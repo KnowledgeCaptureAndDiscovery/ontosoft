@@ -1,0 +1,52 @@
+April 28th: Get Prototype Ready
+
+TODO:
+- Ontology updates [DONE]
+- Add TypeHierarchy to Vocabulary [DONE]
+- Multiple Entities (Server) [DONE]
+- Complex Entities (Server) [DONE]
+- Enumerated Entities (Server) [DONE]
+- Autogrow TextArea [DONE]
+
+- Entity UI Widget adapters
+	- Location
+	- Date
+	- Numeric
+
+- Validation of values
+
+- Multiple Entities (Client) [Partly DONE]
+	- Delete existing entities
+	- Better positioning of + button
+
+- Complex Entities (Client)
+	- Complex Entity Widget: 
+		- Default: Editable cellTable ? Or Show all in a FlowPanel/InputGroup ?
+		- Allow ability to create custom Widgets for some Types
+
+- Green/Pink shading to reflect real values
+
+- Create software object from form, and submit
+- Create Update API
+
+- Browse View
+
+- Search View
+
+- Triggers
+
+- Suggestions
+
+
+- Initial App Configuration loading from server by RPC
+- User Authentication
+
+May 1st: Get prototype ready for GPF people
+
+May 27th: Major Geosoft Demo : Coordinate with Scott & Chris
+
+
+Personal TODO
+
+- InnoTab return ?
+

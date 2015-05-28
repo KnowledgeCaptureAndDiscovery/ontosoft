@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:b="urn:import:org.gwtbootstrap3.client.ui" xmlns:g="urn:import:com.google.gwt.user.client.ui">
+
+ 	<ui:with field="nameTokens" type="org.earthcube.geosoft.client.place.NameTokens"/>
+
+	<g:ScrollPanel>
+		<b:Container>
+			<b:Navbar position="FIXED_TOP" styleName="navbar navbar-xs">
+				<b:Container>
+					<b:NavbarHeader>
+						<b:NavbarBrand targetHistoryToken="{nameTokens.getHome}" 
+							ui:field="brand">
+							<img height="100%" src="images/GeosoftLogo.png" />
+						</b:NavbarBrand>
+						<b:NavbarCollapseButton dataTarget="#navbar-collapse" />
+					</b:NavbarHeader>
+					<b:NavbarCollapse b:id="navbar-collapse">
+						<b:NavbarNav>
+							<b:AnchorListItem icon="DATABASE" text="Software"
+								targetHistoryToken="{nameTokens.getList}" />
+							<b:AnchorListItem icon="USERS" text="Community"
+								targetHistoryToken="{nameTokens.getCommunity}" />
+							<b:AnchorListItem icon="GRADUATION_CAP" text="Training"
+								targetHistoryToken="{nameTokens.getTraining}" />																
+						</b:NavbarNav>
+						
+						<!--b:NavbarForm pull="RIGHT">
+					      <b:TextBox placeholder="Search" addStyleNames="col-lg-8"/>
+					    </b:NavbarForm-->
+					</b:NavbarCollapse>
+				</b:Container>
+			</b:Navbar>
+
+			<!-- Container Content -->
+			<g:SimplePanel ui:field="contentContainer" />
+			
+		</b:Container>
+	</g:ScrollPanel>
+
+</ui:UiBinder>

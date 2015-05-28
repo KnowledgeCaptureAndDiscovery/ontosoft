@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<module rename-to='TurbosoftClient'>
+	<inherits name='com.google.gwt.user.User' />
+	<inherits name="com.google.gwt.uibinder.UiBinder" />
+	<inherits name="com.google.gwt.inject.Inject" />
+
+	<!-- Model View Presenter -->
+	<inherits name='com.gwtplatform.mvp.MvpWithEntryPoint' />
+
+	<!-- REST Client for GWT -->
+	<inherits name="org.fusesource.restygwt.RestyGWT" />
+
+	<!-- GWT Bootstrap3 widgets -->
+	<inherits name="org.gwtbootstrap3.GwtBootstrap3" />
+	<inherits name="org.gwtbootstrap3.extras.datepicker.DatePicker"/>
+	<inherits name="org.gwtbootstrap3.extras.notify.Notify"/>
+	<inherits name="org.gwtbootstrap3.extras.animate.Animate"/>
+	<inherits name="org.gwtbootstrap3.extras.select.Select"/>
+	
+	<!-- GWT Theme -->
+	<public path='theme'>
+		<include name='css/*.css' />
+		<include name='css/*.css.map' />
+		<include name='js/*.js' />
+		<include name='js/*.js.map' />
+		<include name='fonts/*.woff' />
+		<include name='fonts/*.woff2' />
+	</public>
+	
+	<!--public path='client'>
+		<include name='images/*' />
+	</public-->
+
+	<stylesheet src='css/roboto.min.css'/>
+	<stylesheet src='css/roboto-condensed.css'/>
+	<stylesheet src='css/material.min.css'/>
+	<stylesheet src='css/material-mod.css'/>
+	<stylesheet src='css/ripples.min.css'/>
+
+	<generate-with class="org.earthcube.geosoft.client.generator.EntityInputGenerator">
+		<when-type-assignable class="org.earthcube.geosoft.client.generator.EntityInputFactory" />
+	</generate-with>
+	  
+	<!-- GWT D3 -->
+	<inherits name='com.github.gwtd3.D3' />
+
+	<!-- GWT Modules -->
+	<set-configuration-property name="gin.ginjector.modules"
+		value="org.earthcube.geosoft.client.gin.MainModule" />
+
+	<!-- Entry Point -->
+	<entry-point class='org.earthcube.geosoft.client.TurbosoftClient' />
+
+	<source path='client' />
+	<source path='shared' />
+
+</module>
