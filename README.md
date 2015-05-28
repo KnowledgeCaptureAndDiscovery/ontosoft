@@ -1,4 +1,4 @@
-# TurboSoft2
+# TurboSoft (version 2)
 Software repository portal built on semantic technologies
 
 The Turbosoft portal provides access to Geosoft's Turbosoft system (http://www.geosoft-earthcube.org/) by allowing you to browse, and add models to the repository.
