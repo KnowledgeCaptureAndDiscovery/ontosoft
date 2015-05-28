@@ -17,6 +17,7 @@ import org.earthcube.geosoft.shared.classes.SoftwareSummary;
 import org.earthcube.geosoft.shared.classes.vocabulary.Vocabulary;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.Row;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.ButtonSize;
@@ -57,7 +58,13 @@ public class SoftwareListView extends ParameterizedViewImpl
   String authparam = "";
   
   @UiField
-  Button publishbutton, bigpublishbutton, clearsearch, comparebutton, selectionswitch;
+  Button publishbutton, cancelbutton, bigpublishbutton, clearsearch;
+
+  @UiField
+  Modal publishdialog;
+  
+  @UiField
+  Button comparebutton, selectionswitch;
 
   boolean selectionmode = false;
 
@@ -308,7 +315,8 @@ public class SoftwareListView extends ParameterizedViewImpl
   @UiHandler("publishbutton")
   void onPublishButtonClick(ClickEvent event) {
     String label = softwarelabel.getValue();
-    if(label != null) {
+    softwarelabel.setValue(null);
+    if(label != null && !label.equals("")) {
       Software tmpsw = new Software();
       tmpsw.setLabel(label);
       SoftwareREST.publishSoftware(tmpsw, new Callback<Software, Throwable>() {
@@ -325,6 +333,12 @@ public class SoftwareListView extends ParameterizedViewImpl
         public void onFailure(Throwable exception) { }
       });
     }
+  }
+  
+  @UiHandler("cancelbutton")
+  void onCancelPublish(ClickEvent event) {
+    softwarelabel.setValue(null);
+    publishdialog.hide();
   }
   
   private void addToList(SoftwareSummary summary) {

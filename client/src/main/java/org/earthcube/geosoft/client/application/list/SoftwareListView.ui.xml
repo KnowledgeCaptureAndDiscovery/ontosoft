@@ -22,14 +22,16 @@
 			</b:ButtonGroup>
 
 			<b:Modal title="Publish Software" closable="true" fade="true"
-				b:id="publishInput">
+				b:id="publishInput" ui:field="publishdialog">
 				<b:ModalBody>
 					<b:TextBox ui:field="softwarelabel" placeholder="Type the Software name"
 						autoComplete="false" />
 				</b:ModalBody>
 				<b:ModalFooter>
-					<b:Button type="PRIMARY" dataDismiss="MODAL" ui:field="publishbutton"
-						text="GO" />
+					<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton"
+						text="Cancel" />				
+					<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="publishbutton"
+						text="Submit" />
 				</b:ModalFooter>
 			</b:Modal>
 
