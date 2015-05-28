@@ -24,7 +24,7 @@ Installation
 
 3. Move the war files to a Servlet container (Tomcat)
 	- $ mv /path/to/turbosoft-server-<version>.war /path/to/tomcat/webapps/turbosoft-server.war
-	- $ mv /path/to/turbosoft-client-<version>.war /path/to/tomcat/webapps/turbosoft-client.war- 
+	- $ mv /path/to/turbosoft-client-<version>.war /path/to/tomcat/webapps/turbosoft-client.war
 
 4. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
