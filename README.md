@@ -17,6 +17,7 @@ Requirements
 Installation
 -------------
 1. Change KBConstants.java to make sure that the server url is set correctly.
+	- Located at common/src/main/java/org/earthcube/geosoft/shared/classes/util/KBConstants.java
 
 2. $ mvn clean install
 	- This will create a turbosoft-server-[version].war file in server/target
