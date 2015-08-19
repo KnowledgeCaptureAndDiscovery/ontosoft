@@ -5,14 +5,14 @@
 
 	<!-- POM file generated with GWT webAppCreator -->
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.earthcube.geosoft</groupId>
-	<artifactId>turbosoft-server</artifactId>
-	<name>Turbosoft server</name>
-	<description>TurboSoft REST server</description>
+	<groupId>org.ontosoft</groupId>
+	<artifactId>ontosoft-server</artifactId>
+	<name>OntoSoft server</name>
+	<description>OntoSoft REST server</description>
 	<packaging>war</packaging>
     <parent>
-        <groupId>org.earthcube.geosoft</groupId>
-        <artifactId>turbosoft</artifactId>
+        <groupId>org.ontosoft</groupId>
+        <artifactId>ontosoft</artifactId>
         <version>2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -44,10 +44,10 @@
 			<version>${wings-ontapi.version}</version>
 		</dependency>
         
-		<!-- Turbosoft common -->
+		<!-- OntoSoft shared -->
 		<dependency>
-			<groupId>org.earthcube.geosoft</groupId>
-			<artifactId>turbosoft-common</artifactId>
+			<groupId>org.ontosoft</groupId>
+			<artifactId>ontosoft-shared</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		

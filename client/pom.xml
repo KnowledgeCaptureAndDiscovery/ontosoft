@@ -5,21 +5,21 @@
 
 	<!-- POM file generated with GWT webAppCreator -->
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.earthcube.geosoft</groupId>
-	<artifactId>turbosoft-client</artifactId>
-	<name>Turbosoft client</name>
-	<description>TurboSoft portal web application</description>
+	<groupId>org.ontosoft</groupId>
+	<artifactId>ontosoft-client</artifactId>
+	<name>Ontosoft client</name>
+	<description>Ontosoft portal web application</description>
 	<packaging>war</packaging>
     <parent>
-        <groupId>org.earthcube.geosoft</groupId>
-        <artifactId>turbosoft</artifactId>
+        <groupId>org.ontosoft</groupId>
+        <artifactId>ontosoft</artifactId>
         <version>2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
 	<properties>
 		<gwt.version>2.7.0</gwt.version>
-		<gwtp.version>1.4</gwtp.version>
+		<gwtp.version>1.5</gwtp.version>
 		<gin.version>2.1.2</gin.version>
 		<gwt.d3.version>1.1.1</gwt.d3.version>
 		<restygwt.version>2.0.2</restygwt.version>		
@@ -32,15 +32,15 @@
 	</properties>
 
 	<dependencies>
-		<!-- Turbosoft common -->
+		<!-- OntoSoft shared -->
 		<dependency>
-			<groupId>org.earthcube.geosoft</groupId>
-			<artifactId>turbosoft-common</artifactId>
+			<groupId>org.ontosoft</groupId>
+			<artifactId>ontosoft-shared</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.earthcube.geosoft</groupId>
-			<artifactId>turbosoft-common</artifactId>
+			<groupId>org.ontosoft</groupId>
+			<artifactId>ontosoft-shared</artifactId>
 			<version>${project.version}</version>
 			<classifier>sources</classifier>
 		</dependency>

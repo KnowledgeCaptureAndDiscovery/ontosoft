@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"
+	xmlns:b="urn:import:org.gwtbootstrap3.client.ui"
+	xmlns:b.html="urn:import:org.gwtbootstrap3.client.ui.html"
+	xmlns:b.gwt="urn:import:org.gwtbootstrap3.client.ui.gwt" 
+  	xmlns:c="urn:import:com.google.gwt.user.cellview.client"	
+	xmlns:f="urn:import:org.ontosoft.client.components.form.facet"
+	xmlns:p="urn:import:org.ontosoft.client.components.table"
+	xmlns:g="urn:import:com.google.gwt.user.client.ui">
+
+	<b:Row>
+		<b:Column size="XS_12">
+			<g:FlowPanel>
+				<b:Icon pull="RIGHT" type="DATABASE" styleName="fa fa-database header-icon" />
+				<b:PageHeader text="Software Repository"
+					subText="Describe your software so others can find and use it" />
+			</g:FlowPanel>				
+			<b:ButtonGroup styleName="btn-group btn-group-responsive has-bottom-margin">
+				<b:Button ui:field="bigpublishbutton" type="INFO" icon="CLOUD_UPLOAD"
+					text="Publish your software" dataTarget="#publishInput" dataToggle="MODAL" />
+			</b:ButtonGroup>
+
+			<b:Modal title="Publish Software" closable="true" fade="true"
+				b:id="publishInput" ui:field="publishdialog">
+				<b:ModalBody>
+					<b:TextBox ui:field="softwarelabel" placeholder="Type the Software name"
+						autoComplete="false" />
+				</b:ModalBody>
+				<b:ModalFooter>
+					<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton"
+						text="Cancel" />				
+					<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="publishbutton"
+						text="Submit" />
+				</b:ModalFooter>
+			</b:Modal>
+
+			<g:VerticalPanel width="100%" horizontalAlignment="CENTER"
+				ui:field="loading" visible="true">
+				<b:Heading text="Loading" size="H2" />
+				<b:Icon type="GEAR" size="TIMES4" spin="true" />
+			</g:VerticalPanel>
+			
+			<b:Row ui:field="content" visible="false">
+				<b:Column size="SM_8">
+					<b:Panel type="INFO">
+						<b:PanelHeader styleName="panel-heading tight-header">
+							<g:HorizontalPanel verticalAlignment="MIDDLE" width="100%">
+								<b:Heading size="H4" text="Software List" />
+								<g:cell horizontalAlignment="RIGHT">
+									<b:ButtonGroup 
+										styleName="btn-group btn-group-responsive btn-group-header">
+									  <b:Button text="Compare" ui:field="comparebutton"
+									  	size="SMALL" type="INFO" />
+									  <b:Tooltip title="Show/Hide checkboxes. Click twice to  
+									   clear selections" showDelayMs="500">
+									  	<b:Button icon="SQUARE_O" ui:field="selectionswitch" 
+									  		size="SMALL" type="INFO" iconFixedWidth="true"/>
+									  </b:Tooltip>
+									</b:ButtonGroup>							
+								</g:cell>									
+							</g:HorizontalPanel>
+						</b:PanelHeader>
+						<b:PanelBody styleName="panel-body tight-body">
+							<g:ScrollPanel styleName="software-list-scroller">
+								<b.gwt:CellTable condensed="true" striped="true" hover="true"
+									width="100%" ui:field="table" />
+							</g:ScrollPanel>
+							<g:VerticalPanel width="100%" horizontalAlignment="CENTER">						
+								<c:SimplePager ui:field="pager" location="CENTER" />
+							</g:VerticalPanel>							
+						</b:PanelBody>
+					</b:Panel>
+				</b:Column>
+				
+				<b:Column size="SM_4">
+					<b:Panel type="INFO">
+						<b:PanelHeader dataToggle="COLLAPSE" dataTarget="#filters">
+							<b:Heading size="H4" text="Filter Software List" />
+						</b:PanelHeader>
+						<b:PanelCollapse b:id="filters" in="true">
+							<b:PanelBody styleName="panel-body tightish-body">
+								<b:InputGroup styleName="input-group margined-input">
+									<b:TextBox ui:field="searchbox" placeholder="Search" />
+									<b:InputGroupButton>
+										<b:Button ui:field="clearsearch" styleName="btn btn-flat"
+											size="EXTRA_SMALL" icon="REMOVE" tabIndex="-2"
+											color="#5D7BA0" />
+									</b:InputGroupButton>
+								</b:InputGroup>									
+			                    <f:FacetedSearchPanel ui:field="facets" />
+		                    </b:PanelBody>
+	                    </b:PanelCollapse>
+                    </b:Panel>
+				</b:Column>														
+			</b:Row>			
+
+		</b:Column>
+	</b:Row>
+</ui:UiBinder>

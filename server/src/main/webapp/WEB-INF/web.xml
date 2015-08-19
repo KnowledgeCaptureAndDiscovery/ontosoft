@@ -5,16 +5,16 @@
 
 <web-app>
 	<servlet>
-		<servlet-name>TurbosoftAPI</servlet-name>
+		<servlet-name>OntoSoftAPI</servlet-name>
 		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
 		<init-param>
 			<param-name>javax.ws.rs.Application</param-name>
-			<param-value>org.earthcube.geosoft.server.TurbosoftServer</param-value>
+			<param-value>org.ontosoft.server.OntoSoftServer</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>TurbosoftAPI</servlet-name>
+		<servlet-name>OntoSoftAPI</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 </web-app>

@@ -7,7 +7,7 @@
 
 	<!-- Default page to serve -->
 	<welcome-file-list>
-		<welcome-file>TurbosoftClient.html</welcome-file>
+		<welcome-file>OntoSoftClient.html</welcome-file>
 	</welcome-file-list>
 
 </web-app>

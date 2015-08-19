@@ -1,10 +1,10 @@
-# TurboSoft (version 2)
+# OntoSoft (version 2)
 Software repository portal built on semantic technologies
 
-The Turbosoft portal provides access to Geosoft's Turbosoft system (http://www.geosoft-earthcube.org/) by allowing you to browse, and add models to the repository.
+The OntoSoft portal provides access to the OntoSoft system (http://www.ontosoft.org/) by allowing you to browse, and add models to the repository.
 
 Demo here:
-http://www.geosoft-earthcube.org/portal/
+http://www.ontosoft.org/portal/
 
 Installation
 =============
@@ -19,16 +19,16 @@ Installation
 1. Change KBConstants.java to make sure that the server url is set correctly.
 
 2. $ mvn clean install
-	- This will create a turbosoft-server-[version].war file in server/target
-	- It will also create a turbosoft-client-[version].war file in client/target
+	- This will create a ontosoft-server-[version].war file in server/target
+	- It will also create a ontosoft-client-[version].war file in client/target
 
 3. Move the war files to a Servlet container (Tomcat)
-	- $ mv /path/to/turbosoft-server-<version>.war /path/to/tomcat/webapps/turbosoft-server.war
-	- $ mv /path/to/turbosoft-client-<version>.war /path/to/tomcat/webapps/turbosoft-client.war- 
+	- $ mv /path/to/ontosoft-server-<version>.war /path/to/tomcat/webapps/ontosoft-server.war
+	- $ mv /path/to/ontosoft-client-<version>.war /path/to/tomcat/webapps/ontosoft-client.war- 
 
 4. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
 
-5. Open http://[your-server-name]:8080/turbosoft-server/software/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
+5. Open http://[your-server-name]:8080/ontosoft-server/software/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
 
-6. Open http://[your-server-name]:8080/turbosoft-client to access the TurboSoft UI that connects with the local repository
+6. Open http://[your-server-name]:8080/ontosoft-client to access the OntoSoft UI that connects with the local repository
