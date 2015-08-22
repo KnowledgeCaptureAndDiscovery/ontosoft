@@ -1,4 +1,4 @@
-# OntoSoft (version 2)
+# OntoSoft
 Software repository portal built on semantic technologies
 
 The OntoSoft portal provides access to the OntoSoft system (http://www.ontosoft.org/) by allowing you to browse, and add models to the repository.
