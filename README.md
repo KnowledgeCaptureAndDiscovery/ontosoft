@@ -17,6 +17,7 @@ Requirements
 Installation
 -------------
 1. Change KBConstants.java to make sure that the server url is set correctly.
+	- Located at common/src/main/java/org/earthcube/geosoft/shared/classes/util/KBConstants.java
 
 2. $ mvn clean install
 	- This will create a ontosoft-server-[version].war file in server/target
@@ -24,7 +25,7 @@ Installation
 
 3. Move the war files to a Servlet container (Tomcat)
 	- $ mv /path/to/ontosoft-server-<version>.war /path/to/tomcat/webapps/ontosoft-server.war
-	- $ mv /path/to/ontosoft-client-<version>.war /path/to/tomcat/webapps/ontosoft-client.war- 
+	- $ mv /path/to/ontosoft-client-<version>.war /path/to/tomcat/webapps/ontosoft-client.war
 
 4. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
