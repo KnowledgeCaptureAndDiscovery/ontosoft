@@ -1,6 +1,7 @@
 package org.ontosoft.client.application.home;
 
-import org.ontosoft.client.OntoSoftResources;
+import org.gwtbootstrap3.client.ui.PageHeader;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 
 import com.google.gwt.uibinder.client.UiBinder;
@@ -14,6 +15,9 @@ public class HomeView extends ParameterizedViewImpl implements HomePresenter.MyV
   @UiField
   HTML html;
   
+  @UiField
+  PageHeader title;
+  
   interface Binder extends UiBinder<Widget, HomeView> {
   }
 
@@ -21,7 +25,8 @@ public class HomeView extends ParameterizedViewImpl implements HomePresenter.MyV
   public HomeView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
     initMaterial();
-    html.setHTML(OntoSoftResources.INSTANCE.home().getText());
+    title.setText(Config.getPortalTitle() + " Portal");
+    html.setHTML(Config.getHomeHTML());
   }
 
   @Override

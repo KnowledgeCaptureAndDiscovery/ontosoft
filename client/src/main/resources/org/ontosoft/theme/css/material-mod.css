@@ -36,10 +36,10 @@
 }
 
 .nav-tabs {
-  background: #5D7BA0 !important;
+  background: #5D7BA0;
 }
 .navbar.navbar, .navbar-default.navbar {
-  background-color: #5D7BA0 !important;
+  background-color: #5D7BA0;
 }
 
 a, a:hover, a:focus {

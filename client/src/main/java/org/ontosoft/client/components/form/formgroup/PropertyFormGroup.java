@@ -116,7 +116,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         @Override
         public void onClick(ClickEvent event) {
           Entity newEntity = getNewEntity(null);
-          addEntityEditor(newEntity);
+          addEntityEditor(newEntity, infoblock);
           thisfg.add(infoblock);
           validate();
         }
@@ -134,11 +134,11 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     }
     if(!empty) {
       for(Entity ey : entities) {
-        addEntityEditor(ey);
+        addEntityEditor(ey, infoblock);
       }
     } else {
       Entity newEntity = getNewEntity(null);
-      addEntityEditor(newEntity);
+      addEntityEditor(newEntity, infoblock);
     }
 
     this.add(infoblock);
@@ -147,7 +147,14 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       this.setValidationState(ValidationState.ERROR);    
   }
   
-  private void addEntityEditor(final Entity entity) {
+  private void toggleInfoBlock(final HelpBlock infoblock) {
+    if(infoblock.getText().equals(""))
+      infoblock.setVisible(false);
+    else
+      infoblock.setVisible(true);  
+  }
+  
+  private void addEntityEditor(final Entity entity, final HelpBlock infoblock) {
     final FormGroup thisfg = this;
     
     try {
@@ -168,6 +175,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
           form.fireEvent(new SoftwareChangeEvent(software));
           //GWT.log(software.getPropertyValues(property.getId()).toString());
           
+          toggleInfoBlock(infoblock);
           handleEntityPlugins(e);
         }
       });
@@ -195,12 +203,12 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
           }
           else {
             // Clear contents (this will fire the entitychange event)
-            if(entity.getValue() != null) {
+            if(entity.getValue() != null)
               entity.setValue(null);
-              ip.clearValue();
-            }
+            ip.clearValue();
           }
           validate();
+          toggleInfoBlock(infoblock);
           handleEntityPlugins(entity);
         }
       });

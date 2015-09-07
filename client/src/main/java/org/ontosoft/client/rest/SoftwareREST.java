@@ -12,10 +12,10 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.extras.notify.client.constants.NotifyType;
 import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 import org.gwtbootstrap3.extras.notify.client.ui.NotifySettings;
+import org.ontosoft.client.Config;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
-import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -50,7 +50,7 @@ public class SoftwareREST {
   
   public static SoftwareService getSoftwareService() {
     if(softwareService == null) {
-      Defaults.setServiceRoot(KBConstants.SERVERURI());
+      Defaults.setServiceRoot(Config.getServerURL());
       softwareService = GWT.create(SoftwareService.class);
     }
     return softwareService;

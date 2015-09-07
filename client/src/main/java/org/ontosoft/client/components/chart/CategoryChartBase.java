@@ -2,6 +2,7 @@ package org.ontosoft.client.components.chart;
 
 import java.util.List;
 
+import org.ontosoft.client.Config;
 import org.ontosoft.client.components.chart.events.CategorySelectionEvent;
 import org.ontosoft.client.components.chart.events.CategorySelectionHandler;
 import org.ontosoft.client.components.chart.events.HasCategoryChartHandlers;
@@ -46,8 +47,8 @@ public class CategoryChartBase extends SimplePanel
   String textcolor = "#555555";
   String strokecolor = "#EEEEEE";
   
-  String donecolor = "#5D7BA0";
-  String notdonecolor = "#D42041";
+  String donecolor = Config.getOKColor();
+  String notdonecolor = Config.getErrorColor();
   String midcolor = "#EEA6B3"; // #EA90A0
   
   String optcolor = "#CCCCCC";

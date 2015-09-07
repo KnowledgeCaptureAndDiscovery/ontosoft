@@ -5,7 +5,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.util.KBConstants;
@@ -35,6 +37,9 @@ public class CommunityView extends ParameterizedViewImpl
   @UiField
   SimplePager pager;
   
+  @UiField
+  PageHeader title;
+  
   private ListDataProvider<MetadataEnumeration> listProvider = 
       new ListDataProvider<MetadataEnumeration>();
   
@@ -46,6 +51,7 @@ public class CommunityView extends ParameterizedViewImpl
   @Inject
   public CommunityView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
+    title.setText(Config.getPortalTitle() + " Community");
     initVocabulary();
     initTable();
     initAgents();

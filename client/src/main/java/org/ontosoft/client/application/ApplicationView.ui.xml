@@ -12,7 +12,7 @@
 					<b:NavbarHeader>
 						<b:NavbarBrand targetHistoryToken="{nameTokens.getHome}" 
 							ui:field="brand">
-							<img height="100%" src="images/OntosoftLogo.png" />
+							<img height="100%" src="customise/Logo.png" />
 						</b:NavbarBrand>
 						<b:NavbarCollapseButton dataTarget="#navbar-collapse" />
 					</b:NavbarHeader>

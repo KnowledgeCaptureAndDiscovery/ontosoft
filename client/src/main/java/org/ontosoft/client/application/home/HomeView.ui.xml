@@ -7,33 +7,7 @@
 
 	<b:Row>
 		<b:Column size="XS_12">
-			<b:PageHeader text="OntoSoft Portal" />
-			<b:Row>
-				<b:Column size="SM_4">
-					<b:Panel>
-						<b:PanelBody>
-							<g:Image styleName="img img-responsive" url="images/Slide1.png" />
-							<!-- b:AnchorButton text="Publish" targetHistoryToken="{nameTokens.getPublish}" /-->
-						</b:PanelBody>
-					</b:Panel>
-				</b:Column>
-				<b:Column size="SM_4">
-					<b:Panel>
-						<b:PanelBody>
-							<g:Image styleName="img img-responsive" url="images/Slide2.png" />
-							<!-- b:AnchorButton text="Browse" targetHistoryToken="{nameTokens.getBrowse}" /-->
-						</b:PanelBody>
-					</b:Panel>
-				</b:Column>
-				<b:Column size="SM_4">
-					<b:Panel>
-						<b:PanelBody>
-							<g:Image styleName="img img-responsive" url="images/Slide3.png" />
-							<!-- b:AnchorButton text="Search" targetHistoryToken="{nameTokens.getSearch}" /-->
-						</b:PanelBody>
-					</b:Panel>
-				</b:Column>
-			</b:Row>
+			<b:PageHeader ui:field="title" />
 			<g:HTML ui:field="html"/>
 		</b:Column>
 	</b:Row>

@@ -37,6 +37,7 @@
 			<groupId>org.ontosoft</groupId>
 			<artifactId>ontosoft-shared</artifactId>
 			<version>${project.version}</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.ontosoft</groupId>
@@ -80,6 +81,7 @@
 			<groupId>com.google.gwt.inject</groupId>
 			<artifactId>gin</artifactId>
 			<version>${gin.version}</version>
+			<scope>provided</scope>
 		</dependency>
 	
 		<!-- GWT MVP -->
@@ -95,6 +97,7 @@
 			<groupId>org.fusesource.restygwt</groupId>
 			<artifactId>restygwt</artifactId>
 			<version>${restygwt.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 	</dependencies>
