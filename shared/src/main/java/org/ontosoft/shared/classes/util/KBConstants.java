@@ -1,16 +1,6 @@
 package org.ontosoft.shared.classes.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class KBConstants {
-  //private static String serveruri = "http://seagull.isi.edu:8080/ontosoft-server";  
-  private static String serveruri = "http://seagull.isi.edu:8080/turbosoft-server";
-  private static String liburi = "http://www.ontosoft.org/repository/software/";
-  
-//  private static String serveruri = "http://localhost:9090/ontosoft-server";
-//  private static String liburi = null;
-  
   private static String onturi = "http://ontosoft.org/software";
   private static String caturi = "http://ontosoft.org/softwareCategories";
   
@@ -21,15 +11,6 @@ public class KBConstants {
   
   private static String dctermsns = "http://purl.org/dc/terms/";
   private static String dcns = "http://purl.org/dc/elements/1.1/";
-  
-  private static final Map<String, String> nsmap;
-  static
-  {
-    nsmap = new HashMap<String, String>();
-    nsmap.put("osw:", ONTNS());
-    nsmap.put("cat:", CATNS());
-    nsmap.put("lib:", LIBNS());
-  }
   
   public static String ONTURI() {
     return onturi;
@@ -55,32 +36,6 @@ public class KBConstants {
     return caturi + "#";
   }
   
-  public static String SERVERURI() {
-    return serveruri;
-  }
-  
-  public static void SERVERURI(String uri) {
-      serveruri = uri;
-  }
-  
-  public static String LIBURI() {
-    if(liburi == null)
-      return serveruri.replaceAll("\\/$", "") + "/software/";
-    return liburi;
-  }
-  
-  public static String LIBNS() {
-    return LIBURI();
-  }
-  
-  public static String ENUMURI() {
-    return LIBURI() + "enumerations";
-  }
-  
-  public static String ENUMNS() {
-    return ENUMURI() + "#";
-  }
-  
   public static String PROVNS() {
     return provns;
   }
@@ -104,8 +59,5 @@ public class KBConstants {
   public static String RDFSNS() {
     return rdfsns;
   }
-  
-  public static String randomEntityId(String softwareid) {
-    return softwareid + "#Entity-"+ GUID.get(12);
-  }
+
 }

@@ -89,4 +89,8 @@ public class GUID {
     }
     return new String(uuid);
   }
+  
+  public static String randomEntityId(String softwareid) {
+    return softwareid + "#Entity-"+ GUID.get(12);
+  }
 }

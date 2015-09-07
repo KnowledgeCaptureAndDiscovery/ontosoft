@@ -6,6 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.repository.adapters.EntityRegistrar;
 import org.ontosoft.server.repository.adapters.IEntityAdapter;
 import org.ontosoft.server.repository.plugins.CodeAnalysisPlugin;
@@ -43,6 +47,8 @@ public class SoftwareRepository {
   String onturi,caturi,liburi,enumuri;
   String ontns,catns;
   
+  String server;
+  
   String topclass, uniongraph;
   
   Vocabulary vocabulary;
@@ -51,33 +57,121 @@ public class SoftwareRepository {
   ObjectMapper mapper = new ObjectMapper();
   
   static SoftwareRepository singleton = null;
-  public static SoftwareRepository get() {
+  
+  public static SoftwareRepository get(HttpServletRequest request) {
     if(singleton == null)
-      singleton = new SoftwareRepository();
+      singleton = new SoftwareRepository(request);
     return singleton;
   }
   
-  public SoftwareRepository() {
-    setConfiguration();
+  public static SoftwareRepository get() {
+    if(singleton == null)
+      singleton = new SoftwareRepository(null);
+    return singleton;
+  }
+  
+  public SoftwareRepository(HttpServletRequest request) {
+    getServerConfiguration(request);
     initializeKB();
     registerPlugins();
     initializeVocabularyFromKB();
   }
   
-  private void setConfiguration() {
+  public String LIBURI() {
+    if(liburi == null)
+      return server.replaceAll("\\/$", "") + "/software/";
+    return liburi;
+  }
+  
+  public String LIBNS() {
+    return LIBURI();
+  }
+  
+  public String ENUMURI() {
+    return LIBURI() + "enumerations";
+  }
+  
+  public String ENUMNS() {
+    return ENUMURI() + "#";
+  }
+  
+  private void getServerConfiguration(HttpServletRequest request) {
+    String configFile = null;
+    if(request != null) {
+      ServletContext app = request.getSession().getServletContext();
+      configFile = app.getInitParameter("config.file");
+    }
+    if (configFile == null) {
+        String home = System.getProperty("user.home");
+        if (home != null && !home.equals(""))
+            configFile = home + File.separator + ".ontosoft"
+                    + File.separator + "server.properties";
+        else
+            configFile = "/etc/ontosoft/server.properties";
+    }
+    // Create configFile if it doesn't exist (portal.properties)
+    File cfile = new File(configFile);
+    if (!cfile.exists()) {
+        if (!cfile.getParentFile().exists() && !cfile.getParentFile().mkdirs()) {
+            System.err.println("Cannot create config file directory : " + cfile.getParent());
+            return;
+        }
+        if (request != null)
+            createDefaultServerConfig(request, configFile);
+    }
+    // Load properties from configFile
+    PropertyListConfiguration props = new PropertyListConfiguration();
+    try {
+        props.load(configFile);
+        setConfiguration(props);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+  }
+  
+  private void createDefaultServerConfig(HttpServletRequest request, String configFile) {
+    String server = request.getScheme() + "://" + request.getServerName() + ":"
+            + request.getServerPort() + request.getContextPath();
+    String storageDir = null;
+    String home = System.getProperty("user.home");
+    if (home != null && !home.equals(""))
+        storageDir = home + File.separator + ".ontosoft" + File.separator + "storage";
+    else
+        storageDir = System.getProperty("java.io.tmpdir") +
+                File.separator + "ontosoft" + File.separator + "storage";
+    if (!new File(storageDir).mkdirs())
+        System.err.println("Cannot create storage directory: " + storageDir);
+
+    PropertyListConfiguration config = new PropertyListConfiguration();
+    config.addProperty("storage.local", storageDir);
+    config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
+    config.addProperty("server", server);
+
+    try {
+        config.save(configFile);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+  }
+  
+  
+  private void setConfiguration(PropertyListConfiguration props) {
+    this.server = props.getString("server");
     onturi = KBConstants.ONTURI();
     caturi = KBConstants.CATURI();
-    liburi = KBConstants.LIBURI();
-    enumuri = KBConstants.ENUMURI();
+    liburi = this.LIBURI();
+    enumuri = this.ENUMURI();
     
     ontns = KBConstants.ONTNS();
     catns = KBConstants.CATNS();
     
-    tdbdir = System.getProperty("user.home") + "/.tsoft/storage/TDB";
+    tdbdir = props.getString("storage.tdb");
     File tdbdirf = new File(tdbdir);
     if(!tdbdirf.exists() && !tdbdirf.mkdirs()) {
-      System.err.println("Cannot create user directory : "+tdbdirf.getAbsolutePath());
+      System.err.println("Cannot create tdb directory : "+tdbdirf.getAbsolutePath());
     }
+    
+    // TODO: Parse "imports" and "exports" details
     
     topclass = ontns + "Software";
     uniongraph = "urn:x-arq:UnionGraph";
@@ -105,7 +199,7 @@ public class SoftwareRepository {
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
       this.ontkb = fac.getKB(onturi, OntSpec.PELLET, false, true);
-      this.catkb = fac.getKB(caturi, OntSpec.PLAIN, false, true);
+      this.catkb = fac.getKB(caturi, OntSpec.PELLET, false, true);
       this.enumkb = fac.getKB(enumuri, OntSpec.PLAIN, true);
       
       this.registerEntityAdapters();
@@ -361,7 +455,7 @@ public class SoftwareRepository {
    */
   public String addSoftware(Software sw) throws Exception {
     if(sw.getId() == null) 
-      sw.setId(KBConstants.LIBNS() + "Software-" + EntityUtilities.shortUUID());
+      sw.setId(this.LIBNS() + "Software-" + EntityUtilities.shortUUID());
     
     if(sw.getType() == null)
       sw.setType(topclass);
@@ -400,7 +494,7 @@ public class SoftwareRepository {
           if(vocabulary.isA(type, vocabulary.getType(topclass))) {
             if(entity.getId() == null || !this.hasSoftware(entity.getId())) {
               String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-              String id = KBConstants.LIBNS() + etype + "-" + EntityUtilities.shortUUID();
+              String id = this.LIBNS() + etype + "-" + EntityUtilities.shortUUID();
               entity.setId(id);
               Software subsw = new Software(id);
               subsw.setLabel((String)entity.getValue());
@@ -525,7 +619,7 @@ public class SoftwareRepository {
       summary.setId(sw.getID());
       summary.setName(sw.getName());
       summary.setLabel(allkb.getLabel(sw));
-      summary.setType(topclass+"Software");
+      summary.setType(topclass);
       list.add(summary);
     }
     return list;

@@ -3,7 +3,6 @@ package org.ontosoft.server.repository.adapters;
 import org.ontosoft.server.repository.EntityUtilities;
 import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 
 import edu.isi.wings.ontapi.KBAPI;
@@ -40,11 +39,12 @@ public class EnumerationEntityAdapter extends EntityAdapter {
     if(entityobj == null)
       entityobj = this.enumkb.getIndividual(entity.getId());
 
+    SoftwareRepository repo = SoftwareRepository.get();
     if(entityobj == null) {
       // Check that there is no enumeration of the same type with the same label
       // If so, use that instead
       for(MetadataEnumeration menum : 
-        SoftwareRepository.get().getEnumerationsForType(entity.getType())) {
+        repo.getEnumerationsForType(entity.getType())) {
         if(menum.getLabel().equalsIgnoreCase((String)entity.getValue())) {
           entity.setId(menum.getId());
           return true;
@@ -55,7 +55,7 @@ public class EnumerationEntityAdapter extends EntityAdapter {
     // If no entity found, then create a new one
     if(entityobj == null) {
       String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-      entity.setId(KBConstants.ENUMNS() + etype + "-" + EntityUtilities.shortUUID());
+      entity.setId(repo.ENUMNS() + etype + "-" + EntityUtilities.shortUUID());
       entityobj = this.enumkb.createObjectOfClass(entity.getId(), entityClass);
       this.enumkb.setLabel(entityobj, (String)entity.getValue());
       

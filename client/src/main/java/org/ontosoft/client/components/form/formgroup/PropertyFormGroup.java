@@ -28,7 +28,7 @@ import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHa
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.Entity;
 import org.ontosoft.shared.classes.Software;
-import org.ontosoft.shared.classes.util.KBConstants;
+import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.Plugin;
@@ -228,7 +228,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   }
   
   private Entity getNewEntity(Object value) {
-    return new Entity(KBConstants.randomEntityId(software.getId()), 
+    return new Entity(GUID.randomEntityId(software.getId()), 
         value, property.getRange());
   }
   

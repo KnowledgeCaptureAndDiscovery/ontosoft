@@ -40,14 +40,15 @@ public class SoftwareResource implements SoftwareService {
 
   SoftwareRepository repo;
   
-  public SoftwareResource() {
-    this.repo = SoftwareRepository.get();
+  public SoftwareResource(@Context HttpServletRequest req) {
+    this.repo = SoftwareRepository.get(req);
   }
 
   /**
    * Queries
    */
 
+  // TODO: Check User Authentication security here
   @GET
   @Produces("application/json")
   @Override
@@ -68,7 +69,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       String swid = name;
       if(!name.startsWith("http:"))
-        swid = KBConstants.LIBNS() + name;
+        swid = repo.LIBNS() + name;
       return this.repo.getSoftware(swid);
     } catch (Exception e) {
       e.printStackTrace();
@@ -84,7 +85,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       String swid = name;
       if(!name.startsWith("http:"))
-        swid = KBConstants.LIBNS() + name;
+        swid = repo.LIBNS() + name;
       return this.repo.serializeXML(swid);
     } catch (Exception e) {
       e.printStackTrace();
@@ -190,7 +191,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       String swid = name;
       if(!name.startsWith("http:"))
-        swid = KBConstants.LIBNS() + name;
+        swid = repo.LIBNS() + name;
       if (!this.repo.updateSoftware(software, swid))
         throw new RuntimeException("Could not update " + name);
       return software;
@@ -209,7 +210,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       String swid = name;
       if(!name.startsWith("http:"))
-        swid = KBConstants.LIBNS() + name;
+        swid = repo.LIBNS() + name;
       if (!this.repo.deleteSoftware(swid))
         throw new RuntimeException("Could not delete " + name);
     } catch (Exception e) {
@@ -225,7 +226,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       String enumid = name;
       if(!name.startsWith("http:"))
-        enumid = KBConstants.ENUMNS() + name;
+        enumid = repo.ENUMNS() + name;
       if (!this.repo.deleteEnumeration(enumid))
         throw new RuntimeException("Could not delete " + name);
     } catch (Exception e) {
@@ -254,4 +255,9 @@ public class SoftwareResource implements SoftwareService {
     }
     return null;
   }
+  
+  /**
+   * Exports
+   */
+  // TODO: Export Queries (Should do IP based authentication here -- verify with repo exports list)
 }
