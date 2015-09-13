@@ -27,9 +27,9 @@ Installation
 3. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
 
-4. Check $HOME/.ontosoft/server.properties file to see that server name is correctly identified
+4. Open http://[your-server-name]:8080/ontosoft-server/software/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
 
-5. Open http://[your-server-name]:8080/ontosoft-server/software/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
+5. Check $HOME/.ontosoft/server.properties file to see that server name is correctly identified
 
 6. Open http://[your-server-name]:8080/ontosoft-client to access the OntoSoft UI that connects with the local repository
   
