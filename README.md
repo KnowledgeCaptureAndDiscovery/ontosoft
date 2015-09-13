@@ -16,20 +16,20 @@ Requirements
 
 Installation
 -------------
-1. Change KBConstants.java to make sure that the server url is set correctly.
-	- Located at common/src/main/java/org/earthcube/geosoft/shared/classes/util/KBConstants.java
-
-2. $ mvn clean install
+1. $ mvn clean && mvn install
 	- This will create a ontosoft-server-[version].war file in server/target
 	- It will also create a ontosoft-client-[version].war file in client/target
 
-3. Move the war files to a Servlet container (Tomcat)
+2. Move the war files to a Servlet container (Tomcat)
 	- $ mv /path/to/ontosoft-server-<version>.war /path/to/tomcat/webapps/ontosoft-server.war
 	- $ mv /path/to/ontosoft-client-<version>.war /path/to/tomcat/webapps/ontosoft-client.war
 
-4. Start tomcat
+3. Start tomcat
 	- $ /path/to/tomcat/bin/startup.sh
+
+4. Check $HOME/.ontosoft/server.properties file to see that server name is correctly identified
 
 5. Open http://[your-server-name]:8080/ontosoft-server/software/vocabulary to check that the local repository server is working fine. It might take a little while to open it for the first time as it downloads vocabularies from the internet.
 
 6. Open http://[your-server-name]:8080/ontosoft-client to access the OntoSoft UI that connects with the local repository
+  
