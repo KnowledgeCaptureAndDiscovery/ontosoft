@@ -13,9 +13,13 @@ import org.gwtbootstrap3.extras.notify.client.constants.NotifyType;
 import org.gwtbootstrap3.extras.notify.client.ui.Notify;
 import org.gwtbootstrap3.extras.notify.client.ui.NotifySettings;
 import org.ontosoft.client.Config;
+import org.ontosoft.client.authentication.AuthenticatedDispatcher;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.users.UserCredentials;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -51,9 +55,69 @@ public class SoftwareREST {
   public static SoftwareService getSoftwareService() {
     if(softwareService == null) {
       Defaults.setServiceRoot(Config.getServerURL());
+      Defaults.setDateFormat(null);
+      Defaults.setDispatcher(new AuthenticatedDispatcher());
       softwareService = GWT.create(SoftwareService.class);
     }
     return softwareService;
+  }
+  
+  public static void login(UserCredentials credentials, 
+      final Callback<UserSession, Throwable> callback) {
+    if(SessionStorage.getSession() != null) {
+      callback.onSuccess(SessionStorage.getSession());
+    }
+    else {
+      REST.withCallback(new MethodCallback<UserSession>() {
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          callback.onFailure(exception);
+        }
+        @Override
+        public void onSuccess(Method method, UserSession session) {
+          if(session != null) {
+            SessionStorage.setSession(session);
+            callback.onSuccess(session);
+          }
+          else
+            callback.onFailure(new Throwable("Login incorrect"));
+        }
+      }).call(getSoftwareService()).login(credentials);
+    }
+  }
+  
+  public static void validateSession(UserSession session, 
+      final Callback<UserSession, Throwable> callback) {
+    REST.withCallback(new MethodCallback<UserSession>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, UserSession session) {
+        SessionStorage.setSession(session);
+        callback.onSuccess(session);
+      }
+    }).call(getSoftwareService()).validateSession(session);
+  }
+  
+  public static void logout(final Callback<Void, Throwable> callback) {
+    if(SessionStorage.getSession() == null) {
+      callback.onFailure(new Throwable("Not logged in"));
+    }
+    else {
+      REST.withCallback(new MethodCallback<Void>() {
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          callback.onFailure(exception);
+        }
+        @Override
+        public void onSuccess(Method method, Void response) {
+          SessionStorage.setSession(null);
+          callback.onSuccess(response);
+        }
+      }).call(getSoftwareService()).logout(SessionStorage.getSession());
+    }
   }
   
   public static void getVocabulary(final Callback<Vocabulary, Throwable> callback,
@@ -154,6 +218,7 @@ public class SoftwareREST {
         }
         @Override
         public void onFailure(Method method, Throwable exception) {
+          GWT.log("Could nto fetch software: "+swname, exception);
           notifyFailure("Could not fetch software: "+swname);
           callback.onFailure(exception);
         }

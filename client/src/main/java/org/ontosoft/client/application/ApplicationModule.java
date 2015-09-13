@@ -10,10 +10,10 @@ import org.ontosoft.client.application.home.HomePresenter;
 import org.ontosoft.client.application.home.HomeView;
 import org.ontosoft.client.application.list.SoftwareListPresenter;
 import org.ontosoft.client.application.list.SoftwareListView;
+import org.ontosoft.client.application.loader.LoaderPresenter;
+import org.ontosoft.client.application.loader.LoaderView;
 import org.ontosoft.client.application.publish.PublishPresenter;
 import org.ontosoft.client.application.publish.PublishView;
-import org.ontosoft.client.application.router.RouterPresenter;
-import org.ontosoft.client.application.router.RouterView;
 import org.ontosoft.client.application.training.TrainingPresenter;
 import org.ontosoft.client.application.training.TrainingView;
 
@@ -38,8 +38,8 @@ public class ApplicationModule extends AbstractPresenterModule {
         CommunityView.class, CommunityPresenter.MyProxy.class);
     bindPresenter(TrainingPresenter.class, TrainingPresenter.MyView.class,
         TrainingView.class, TrainingPresenter.MyProxy.class);
-    bindPresenter(RouterPresenter.class, RouterPresenter.MyView.class,
-        RouterView.class, RouterPresenter.MyProxy.class);
+    bindPresenter(LoaderPresenter.class, LoaderPresenter.MyView.class,
+        LoaderView.class, LoaderPresenter.MyProxy.class);
     bindPresenter(SoftwareListPresenter.class, SoftwareListPresenter.MyView.class,
         SoftwareListView.class, SoftwareListPresenter.MyProxy.class);
     bindPresenter(ComparePresenter.class, ComparePresenter.MyView.class,

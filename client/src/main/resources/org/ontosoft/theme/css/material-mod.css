@@ -261,8 +261,20 @@ h1 small {
 }
 .admin-table .admin-cell {
 	display: table-cell;
+	padding-left: 0px !important;
 	width: 64px;
 }
+.registered-user-cell button {
+	visibility: hidden;
+}
+.registered-user-table .registered-user-cell button {
+	visibility: visible;
+}
+.registered-user-table .registered-user-cell {
+	padding-left: 4px !important;
+	padding-right: 4px !important;
+}
+
 .selection-table .selection-cell {
 	display: table-cell;
 	width: 32px;
@@ -420,6 +432,16 @@ fieldset.bordered-fieldset {
 	background-color: #F9F9F9 !important;
 	border: 1px solid #F0F0F0 !important;		
 }
+.form-group .control-label.provenance-label {
+	background: none !important;
+	border: none !important;
+	color: #CCC !important;
+	font-weight: normal !important;
+	font-size: 80% !important;
+	padding: 0px !important;
+    margin: 0px !important;
+}
+
 /* Autogrow Text area */
 .mirror-text {
 	visibility: hidden;
@@ -430,6 +452,7 @@ fieldset.bordered-fieldset {
 	margin: 0px;
 	padding-top:7px !important;
 	padding-bottom:7px !important;
+	margin-bottom: -5px !important;
 	border: none;
 	outline: none;
 	resize: none;

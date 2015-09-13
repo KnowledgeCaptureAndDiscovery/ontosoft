@@ -7,6 +7,7 @@ import org.gwtbootstrap3.client.ui.ButtonGroup;
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
 import org.ontosoft.client.application.ParameterizedViewImpl;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.chart.CategoryBarChart;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.components.chart.events.CategorySelectionEvent;
@@ -17,6 +18,7 @@ import org.ontosoft.client.components.form.notification.PluginNotifications;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -84,8 +86,13 @@ public class PublishView extends ParameterizedViewImpl
   // If some parameters are passed in, initialize the software and interface
   public void initializeParameters(String[] params) {
     clear();
-    
-    // Parse other tokens
+    UserSession session = SessionStorage.getSession();
+    if(session == null) {
+      loading.setVisible(false);
+      //SoftwareREST.notifyFailure("You need to be logged in to edit software description");
+      return;
+    }
+    // Parse tokens
     if(params.length > 0) {
       this.softwarename = params[0];
       String pfx = KBConstants.CATNS();
@@ -98,7 +105,6 @@ public class PublishView extends ParameterizedViewImpl
       initSoftware(this.softwarename);
     }
     else {
-      clear();
       software = null; 
     }
   }

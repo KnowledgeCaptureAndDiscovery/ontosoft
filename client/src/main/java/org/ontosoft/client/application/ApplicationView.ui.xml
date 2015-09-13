@@ -25,13 +25,31 @@
 							<b:AnchorListItem icon="GRADUATION_CAP" text="Training"
 								targetHistoryToken="{nameTokens.getTraining}" />																
 						</b:NavbarNav>
-						
-						<!--b:NavbarForm pull="RIGHT">
-					      <b:TextBox placeholder="Search" addStyleNames="col-lg-8"/>
-					    </b:NavbarForm-->
+						<b:NavbarNav pull="RIGHT">
+							<b:Button type="INFO" size="SMALL" text="Login" ui:field="login" />
+							<b:Button type="INFO" size="SMALL" text="Logout" ui:field="logout" 
+								visible="false"/>								
+						</b:NavbarNav>
 					</b:NavbarCollapse>
 				</b:Container>
 			</b:Navbar>
+			
+			<b:Modal title="Login" closable="true" fade="true" b:id="loginForm" ui:field="loginform">
+				<b:ModalBody>
+					<b:FormGroup>
+						<b:HelpBlock />					
+						<b:TextBox ui:field="username" placeholder="User name" allowBlank="false" />
+					</b:FormGroup>
+					<b:FormGroup>
+						<b:Input type="PASSWORD" ui:field="password" placeholder="Password" allowBlank="false" />
+						<b:HelpBlock />
+					</b:FormGroup>
+				</b:ModalBody>
+				<b:ModalFooter>
+					<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton" text="Cancel" />				
+					<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="loginbutton" text="Login" />
+				</b:ModalFooter>
+			</b:Modal>
 
 			<!-- Container Content -->
 			<g:SimplePanel ui:field="contentContainer" />

@@ -6,17 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.repository.adapters.EntityRegistrar;
 import org.ontosoft.server.repository.adapters.IEntityAdapter;
 import org.ontosoft.server.repository.plugins.CodeAnalysisPlugin;
 import org.ontosoft.server.repository.plugins.GithubPlugin;
+import org.ontosoft.server.users.User;
+import org.ontosoft.server.util.Config;
 import org.ontosoft.shared.classes.Entity;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
@@ -41,8 +42,10 @@ public class SoftwareRepository {
 
   KBAPI ontkb, catkb, enumkb;
   OntFactory fac;
+  ProvenanceRepository prov;
   
   String tdbdir;
+  String dbdir;
   String owlns, rdfns, rdfsns;
   String onturi,caturi,liburi,enumuri;
   String ontns,catns;
@@ -50,36 +53,31 @@ public class SoftwareRepository {
   String server;
   
   String topclass, uniongraph;
-  
+
   Vocabulary vocabulary;
   Map<String, List<MetadataEnumeration>> enumerations;
 
   ObjectMapper mapper = new ObjectMapper();
   
   static SoftwareRepository singleton = null;
-  
-  public static SoftwareRepository get(HttpServletRequest request) {
-    if(singleton == null)
-      singleton = new SoftwareRepository(request);
-    return singleton;
-  }
-  
+
   public static SoftwareRepository get() {
     if(singleton == null)
-      singleton = new SoftwareRepository(null);
+      singleton = new SoftwareRepository();
     return singleton;
   }
   
-  public SoftwareRepository(HttpServletRequest request) {
-    getServerConfiguration(request);
+  public SoftwareRepository() {
+    setConfiguration();
     initializeKB();
     registerPlugins();
     initializeVocabularyFromKB();
+    this.prov = new ProvenanceRepository();
   }
   
   public String LIBURI() {
     if(liburi == null)
-      return server.replaceAll("\\/$", "") + "/software/";
+      liburi = server.replaceAll("\\/$", "") + "/software/";
     return liburi;
   }
   
@@ -95,67 +93,8 @@ public class SoftwareRepository {
     return ENUMURI() + "#";
   }
   
-  private void getServerConfiguration(HttpServletRequest request) {
-    String configFile = null;
-    if(request != null) {
-      ServletContext app = request.getSession().getServletContext();
-      configFile = app.getInitParameter("config.file");
-    }
-    if (configFile == null) {
-        String home = System.getProperty("user.home");
-        if (home != null && !home.equals(""))
-            configFile = home + File.separator + ".ontosoft"
-                    + File.separator + "server.properties";
-        else
-            configFile = "/etc/ontosoft/server.properties";
-    }
-    // Create configFile if it doesn't exist (portal.properties)
-    File cfile = new File(configFile);
-    if (!cfile.exists()) {
-        if (!cfile.getParentFile().exists() && !cfile.getParentFile().mkdirs()) {
-            System.err.println("Cannot create config file directory : " + cfile.getParent());
-            return;
-        }
-        if (request != null)
-            createDefaultServerConfig(request, configFile);
-    }
-    // Load properties from configFile
-    PropertyListConfiguration props = new PropertyListConfiguration();
-    try {
-        props.load(configFile);
-        setConfiguration(props);
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-  }
-  
-  private void createDefaultServerConfig(HttpServletRequest request, String configFile) {
-    String server = request.getScheme() + "://" + request.getServerName() + ":"
-            + request.getServerPort() + request.getContextPath();
-    String storageDir = null;
-    String home = System.getProperty("user.home");
-    if (home != null && !home.equals(""))
-        storageDir = home + File.separator + ".ontosoft" + File.separator + "storage";
-    else
-        storageDir = System.getProperty("java.io.tmpdir") +
-                File.separator + "ontosoft" + File.separator + "storage";
-    if (!new File(storageDir).mkdirs())
-        System.err.println("Cannot create storage directory: " + storageDir);
-
-    PropertyListConfiguration config = new PropertyListConfiguration();
-    config.addProperty("storage.local", storageDir);
-    config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
-    config.addProperty("server", server);
-
-    try {
-        config.save(configFile);
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-  }
-  
-  
-  private void setConfiguration(PropertyListConfiguration props) {
+  private void setConfiguration() {
+    PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
     onturi = KBConstants.ONTURI();
     caturi = KBConstants.CATURI();
@@ -170,7 +109,7 @@ public class SoftwareRepository {
     if(!tdbdirf.exists() && !tdbdirf.mkdirs()) {
       System.err.println("Cannot create tdb directory : "+tdbdirf.getAbsolutePath());
     }
-    
+
     // TODO: Parse "imports" and "exports" details
     
     topclass = ontns + "Software";
@@ -181,7 +120,6 @@ public class SoftwareRepository {
     rdfsns = KBConstants.RDFSNS();
   }
 
-  
   /**
    * KB Initialization
    */
@@ -453,9 +391,9 @@ public class SoftwareRepository {
    * @return
    * @throws Exception
    */
-  public String addSoftware(Software sw) throws Exception {
+  public String addSoftware(Software sw, User user) throws Exception {
     if(sw.getId() == null) 
-      sw.setId(this.LIBNS() + "Software-" + EntityUtilities.shortUUID());
+      sw.setId(this.LIBNS() + "Software-" + GUID.get());
     
     if(sw.getType() == null)
       sw.setType(topclass);
@@ -467,14 +405,33 @@ public class SoftwareRepository {
         return sw.getId();
       }
     }
-    
+    String swid = updateOrAddSoftware(sw, user);
+    if(swid != null)  {
+      Provenance prov = this.prov.getAddProvenance(sw, user);
+      this.prov.addProvenance(prov);
+    }
+    return swid;
+  }
+  
+  public String createEntityId(String swid, Entity entity) {
+    MetadataType type = vocabulary.getType(entity.getType());
+    // Treat software entities specially 
+    if(vocabulary.isA(type, vocabulary.getType(topclass)))
+        return GUID.randomEntityId(swid, entity.getType());
+    return GUID.randomEntityId(swid, entity.getType());
+  }
+  
+  private String updateOrAddSoftware(Software sw, User user) throws Exception {
     KBAPI swkb = fac.getKB(sw.getId(), OntSpec.PLAIN, true);
     String swtype = sw.getType();
     if(swtype == null)
       swtype = topclass;
     KBObject swcls = this.ontkb.getConcept(swtype);
+
+    KBObject swobj = swkb.getIndividual(sw.getId());
+    if(swobj == null)
+      swobj = swkb.createObjectOfClass(sw.getId(), swcls);
     
-    KBObject swobj = swkb.createObjectOfClass(sw.getId(), swcls);
     if(swobj == null)
       return null;
     
@@ -487,19 +444,24 @@ public class SoftwareRepository {
         List<Entity> entities = sw.getPropertyValues().get(propid);
         MetadataProperty prop = vocabulary.getProperty(swprop.getID());
         
+        // Remove existing property values if any
+        for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
+          swkb.removeTriple(t);
+        
         for(Entity entity: entities) {
           MetadataType type = vocabulary.getType(entity.getType());
           
           // Treat software entities specially 
           if(vocabulary.isA(type, vocabulary.getType(topclass))) {
             if(entity.getId() == null || !this.hasSoftware(entity.getId())) {
+              entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
               String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-              String id = this.LIBNS() + etype + "-" + EntityUtilities.shortUUID();
+              String id = this.LIBNS() + etype + "-" + GUID.get();
               entity.setId(id);
               Software subsw = new Software(id);
               subsw.setLabel((String)entity.getValue());
               subsw.setType(entity.getType());
-              String swid = this.addSoftware(subsw);
+              String swid = this.addSoftware(subsw, user);
               entity.setId(swid);
             }
 
@@ -509,12 +471,10 @@ public class SoftwareRepository {
           }
           
           // Get entity adapter for class
-          // IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, entity.getType());
           IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
           if(adapter != null) {
             if(entity.getId() == null) {
-              String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-              entity.setId(sw.getId() + "#" + etype + "-" + EntityUtilities.shortUUID());
+              entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
             }
             if(adapter.saveEntity(entity)) {
               KBObject entityobj = swkb.getIndividual(entity.getId());
@@ -541,8 +501,9 @@ public class SoftwareRepository {
       //vocabulary.setNeedsReload(true);
       return sw.getId();
     }
-    return null;
+    return null;    
   }
+  
   
   /**
    * Updating software (for now just deleting old and adding new)
@@ -551,13 +512,14 @@ public class SoftwareRepository {
    * @return
    * @throws Exception
    */
-  public boolean updateSoftware(Software sw, String swid) throws Exception {
-    // Update Software in KB
-    // TODO: Only update properties that are changed
-    if(this.deleteSoftware(swid)) {
-      sw.setId(swid); 
-      this.addSoftware(sw);
-      //vocabulary.setNeedsReload(true);
+  public boolean updateSoftware(Software newsw, String swid, User user) 
+      throws Exception {
+    Software cursw = this.getSoftware(swid);
+    this.prov.getUpdateProvenance(cursw, newsw, user);
+    String nswid = this.updateOrAddSoftware(newsw, user);
+    if(nswid != null) {
+      Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
+      this.prov.addProvenance(prov);
       return true;
     }
     return false;
@@ -566,20 +528,7 @@ public class SoftwareRepository {
   // TODO: Change this call. Make it more efficient than
   //       crawling through the whole union graph ?
   public ArrayList<SoftwareSummary> getAllSoftware() throws Exception {
-    //ArrayList<SoftwareSummary> list = new ArrayList<SoftwareSummary>();
     return this.getAllSoftwareWithFacets(null);
-    /*KBAPI allkb = fac.getKB(uniongraph, OntSpec.PELLET);
-    KBObject swcls = allkb.getConcept(topclass);
-    ArrayList<KBObject> sws = allkb.getInstancesOfClass(swcls, true);
-    for(KBObject sw : sws) {
-      SoftwareSummary summary = new SoftwareSummary();
-      summary.setId(sw.getID());
-      summary.setName(sw.getName());
-      summary.setLabel(allkb.getLabel(sw));
-      summary.setType(allkb.getClassOfInstance(sw).getID());
-      list.add(summary);
-    }
-    return list;*/
   }
   
   public ArrayList<SoftwareSummary> getAllSoftwareWithFacets(
@@ -645,7 +594,7 @@ public class SoftwareRepository {
       for(MetadataProperty prop : this.vocabulary.getPropertiesForType(swtype)) {
         
         KBObject propobj = swkb.getProperty(prop.getId());
-        List<Entity> entities = new ArrayList<Entity>();
+        ArrayList<Entity> entities = new ArrayList<Entity>();
         for(KBObject valobj: swkb.getPropertyValues(swobj, propobj)) {
           
           MetadataType type = vocabulary.getType(prop.getRange());
@@ -667,9 +616,19 @@ public class SoftwareRepository {
         }
         sw.addPropertyValues(prop.getId(), entities);
       }
+      
+      sw.setProvenance(this.prov.getSoftwareProvenance(swid));
       return sw;
     }
     return null;
+  }
+  
+  public Provenance getProvenance(String swid) throws Exception {
+    return this.prov.getSoftwareProvenance(swid);
+  }
+
+  public String getProvenanceGraph(String swid) throws Exception {
+    return this.prov.getSoftwareProvenanceGraph(swid);
   }
   
   public boolean hasSoftware(String swid) throws Exception {
@@ -700,10 +659,10 @@ public class SoftwareRepository {
   
   public boolean deleteSoftware(String swid) throws Exception {
     KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
-    KBObject swobj = swkb.getIndividual(swid);
-    if (swkb.delete() && (swobj != null)) {
+    //KBObject swobj = swkb.getIndividual(swid);
+    if (swkb.delete()) { // && (swobj != null)) {
       deleteEnumerationFromVocabulary(swid);
-      //vocabulary.setNeedsReload(true);
+      this.prov.deleteSoftwareProvenance(swid);
       return true;
     }
     return false;

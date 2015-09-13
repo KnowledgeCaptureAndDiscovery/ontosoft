@@ -28,6 +28,10 @@ import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHa
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.Entity;
 import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.provenance.Activity;
+import org.ontosoft.shared.classes.provenance.Agent;
+import org.ontosoft.shared.classes.provenance.ProvEntity;
+import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -41,6 +45,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 
 public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   private HandlerManager handlerManager;
@@ -218,6 +224,23 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       
       this.add(ig);
       
+      Provenance prov = this.software.getProvenance();
+      ProvEntity pentity = prov.getEntity(entity.getId());
+      if(pentity != null) {
+        Activity activity = prov.getActivity(pentity.getGeneratedBy());
+        if(activity != null) {
+          Agent agent = prov.getAgent(activity.getAgentId());
+          if(agent != null) {
+            FormLabel flabel = new FormLabel();
+            flabel.addStyleName("provenance-label");
+            DateTimeFormat fmt = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_SHORT);
+            String datestr = fmt.format(activity.getTime());
+            flabel.setText("Last edited by " + agent.getName() + " at "+datestr);
+            this.add(flabel);
+          }
+        }
+      }
+      
       // Add for bookkeeping
       entities.add(entity);
       inputs.add(ip);
@@ -228,7 +251,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   }
   
   private Entity getNewEntity(Object value) {
-    return new Entity(GUID.randomEntityId(software.getId()), 
+    return new Entity(GUID.randomEntityId(software.getId(), property.getRange()), 
         value, property.getRange());
   }
   

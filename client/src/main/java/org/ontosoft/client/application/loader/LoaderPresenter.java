@@ -1,4 +1,4 @@
-package org.ontosoft.client.application.community;
+package org.ontosoft.client.application.loader;
 
 import org.ontosoft.client.application.ApplicationPresenter;
 import org.ontosoft.client.application.ParameterizedView;
@@ -11,19 +11,20 @@ import com.gwtplatform.mvp.client.annotations.NameToken;
 import com.gwtplatform.mvp.client.annotations.ProxyCodeSplit;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 
-public class CommunityPresenter extends
-    Presenter<CommunityPresenter.MyView, CommunityPresenter.MyProxy> {
+public class LoaderPresenter extends
+    Presenter<LoaderPresenter.MyView, LoaderPresenter.MyProxy> {
 
   @ProxyCodeSplit
-  @NameToken(NameTokens.community)
-  public interface MyProxy extends ProxyPlace<CommunityPresenter> {
+  @NameToken(NameTokens.router)
+  public interface MyProxy extends ProxyPlace<LoaderPresenter> {
   }
 
   public interface MyView extends ParameterizedView {
   }
 
   @Inject
-  public CommunityPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
+  public LoaderPresenter(EventBus eventBus, MyView view, MyProxy proxy) {
     super(eventBus, view, proxy, ApplicationPresenter.CONTENT_SLOT);
   }
+  
 }

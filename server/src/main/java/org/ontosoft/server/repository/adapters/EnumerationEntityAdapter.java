@@ -1,8 +1,8 @@
 package org.ontosoft.server.repository.adapters;
 
-import org.ontosoft.server.repository.EntityUtilities;
 import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 
 import edu.isi.wings.ontapi.KBAPI;
@@ -55,7 +55,7 @@ public class EnumerationEntityAdapter extends EntityAdapter {
     // If no entity found, then create a new one
     if(entityobj == null) {
       String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-      entity.setId(repo.ENUMNS() + etype + "-" + EntityUtilities.shortUUID());
+      entity.setId(repo.ENUMNS() + etype + "-" + GUID.get());
       entityobj = this.enumkb.createObjectOfClass(entity.getId(), entityClass);
       this.enumkb.setLabel(entityobj, (String)entity.getValue());
       

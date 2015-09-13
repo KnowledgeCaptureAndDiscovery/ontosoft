@@ -1,5 +1,7 @@
 package org.ontosoft.client;
 
+import org.ontosoft.client.authentication.SessionStorage;
+
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -12,6 +14,7 @@ public class OntoSoftClient implements EntryPoint {
   int num = 0;
   
   public void onModuleLoad() {
+    SessionStorage.loadSession();
     loadMaterialScripts();
   }
   

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.provenance.Provenance;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,6 +18,7 @@ public class Software {
   String type;
   String label;
   Map<String, List<Entity>> propertyValues;
+  Provenance provenance;
   
   @JsonIgnore
   boolean dirty;
@@ -154,5 +156,13 @@ public class Software {
 
   public void setDirty(boolean dirty) {
     this.dirty = dirty;
+  }
+
+  public Provenance getProvenance() {
+    return provenance;
+  }
+
+  public void setProvenance(Provenance provenance) {
+    this.provenance = provenance;
   }
 }

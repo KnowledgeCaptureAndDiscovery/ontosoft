@@ -1,12 +1,12 @@
 package org.ontosoft.client.application.list;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import org.gwtbootstrap3.client.shared.event.ModalShownEvent;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Modal;
@@ -18,12 +18,14 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.ontosoft.client.application.ParameterizedViewImpl;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.facet.FacetedSearchPanel;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.cell.client.CheckboxCell;
@@ -32,6 +34,8 @@ import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
@@ -54,8 +58,7 @@ import com.google.inject.Inject;
 public class SoftwareListView extends ParameterizedViewImpl 
   implements SoftwareListPresenter.MyView {
   
-  boolean isadmin;
-  String authparam = "";
+  boolean isreguser, isadmin;
   
   @UiField
   Button publishbutton, cancelbutton, bigpublishbutton, clearsearch;
@@ -147,26 +150,27 @@ public class SoftwareListView extends ParameterizedViewImpl
   
   @Override
   public void initializeParameters(String[] params) {
-    // Check for admin token
-    if(params.length > 0) {
-      if(params[params.length - 1].equals("__admin")) {
+    UserSession session = SessionStorage.getSession();
+    this.isreguser = false;
+    this.isadmin = false;
+    if( session != null) {
+      this.isreguser = true;
+      if (session.getRoles().contains("admin"))
         this.isadmin = true;
-        this.authparam = "/__admin";
-        params = Arrays.copyOf(params, params.length - 1);
-      }
-    } else {
-      this.authparam = "";
-      this.isadmin = false;
     }
-    
-    if(params.length == 0) {
-      if(isadmin) {
-        table.addStyleName("admin-table");
-      }
-      else {
-        table.removeStyleName("admin-table");
-      }
-    }
+    redrawControls();
+  }
+  
+  public void redrawControls() {
+    table.removeStyleName("admin-table");
+    table.removeStyleName("registered-user-table");
+    bigpublishbutton.getParent().setVisible(false);
+    if(this.isadmin)
+      table.addStyleName("admin-table");
+    if(this.isreguser)
+      table.addStyleName("registered-user-table");
+    if(this.isadmin || this.isreguser)
+      bigpublishbutton.getParent().setVisible(true);
   }
   
   private void initTable() {
@@ -236,7 +240,8 @@ public class SoftwareListView extends ParameterizedViewImpl
       }
     });
     table.setColumnWidth(editcol, "50px");
-    table.addColumn(editcol);    
+    editcol.setCellStyleNames("registered-user-cell");
+    table.addColumn(editcol);
     
     // Delete Button Column
     deletecolumn = new Column<SoftwareSummary, String>(
@@ -310,13 +315,38 @@ public class SoftwareListView extends ParameterizedViewImpl
       );
     }
   }
-
+  
+  @UiHandler("publishdialog")
+  void onShowWindow(ModalShownEvent event) {
+    softwarelabel.setFocus(true);
+  }
+  
+  @UiHandler("bigpublishbutton")
+  void onOpenPublishButtonClick(ClickEvent event) {
+    publishdialog.show();
+  }
   
   @UiHandler("publishbutton")
   void onPublishButtonClick(ClickEvent event) {
-    String label = softwarelabel.getValue();
+    submitPublishForm();
+    event.stopPropagation();
+  }
+  
+  @UiHandler("softwarelabel")
+  void onSoftwareEnter(KeyPressEvent event) {
+    if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+      submitPublishForm();
+    }
+  }
+  
+  @UiHandler("cancelbutton")
+  void onCancelPublish(ClickEvent event) {
     softwarelabel.setValue(null);
-    if(label != null && !label.equals("")) {
+  }
+  
+  private void submitPublishForm() {
+    String label = softwarelabel.getValue();
+    if(softwarelabel.validate(true)) {
       Software tmpsw = new Software();
       tmpsw.setLabel(label);
       SoftwareREST.publishSoftware(tmpsw, new Callback<Software, Throwable>() {
@@ -325,20 +355,17 @@ public class SoftwareListView extends ParameterizedViewImpl
           SoftwareSummary newsw = new SoftwareSummary(sw);
           addToList(newsw);
           updateList();
-
+          
           // Go to the new item
           History.newItem(NameTokens.publish + "/" + sw.getName());
+          
+          publishdialog.hide();
+          softwarelabel.setValue(null);
         }
         @Override
         public void onFailure(Throwable exception) { }
       });
-    }
-  }
-  
-  @UiHandler("cancelbutton")
-  void onCancelPublish(ClickEvent event) {
-    softwarelabel.setValue(null);
-    publishdialog.hide();
+    } 
   }
   
   private void addToList(SoftwareSummary summary) {
@@ -445,4 +472,5 @@ public class SoftwareListView extends ParameterizedViewImpl
       History.newItem(NameTokens.compare + "/" + idtext);
     }
   }
+
 }

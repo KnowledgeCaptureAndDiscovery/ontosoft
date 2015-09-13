@@ -119,7 +119,25 @@
 				</executions>
 				<inherited>true</inherited>
 				<configuration>
-					<enableClosureCompiler>true</enableClosureCompiler>
+					<methodNameDisplayMode>NONE</methodNameDisplayMode>
+					<namespace>NONE</namespace>
+					<style>OBFUSCATED</style>
+					<sourceLevel>auto</sourceLevel>
+					<!--compileReport>true</compileReport>
+					<nocompilerMetrics>true</nocompilerMetrics-->
+					<nocheckCasts>true</nocheckCasts>
+					<noclassMetadata>true</noclassMetadata>
+					<clusterFunction>true</clusterFunction>
+					<inlineLiteralParameters>true</inlineLiteralParameters>
+					<optimizeDataflow>true</optimizeDataflow>
+					<!--noincrementalCompileWarnings>true</noincrementalCompileWarnings>
+					<enableJsonSoyc>true</enableJsonSoyc-->
+					<nooverlappingSourceWarnings>true</nooverlappingSourceWarnings>
+					<!--saveSource>true</saveSource>
+					<soycReport>true</soycReport>
+					<nodetailedSoyc>true</nodetailedSoyc-->
+					<optimize>9</optimize>
+					<!--enableClosureCompiler>true</enableClosureCompiler-->
 				</configuration>
 			</plugin>
 			<plugin>

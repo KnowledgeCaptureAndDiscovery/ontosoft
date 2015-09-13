@@ -8,13 +8,13 @@ import com.google.inject.Inject;
 import com.google.web.bindery.event.shared.EventBus;
 import com.gwtplatform.mvp.client.Presenter;
 import com.gwtplatform.mvp.client.annotations.NameToken;
-import com.gwtplatform.mvp.client.annotations.ProxyStandard;
+import com.gwtplatform.mvp.client.annotations.ProxyCodeSplit;
 import com.gwtplatform.mvp.client.proxy.ProxyPlace;
 
 public class ComparePresenter extends
     Presenter<ComparePresenter.MyView, ComparePresenter.MyProxy> {
 
-  @ProxyStandard
+  @ProxyCodeSplit
   @NameToken(NameTokens.compare)
   public interface MyProxy extends ProxyPlace<ComparePresenter> {
   }

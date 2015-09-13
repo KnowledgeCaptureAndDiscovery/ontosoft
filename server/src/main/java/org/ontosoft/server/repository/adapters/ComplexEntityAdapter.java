@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.ontosoft.server.repository.EntityUtilities;
 import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.util.GUID;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
@@ -67,7 +67,7 @@ public class ComplexEntityAdapter extends EntityAdapter {
           IEntityAdapter adapter = EntityRegistrar.getAdapter(kb, ontkb, enumkb, subentity.getType());
           if(adapter != null) {
             if(subentity.getId() == null) {
-              subentity.setId(entity.getId() + "-" + EntityUtilities.shortUUID());
+              subentity.setId(entity.getId() + "-" + GUID.get());
             }
             if(adapter.saveEntity(subentity)) {
               KBObject subentityobj = kb.getIndividual(subentity.getId());

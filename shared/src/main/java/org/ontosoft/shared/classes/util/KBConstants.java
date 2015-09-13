@@ -3,6 +3,7 @@ package org.ontosoft.shared.classes.util;
 public class KBConstants {
   private static String onturi = "http://ontosoft.org/software";
   private static String caturi = "http://ontosoft.org/softwareCategories";
+  private static String provuri = "http://www.w3.org/ns/prov-o";
   
   private static String provns = "http://www.w3.org/ns/prov#";
   private static String owlns = "http://www.w3.org/2002/07/owl#";
@@ -34,6 +35,10 @@ public class KBConstants {
   
   public static String CATNS() {
     return caturi + "#";
+  }
+  
+  public static String PROVURI() {
+    return provuri;
   }
   
   public static String PROVNS() {

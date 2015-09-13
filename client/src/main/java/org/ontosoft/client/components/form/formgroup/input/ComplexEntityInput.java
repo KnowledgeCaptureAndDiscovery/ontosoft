@@ -43,7 +43,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
     
     MetadataType type = vocabulary.getType(this.property.getRange());
     for(MetadataProperty subprop : vocabulary.getPropertiesForType(type)) {
-      String subentityid = e.getId() + "-" + GUID.get(12);  
+      String subentityid = e.getId() + "-" + GUID.get();  
       Entity subentity = new Entity(subentityid, null, subprop.getRange());
       try {
         subprop.setRequired(prop.isRequired());

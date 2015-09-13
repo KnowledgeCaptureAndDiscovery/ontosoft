@@ -53,6 +53,8 @@
 	<!-- Entry Point -->
 	<entry-point class='org.ontosoft.client.OntoSoftClient' />
 
+	<set-property name="compiler.stackMode" value="strip" />
+	
 	<source path='client' />
 	<source path='shared' />
 

@@ -11,11 +11,13 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 
 import org.fusesource.restygwt.client.DirectRestService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.users.UserCredentials;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -23,24 +25,42 @@ import org.ontosoft.shared.search.EnumerationFacet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Path("software")
+@Path("")
 public interface SoftwareService extends DirectRestService {
   /*
    * Query functions
    */
   @GET
+  @Path("software")
   @Produces("application/json")
   public List<SoftwareSummary> list();
-
+  
+  @POST
+  @Path("search")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public List<SoftwareSummary> listWithFacets(
+      @JsonProperty("facets") List<EnumerationFacet> facets);
+  
   @GET
-  @Path("{name}")
+  @Path("software/{name}")
   @Produces("application/json")
   public Software get(@PathParam("name") String name);
 
   @GET
-  @Path("{name}")
+  @Path("software/{name}")
   @Produces("application/rdf+xml")
   public String getGraph(@PathParam("name") String name);
+  
+  @GET
+  @Path("software/{name}/provenance")
+  @Produces("application/json")
+  public Provenance getProvenance(@PathParam("name") String name);
+
+  @GET
+  @Path("software/{name}/provenance")
+  @Produces("application/rdf+xml")
+  public String getProvenanceGraph(@PathParam("name") String name);
   
   @GET
   @Path("vocabulary")
@@ -50,51 +70,43 @@ public interface SoftwareService extends DirectRestService {
   @GET
   @Path("vocabulary/reload")
   @Produces("text/html")
-  public void reloadVocabulary();
-
-  @GET
-  @Path("type/enumerations")
-  @Produces("application/json")
-  public List<MetadataEnumeration> getEnumerationsForType(@QueryParam("type") String type);
+  public String reloadVocabulary();
   
   @GET
-  @Path("enumerations")
+  @Path("software/enumerations")
   @Produces("application/json")
   public Map<String, List<MetadataEnumeration>> getEnumerations();
-    
+
   @POST
-  @Path("list/facets")
+  @Path("software/enumerations/type")
   @Produces("application/json")
-  @Consumes("application/json")
-  public List<SoftwareSummary> listWithFacets(
-      @JsonProperty("facets") List<EnumerationFacet> facets);
+  public List<MetadataEnumeration> getEnumerationsForType(@JsonProperty("type") String type);
 
   /*
    * Edit functions
    */
   @POST
+  @Path("software")
   @Produces("application/json")
   @Consumes("application/json")
   public Software publish(@JsonProperty("software") Software software);
 
   @PUT
-  @Path("{name}")
+  @Path("software/{name}")
   @Produces("application/json")
   @Consumes("application/json")
   public Software update(@PathParam("name") String name,
       @JsonProperty("software") Software software);
 
   @DELETE
-  @Path("{name}")
+  @Path("software/{name}")
   @Produces("text/html")
   public void delete(@PathParam("name") String name);
 
-  
   @DELETE
-  @Path("enumerations/{name}")
+  @Path("software/enumerations/{name}")
   @Produces("text/html")
   public void deleteEnumeration(@PathParam("name") String name);
-  
   
   /*
    * Query via POST
@@ -107,4 +119,26 @@ public interface SoftwareService extends DirectRestService {
   public PluginResponse runPlugin(
       @PathParam("name") String name,
       @JsonProperty("software") Software software);
+  
+  /**
+   * Authentication
+   */
+  @POST
+  @Path("login")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public UserSession login(
+      @JsonProperty("credentials") UserCredentials credentials);
+
+  @POST
+  @Path("validate")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public UserSession validateSession(UserSession session);
+  
+  @POST
+  @Path("logout")
+  @Consumes("application/json")
+  public void logout(UserSession session);
+  
 }

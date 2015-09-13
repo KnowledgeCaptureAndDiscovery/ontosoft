@@ -31,7 +31,7 @@ public class Validators {
     public List<EditorError> validate(Editor<Double> editor, Double value) {
       List<EditorError> result = new ArrayList<EditorError>();
       if (value == null)
-        result.add(new BasicEditorError(editor, value, null));
+        result.add(new BasicEditorError(editor, value, "Not a valid number"));
       return result;
     }
 
