@@ -16,8 +16,6 @@ import org.fusesource.restygwt.client.DirectRestService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.provenance.Provenance;
-import org.ontosoft.shared.classes.users.UserCredentials;
-import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -108,10 +106,9 @@ public interface SoftwareService extends DirectRestService {
   @Produces("text/html")
   public void deleteEnumeration(@PathParam("name") String name);
   
-  /*
-   * Query via POST
+  /**
+   * Run Plugin
    */
-  
   @POST
   @Path("plugin/{name}/run")
   @Produces("application/json")
@@ -120,25 +117,5 @@ public interface SoftwareService extends DirectRestService {
       @PathParam("name") String name,
       @JsonProperty("software") Software software);
   
-  /**
-   * Authentication
-   */
-  @POST
-  @Path("login")
-  @Produces("application/json")
-  @Consumes("application/json")
-  public UserSession login(
-      @JsonProperty("credentials") UserCredentials credentials);
-
-  @POST
-  @Path("validate")
-  @Produces("application/json")
-  @Consumes("application/json")
-  public UserSession validateSession(UserSession session);
-  
-  @POST
-  @Path("logout")
-  @Consumes("application/json")
-  public void logout(UserSession session);
   
 }

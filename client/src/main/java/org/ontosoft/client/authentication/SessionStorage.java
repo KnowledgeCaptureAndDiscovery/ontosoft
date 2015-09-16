@@ -1,6 +1,6 @@
 package org.ontosoft.client.authentication;
 
-import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.users.UserSession;
 
 import com.google.gwt.core.client.Callback;
@@ -25,7 +25,7 @@ public class SessionStorage {
     if(session_string != null) {
       UserSession cachedSession = UserSession.getSession(session_string);
       // Check session validity
-      SoftwareREST.validateSession(cachedSession, new Callback<UserSession, Throwable>() {
+      UserREST.validateSession(cachedSession, new Callback<UserSession, Throwable>() {
         @Override
         public void onSuccess(UserSession session) {}
         @Override

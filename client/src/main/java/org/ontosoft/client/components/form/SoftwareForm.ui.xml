@@ -15,12 +15,6 @@
 				text="Optional" />
 		</b:NavTabs>
 		<b:Well>
-			<g:VerticalPanel width="100%" horizontalAlignment="CENTER">
-				<b:Button type="PRIMARY" ui:field="savebutton" text="Save"
-					icon="SAVE" size="SMALL" visible="false" />
-				<b:Button type="DANGER" ui:field="deletebutton" text="Delete"
-					icon="REMOVE" size="SMALL" visible="false" />
-			</g:VerticalPanel>
 			<b:TabContent>
 				<b:TabPane active="true" b:id="required" ui:field="requiredtab" />
 				<b:TabPane b:id="optional" ui:field="optionaltab" />

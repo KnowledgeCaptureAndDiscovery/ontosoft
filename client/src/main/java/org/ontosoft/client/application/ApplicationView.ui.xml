@@ -26,15 +26,24 @@
 								targetHistoryToken="{nameTokens.getTraining}" />																
 						</b:NavbarNav>
 						<b:NavbarNav pull="RIGHT">
-							<b:Button type="INFO" size="SMALL" text="Login" ui:field="login" />
-							<b:Button type="INFO" size="SMALL" text="Logout" ui:field="logout" 
-								visible="false"/>								
+							<b:AnchorListItem icon="SIGN_IN" text="Login" ui:field="login" />
+							<b:AnchorListItem icon="USER_PLUS" text="Register" ui:field="register" 
+								targetHistoryToken="{nameTokens.getUsers}" />	
+							<b:ListDropDown ui:field="userdropdown" visible="true">
+								<b:AnchorButton icon="USER" ui:field="usertext" 
+									dataToggle="DROPDOWN">[User]</b:AnchorButton>
+								<b:DropDownMenu>
+									<b:AnchorListItem icon="EDIT" text="Edit"
+										targetHistoryToken="{nameTokens.getUsers}" />
+									<b:AnchorListItem icon="SIGN_OUT" text="Logout" ui:field="logout"/>
+								</b:DropDownMenu>
+							</b:ListDropDown>							
 						</b:NavbarNav>
 					</b:NavbarCollapse>
 				</b:Container>
 			</b:Navbar>
 			
-			<b:Modal title="Login" closable="true" fade="true" b:id="loginForm" ui:field="loginform">
+			<b:Modal title="Login" closable="true" fade="true" ui:field="loginform">
 				<b:ModalBody>
 					<b:FormGroup>
 						<b:HelpBlock />					

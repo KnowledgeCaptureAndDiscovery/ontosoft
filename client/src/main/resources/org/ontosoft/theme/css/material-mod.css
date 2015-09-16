@@ -46,6 +46,14 @@ a, a:hover, a:focus {
   color: #5D7BA0;
 }
 
+input[type=checkbox], input[type=radio] {
+  margin-right: 8px !important;
+}
+
+.gwt-CheckBox label {
+  font-weight: 100 !important;
+}
+
 pre.wordbreak
 {
 	font-size:80%;
@@ -421,6 +429,7 @@ fieldset.bordered-fieldset {
 	font-size: 0.95em;
 }
 #required .form-group.has-error .control-label,
+.required .form-group.has-error .control-label,
 .browse-label.error-label {
 	background-color: rgba(212, 32, 65,0.05) !important;
 	border: 1px solid rgba(212, 32, 65,0.08) !important;	
@@ -432,14 +441,16 @@ fieldset.bordered-fieldset {
 	background-color: #F9F9F9 !important;
 	border: 1px solid #F0F0F0 !important;		
 }
-.form-group .control-label.provenance-label {
+.provenance-label {
+	font-family: 'Roboto Condensed';
 	background: none !important;
 	border: none !important;
-	color: #CCC !important;
+	color: #C0C0C0 !important;
 	font-weight: normal !important;
-	font-size: 80% !important;
-	padding: 0px !important;
+	font-size: 85% !important;
+	padding: 1px !important;
     margin: 0px !important;
+    display: block;
 }
 
 /* Autogrow Text area */

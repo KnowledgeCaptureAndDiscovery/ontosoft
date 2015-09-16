@@ -6,7 +6,11 @@ import java.util.List;
 public class UserCredentials {
   int id;
   String name;
+  String fullname;
   String password;
+  String email;
+  String affiliation;
+  
   List<String> roles;
 
   public UserCredentials() {
@@ -41,7 +45,31 @@ public class UserCredentials {
     return roles;
   }
 
-  public void setRoles(ArrayList<String> roles) {
+  public void setRoles(List<String> roles) {
     this.roles = roles;
+  }
+
+  public String getFullname() {
+    return fullname;
+  }
+
+  public void setFullname(String fullname) {
+    this.fullname = fullname;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public String getAffiliation() {
+    return affiliation;
+  }
+
+  public void setAffiliation(String affiliation) {
+    this.affiliation = affiliation;
   }
 }

@@ -20,13 +20,10 @@ import javax.ws.rs.core.SecurityContext;
 
 import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.server.users.User;
-import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.provenance.Provenance;
-import org.ontosoft.shared.classes.users.UserCredentials;
-import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -288,7 +285,7 @@ public class SoftwareResource implements SoftwareService {
   }
   
   /**
-   * Query via POST
+   * Run Plugin
    */
   @POST
   @Path("plugin/{name}/run")
@@ -308,38 +305,7 @@ public class SoftwareResource implements SoftwareService {
     }
     return null;
   }
-  
-  /**
-   * Authentication
-   */
-  @POST
-  @Path("login")
-  @Produces("application/json")
-  @Consumes("application/json")
-  @Override
-  public UserSession login(
-      @JsonProperty("credentials") UserCredentials credentials) {
-    return UserDatabase.get().login(credentials);
-  }
-  
-  @POST
-  @Path("validate")
-  @Produces("application/json")
-  @Consumes("application/json")
-  @Override
-  public UserSession validateSession(
-      @JsonProperty("session") UserSession session) {
-    return UserDatabase.get().validateSession(session);
-  }
-  
-  @POST
-  @Path("logout")
-  @Consumes("application/json")
-  @Override
-  public void logout(UserSession session) {
-    UserDatabase.get().logout(session);
-  }
-  
+
   /**
    * Exports
    */

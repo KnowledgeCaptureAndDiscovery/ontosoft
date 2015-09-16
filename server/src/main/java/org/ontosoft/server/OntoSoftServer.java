@@ -5,6 +5,7 @@ import javax.annotation.PreDestroy;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.ontosoft.server.api.impl.SoftwareResource;
+import org.ontosoft.server.api.impl.UserResource;
 import org.ontosoft.server.filters.AcceptHeaderFilter;
 import org.ontosoft.server.filters.CORSResponseFilter;
 import org.ontosoft.server.filters.UserAuthenticationFilter;
@@ -17,6 +18,7 @@ class OntoSoftServer extends ResourceConfig {
     register(CORSResponseFilter.class);
     register(RolesAllowedDynamicFeature.class);
     register(UserAuthenticationFilter.class);
+    register(UserResource.class);
     register(SoftwareResource.class);
   }
 

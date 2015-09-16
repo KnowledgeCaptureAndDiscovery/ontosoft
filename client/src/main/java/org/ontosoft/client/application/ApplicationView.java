@@ -4,12 +4,16 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 
 import org.gwtbootstrap3.client.shared.event.ModalShownEvent;
+import org.gwtbootstrap3.client.ui.AnchorButton;
+import org.gwtbootstrap3.client.ui.AnchorListItem;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Input;
+import org.gwtbootstrap3.client.ui.ListDropDown;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.ontosoft.client.authentication.SessionStorage;
-import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.client.rest.AppNotification;
+import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.users.UserCredentials;
 import org.ontosoft.shared.classes.users.UserSession;
 
@@ -38,8 +42,17 @@ public class ApplicationView extends ViewImpl implements
   Input password;
   
   @UiField
-  Button loginbutton, login, logout;
+  Button loginbutton;
+  
+  @UiField
+  AnchorListItem login, register, logout;
 
+  @UiField
+  ListDropDown userdropdown;
+  
+  @UiField
+  AnchorButton usertext;
+  
   @UiField
   Modal loginform;
   
@@ -76,10 +89,10 @@ public class ApplicationView extends ViewImpl implements
   
   @UiHandler("logout")
   public void onLogout(ClickEvent event) {
-    SoftwareREST.logout(new Callback<Void, Throwable>() {
+    UserREST.logout(new Callback<Void, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
-        SoftwareREST.notifyFailure(reason.getMessage());
+        AppNotification.notifyFailure(reason.getMessage());
       }
       @Override
       public void onSuccess(Void session) {
@@ -100,10 +113,10 @@ public class ApplicationView extends ViewImpl implements
       UserCredentials credentials = new UserCredentials();
       credentials.setName(username.getValue());
       credentials.setPassword(password.getValue());
-      SoftwareREST.login(credentials, new Callback<UserSession, Throwable>() {
+      UserREST.login(credentials, new Callback<UserSession, Throwable>() {
         @Override
         public void onFailure(Throwable reason) {
-          SoftwareREST.notifyFailure(reason.getMessage());
+          AppNotification.notifyFailure(reason.getMessage());
         }
         @Override
         public void onSuccess(UserSession session) {
@@ -125,12 +138,14 @@ public class ApplicationView extends ViewImpl implements
     UserSession session = SessionStorage.getSession();
     if(session == null) {
       login.setVisible(true);
-      logout.setVisible(false);
+      register.setVisible(true);
+      userdropdown.setVisible(false);
     }
     else {
       login.setVisible(false);
-      logout.setText("Logout " + session.getUsername());
-      logout.setVisible(true);
+      register.setVisible(false);
+      usertext.setText(session.getUsername());
+      userdropdown.setVisible(true);
     }
   }
 

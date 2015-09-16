@@ -16,6 +16,8 @@ import org.ontosoft.client.application.publish.PublishPresenter;
 import org.ontosoft.client.application.publish.PublishView;
 import org.ontosoft.client.application.training.TrainingPresenter;
 import org.ontosoft.client.application.training.TrainingView;
+import org.ontosoft.client.application.users.UserPresenter;
+import org.ontosoft.client.application.users.UserView;
 
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 
@@ -43,7 +45,9 @@ public class ApplicationModule extends AbstractPresenterModule {
     bindPresenter(SoftwareListPresenter.class, SoftwareListPresenter.MyView.class,
         SoftwareListView.class, SoftwareListPresenter.MyProxy.class);
     bindPresenter(ComparePresenter.class, ComparePresenter.MyView.class,
-        CompareView.class, ComparePresenter.MyProxy.class);    
+        CompareView.class, ComparePresenter.MyProxy.class);
+    bindPresenter(UserPresenter.class, UserPresenter.MyView.class,
+        UserView.class, UserPresenter.MyProxy.class);        
   }
 
 }

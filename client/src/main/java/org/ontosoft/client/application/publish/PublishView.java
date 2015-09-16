@@ -341,12 +341,21 @@ public class PublishView extends ParameterizedViewImpl
     breadcrumbs.clear();
     breadcrumbs.setVisible(true);
     
-    AnchorListItem anchor = null;
+    String swlabel = piechart.getSoftware().getLabel();
+    if (swlabel == null)
+      swlabel = piechart.getSoftware().getName();
+    AnchorListItem anchor = new AnchorListItem(swlabel);
+    anchor.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        History.newItem(NameTokens.browse + "/" + softwarename);
+      }
+    });
+    anchor.setStyleName("first-crumb");
+    breadcrumbs.add(anchor);
+
     if(piechart != null && piechart.getSoftware() != null) {
-      String swlabel = piechart.getSoftware().getLabel();
-      if(swlabel == null)
-        swlabel = piechart.getSoftware().getName();
-      anchor = new AnchorListItem(swlabel);
+      anchor = new AnchorListItem("Edit");
       anchor.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
@@ -356,9 +365,9 @@ public class PublishView extends ParameterizedViewImpl
           //initSoftware(softwarename);
         }
       });
-      anchor.setStyleName("first-crumb");
+      anchor.setStyleName("");
       breadcrumbs.add(anchor);
-    }
+    }    
     if(piechart != null) {
       final String catid = piechart.getActiveCategoryId();
       if(catid != null) {

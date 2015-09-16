@@ -18,12 +18,12 @@
     </parent>
 
 	<properties>
-		<jersey.version>2.8</jersey.version>
+		<jersey.version>2.21</jersey.version>
 		<javax.rs-api.version>2.0.1</javax.rs-api.version>
 		<jackson.version>2.4.6</jackson.version>
 		<commons-configuration.version>1.10</commons-configuration.version>
 		<wings-ontapi.version>4.0-SNAPSHOT</wings-ontapi.version>
-
+		<jbcrypt.version>0.3m</jbcrypt.version>
 		<java.version>1.7</java.version>		
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -100,6 +100,13 @@
             <version>${commons-configuration.version}</version>
         </dependency>		
 
+		<!-- Password encryption -->
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>${jbcrypt.version}</version>
+		</dependency>
+		
 	</dependencies>
     
 	<build>

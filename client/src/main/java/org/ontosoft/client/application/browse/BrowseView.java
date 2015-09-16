@@ -9,12 +9,14 @@ import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.Well;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
 import org.ontosoft.client.application.ParameterizedViewImpl;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.browse.EntityBrowser;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.Entity;
 import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
@@ -79,6 +81,9 @@ public class BrowseView extends ParameterizedViewImpl
       this.softwarename = params[0];
       initSoftware(this.softwarename);
     }
+    UserSession session = SessionStorage.getSession();
+    if(session != null && session.getUsername() != null)
+      editbutton.setVisible(true);
   }
   
   private void initVocabulary() {
@@ -130,6 +135,7 @@ public class BrowseView extends ParameterizedViewImpl
   private void clear() {
     htmlbutton.getParent().setVisible(false);
     editbutton.getParent().setVisible(false);
+    editbutton.setVisible(false);
     piechart.setVisible(false);
     softwareBody.setVisible(false);
     softwareTitle.setVisible(false);

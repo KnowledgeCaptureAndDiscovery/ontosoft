@@ -38,7 +38,7 @@
 					<b:Button size="SMALL" type="INFO" text="Rate" icon="STAR"
 						ui:field="ratebutton" enabled="false"/>
 					<b:Button size="SMALL" type="INFO" text="Edit" icon="EDIT"
-						ui:field="editbutton" visible="false" />
+						ui:field="editbutton" />
 				</b:ButtonGroup>
 			</g:FlowPanel>
 			<g:VerticalPanel styleName="maxwidth-panel" width="100%" ui:field="softwareBody" />

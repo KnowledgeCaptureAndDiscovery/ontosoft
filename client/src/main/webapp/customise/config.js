@@ -18,7 +18,9 @@ CONFIG.HOME = " \
 	        about software, including input requirements, physical variables and \
 	        assumptions, and software runtime dependencies. OntoSoft uses this \
 	        structured metadata to improve search, to facilitate software reuse, \
-	        and to support software integration.</li> \
+	        and to support software integration. \
+	        <a href=\'#list\'><b>START HERE</b></a> to publish your own software in OntoSoft. \
+	        Please register for an account in order to publish</center></li> \
 	    <li><b>Assisting geoscientists to make their software more \
 	            reusable.</b> OntoSoft includes mini-tutorials to introduce geoscientists \
 	        to topics such as licenses, software libraries, and software reuse.</li> \

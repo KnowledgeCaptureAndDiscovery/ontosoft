@@ -6,6 +6,7 @@ import org.ontosoft.client.application.browse.BrowseView;
 import org.ontosoft.client.application.compare.CompareView;
 import org.ontosoft.client.application.list.SoftwareListView;
 import org.ontosoft.client.application.publish.PublishView;
+import org.ontosoft.client.application.users.UserView;
 import org.ontosoft.client.place.NameTokens;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -36,7 +37,7 @@ public class ApplicationPresenter extends
   public ApplicationPresenter(EventBus eventBus, final MyView view, MyProxy proxy,
       final PlaceManager placemanager, final PublishView publishview,
       final BrowseView browseview, final SoftwareListView listview, 
-      final CompareView compareview) {
+      final CompareView compareview, final UserView userview) {
     super(eventBus, view, proxy, RevealType.Root);
     
     final PlaceRequest.Builder builder = new PlaceRequest.Builder();
@@ -57,6 +58,8 @@ public class ApplicationPresenter extends
           sectionview = listview;        
         else if(nametoken.equals(NameTokens.compare))
           sectionview = compareview;
+        else if(nametoken.equals(NameTokens.users))
+          sectionview = userview;        
 
         // Reveal called view with parameters
         if(sectionview != null) {

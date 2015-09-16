@@ -8,18 +8,11 @@ import org.fusesource.restygwt.client.Defaults;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.REST;
-import org.gwtbootstrap3.client.ui.constants.IconType;
-import org.gwtbootstrap3.extras.notify.client.constants.NotifyType;
-import org.gwtbootstrap3.extras.notify.client.ui.Notify;
-import org.gwtbootstrap3.extras.notify.client.ui.NotifySettings;
 import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
-import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
-import org.ontosoft.shared.classes.users.UserCredentials;
-import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -35,7 +28,7 @@ import com.google.gwt.http.client.URL;
 
 public class SoftwareREST {
   public static SoftwareService softwareService;
-  
+
   private static Vocabulary vocabulary;
   private static List<SoftwareSummary> softwareList;
   private static HashMap<String, Software> softwareCache = 
@@ -62,64 +55,6 @@ public class SoftwareREST {
     return softwareService;
   }
   
-  public static void login(UserCredentials credentials, 
-      final Callback<UserSession, Throwable> callback) {
-    if(SessionStorage.getSession() != null) {
-      callback.onSuccess(SessionStorage.getSession());
-    }
-    else {
-      REST.withCallback(new MethodCallback<UserSession>() {
-        @Override
-        public void onFailure(Method method, Throwable exception) {
-          callback.onFailure(exception);
-        }
-        @Override
-        public void onSuccess(Method method, UserSession session) {
-          if(session != null) {
-            SessionStorage.setSession(session);
-            callback.onSuccess(session);
-          }
-          else
-            callback.onFailure(new Throwable("Login incorrect"));
-        }
-      }).call(getSoftwareService()).login(credentials);
-    }
-  }
-  
-  public static void validateSession(UserSession session, 
-      final Callback<UserSession, Throwable> callback) {
-    REST.withCallback(new MethodCallback<UserSession>() {
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
-      }
-      @Override
-      public void onSuccess(Method method, UserSession session) {
-        SessionStorage.setSession(session);
-        callback.onSuccess(session);
-      }
-    }).call(getSoftwareService()).validateSession(session);
-  }
-  
-  public static void logout(final Callback<Void, Throwable> callback) {
-    if(SessionStorage.getSession() == null) {
-      callback.onFailure(new Throwable("Not logged in"));
-    }
-    else {
-      REST.withCallback(new MethodCallback<Void>() {
-        @Override
-        public void onFailure(Method method, Throwable exception) {
-          callback.onFailure(exception);
-        }
-        @Override
-        public void onSuccess(Method method, Void response) {
-          SessionStorage.setSession(null);
-          callback.onSuccess(response);
-        }
-      }).call(getSoftwareService()).logout(SessionStorage.getSession());
-    }
-  }
-  
   public static void getVocabulary(final Callback<Vocabulary, Throwable> callback,
       boolean reload) {
     if(vocabulary != null && !reload) {
@@ -139,7 +74,7 @@ public class SoftwareREST {
           }
           @Override
           public void onFailure(Method method, Throwable exception) {
-            notifyFailure("Could not load vocabulary");
+            AppNotification.notifyFailure("Could not load vocabulary");
             callback.onFailure(exception);
           }
         }).call(getSoftwareService()).getVocabulary();        
@@ -169,7 +104,7 @@ public class SoftwareREST {
           }
           @Override
           public void onFailure(Method method, Throwable exception) {
-            notifyFailure("Could not load software list");
+            AppNotification.notifyFailure("Could not load software list");
             callback.onFailure(exception);
           }
         }).call(getSoftwareService()).list();
@@ -208,18 +143,18 @@ public class SoftwareREST {
           if(sw != null) {
             softwareCache.put(sw.getName(), sw);
             if(reload)
-              notifySuccess(sw.getLabel() + " reloaded", 1000);
+              AppNotification.notifySuccess(sw.getLabel() + " reloaded", 1000);
             callback.onSuccess(sw);
           }
           else {
-            notifyFailure("Could not find "+swname);
+            AppNotification.notifyFailure("Could not find "+swname);
             callback.onFailure(new Throwable("Software details could not be found"));
           }
         }
         @Override
         public void onFailure(Method method, Throwable exception) {
           GWT.log("Could nto fetch software: "+swname, exception);
-          notifyFailure("Could not fetch software: "+swname);
+          AppNotification.notifyFailure("Could not fetch software: "+swname);
           callback.onFailure(exception);
         }
       }).call(getSoftwareService()).get(URL.encodeQueryString(swname));
@@ -238,13 +173,13 @@ public class SoftwareREST {
         }
         @Override
         public void onError(Request request, Throwable exception) {
-          notifyFailure("Could not find " + swid);
+          AppNotification.notifyFailure("Could not find " + swid);
           callback.onFailure(new Throwable(
               "Software graph could not be found"));
         }
       });
     } catch (Exception e) {
-      notifyFailure("Could not find " + swid);
+      AppNotification.notifyFailure("Could not find " + swid);
     }
   }
   
@@ -273,7 +208,7 @@ public class SoftwareREST {
           }
           @Override
           public void onFailure(Method method, Throwable exception) {
-            notifyFailure("Could not load enumerations for "+typeid);
+            AppNotification.notifyFailure("Could not load enumerations for "+typeid);
             callback.onFailure(exception);
           }
         }).call(getSoftwareService()).getEnumerationsForType(typeid);
@@ -292,12 +227,12 @@ public class SoftwareREST {
       public void onSuccess(Method method, Software sw) {
         softwareCache.put(sw.getName(), sw);
         softwareList.add(new SoftwareSummary(sw));
-        notifySuccess(software.getLabel() + " published. Now enter some details !", 1500);
+        AppNotification.notifySuccess(software.getLabel() + " published. Now enter some details !", 1500);
         callback.onSuccess(sw);
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
-        notifyFailure("Could not publish");
+        AppNotification.notifyFailure("Could not publish");
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).publish(software);    
@@ -309,12 +244,12 @@ public class SoftwareREST {
       @Override
       public void onSuccess(Method method, Software sw) {
         softwareCache.put(sw.getName(), sw);
-        notifySuccess(software.getLabel() + " saved", 1000);
+        AppNotification.notifySuccess(software.getLabel() + " saved", 1000);
         callback.onSuccess(sw);
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
-        notifyFailure("Could not save "+software.getLabel());
+        AppNotification.notifyFailure("Could not save "+software.getLabel());
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).update(software.getName(), software);    
@@ -330,11 +265,11 @@ public class SoftwareREST {
           if(sum.getName().equals(swname))
             softwareList.remove(sum);
         callback.onSuccess(v);
-        notifySuccess(swname+" deleted", 1000);
+        AppNotification.notifySuccess(swname+" deleted", 1000);
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
-        notifyFailure("Could not delete "+swname);
+        AppNotification.notifyFailure("Could not delete "+swname);
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).delete(swname);    
@@ -348,30 +283,14 @@ public class SoftwareREST {
       public void onSuccess(Method method, PluginResponse response) {
         String msg = pluginname+" Plugin: "
             + "Got a response for "+response.getSoftwareInfo().getLabel();
-        notifySuccess(msg, 1500);
+        AppNotification.notifySuccess(msg, 1500);
         callback.onSuccess(response);
       }
       @Override
       public void onFailure(Method method, Throwable exception) {
-        notifyFailure(pluginname+" Plugin: Could not run");
+        AppNotification.notifyFailure(pluginname+" Plugin: Could not run");
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).runPlugin(pluginname, software);  
-  }
-  
-  public static void notifySuccess(String message, int delay) {
-    NotifySettings settings = NotifySettings.newSettings();
-    settings.setType(NotifyType.SUCCESS);
-    settings.setDelay(delay);
-    settings.setAllowDismiss(false);
-    Notify.notify("", message, IconType.SMILE_O, settings);    
-  }
-  
-  public static void notifyFailure(String message) {
-    NotifySettings settings = NotifySettings.newSettings();
-    settings.setType(NotifyType.DANGER);
-    settings.setAllowDismiss(false);
-    GWT.log("Error: "+message);
-    Notify.notify("", message, IconType.WARNING, settings);
   }
 }

@@ -47,6 +47,7 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.user.client.ui.Label;
 
 public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   private HandlerManager handlerManager;
@@ -125,6 +126,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
           addEntityEditor(newEntity, infoblock);
           thisfg.add(infoblock);
           validate();
+          toggleInfoBlock(infoblock);
         }
       });
       
@@ -231,7 +233,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         if(activity != null) {
           Agent agent = prov.getAgent(activity.getAgentId());
           if(agent != null) {
-            FormLabel flabel = new FormLabel();
+            Label flabel = new Label();
             flabel.addStyleName("provenance-label");
             DateTimeFormat fmt = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_SHORT);
             String datestr = fmt.format(activity.getTime());
