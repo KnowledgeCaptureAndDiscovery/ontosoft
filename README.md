@@ -32,4 +32,10 @@ Installation
 5. Check $HOME/.ontosoft/server.properties file to see that server name is correctly identified
 
 6. Open http://[your-server-name]:8080/ontosoft-client to access the OntoSoft UI that connects with the local repository
+
+7. Customize the client by changing /path/to/tomcat/webapps/ontosoft-client/customise/config.js
+
+8. The default userid is "admin" with password "changeme!". Remember to change it :)
+
+
   

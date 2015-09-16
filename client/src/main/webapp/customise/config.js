@@ -1,5 +1,5 @@
 var CONFIG = {
-	SERVER : "http://localhost:9090/ontosoft-server",
+	SERVER : "http://localhost:8080/ontosoft-server",
 	TITLE : "OntoSoft",
 	COLORS : {
 		base : "#5D7BA0", // Background color for Top Banner, and Headers
