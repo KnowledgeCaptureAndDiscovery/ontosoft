@@ -1,53 +1,86 @@
 package org.ontosoft.server.repository.adapters;
 
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.KBConstants;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
 
-public class EntityAdapter implements IEntityAdapter {
+public abstract class EntityAdapter implements IEntityAdapter {
   protected KBAPI kb;
   protected KBAPI ontkb;
   protected KBAPI enumkb;
-  protected KBObject valueProperty;
-  protected KBObject entityClass;
+  protected KBObject kbValueProperty;
+  protected KBObject kbClass;
+  protected Class<? extends Entity> entityClass;
   
   protected static String ontns = KBConstants.ONTNS();
   
   public EntityAdapter(KBAPI kb, KBAPI ontkb, KBAPI enumkb, 
-      String clsid, String valpropid) {
+      String clsid, String valpropid, Class<? extends Entity> entityClass) {
     this.kb = kb;
     this.ontkb = ontkb;
     this.enumkb = enumkb;
-    this.setEntityClass(clsid);
-    this.setEntityValueProperty(valpropid);
+    this.setKBClass(clsid);
+    this.entityClass = entityClass;
+    this.setKBValueProperty(valpropid);
   }
 
-  protected void setEntityClass(String clsid) {
+  protected void setKBClass(String clsid) {
     if(clsid != null)
-      this.entityClass = this.ontkb.getConcept(clsid);
+      this.kbClass = this.ontkb.getConcept(clsid);
   }
   
-  protected void setEntityValueProperty(String valpropid) {
+  protected void setKBValueProperty(String valpropid) {
     if(valpropid != null)
-      this.valueProperty = this.ontkb.getProperty(valpropid);
+      this.kbValueProperty = this.ontkb.getProperty(valpropid);
   }
   
+  protected Entity fetchEntityDetailsFromKB(Entity entity) {
+    return this.fetchEntityDetailsFromKB(entity, this.kb);
+  }
+  
+  protected Entity fetchEntityDetailsFromKB(Entity entity, KBAPI kb) {
+    KBObject entityobj = kb.getIndividual(entity.getId());
+    if(entityobj != null) {
+      entity.setType(this.kbClass.getID());
+      entity.setLabel(kb.getLabel(entityobj));
+      entity.setName(entityobj.getName());
+      KBObject valobj = kb.getPropertyValue(entityobj, this.kbValueProperty);
+      if(valobj != null)
+        entity.setValue(valobj.getValue());
+    }
+    return entity;
+  }
+  
+  protected boolean saveEntityInKB(Entity entity) {
+    return this.saveEntityInKB(entity, this.kb);
+  }
+  
+  protected boolean saveEntityInKB(Entity entity, KBAPI kb) {
+    KBObject entityobj = kb.createObjectOfClass(entity.getId(), kbClass);
+    if(entity.getValue() != null) {
+      KBObject valobj = kb.createLiteral(entity.getValue());
+      kb.setPropertyValue(entityobj, this.kbValueProperty, valobj);
+    }
+    return true;
+  }
+
+
   @Override
   public Entity getEntity(String id) {
-    KBObject entityobj = this.kb.getIndividual(id);
-    KBObject valobj = this.kb.getPropertyValue(entityobj, this.valueProperty);
-    return new Entity(id, valobj.getValue(), entityClass.getID());
+    try {
+      Entity entity = entityClass.newInstance();
+      entity.setId(id);
+      return this.fetchEntityDetailsFromKB(entity);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
-  
+
   @Override
   public boolean saveEntity(Entity entity) {
-    KBObject entityobj = this.kb.createObjectOfClass(entity.getId(), entityClass);
-    if(entity.getValue() == null)
-      return false;
-    KBObject valobj = this.kb.createLiteral(entity.getValue());
-    this.kb.setPropertyValue(entityobj, this.valueProperty, valobj);
-    return true;
+    return this.saveEntityInKB(entity);
   }
 }

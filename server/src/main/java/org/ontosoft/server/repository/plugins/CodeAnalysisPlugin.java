@@ -1,6 +1,6 @@
 package org.ontosoft.server.repository.plugins;
 
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.plugins.Plugin;
 import org.ontosoft.shared.plugins.PluginResponse;

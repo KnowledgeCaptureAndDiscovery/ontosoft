@@ -4,18 +4,25 @@ import java.util.List;
 
 import org.fusesource.restygwt.client.JsonEncoderDecoder;
 import org.gwtbootstrap3.client.ui.Button;
+import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
 import org.gwtbootstrap3.client.ui.PageHeader;
-import org.gwtbootstrap3.client.ui.Well;
+import org.gwtbootstrap3.client.ui.Panel;
+import org.gwtbootstrap3.client.ui.PanelBody;
+import org.gwtbootstrap3.client.ui.PanelHeader;
+import org.gwtbootstrap3.client.ui.Row;
+import org.gwtbootstrap3.client.ui.constants.DeviceSize;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
+import org.gwtbootstrap3.client.ui.constants.PanelType;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.browse.EntityBrowser;
+import org.ontosoft.client.components.chart.CategoryBarChart;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -24,8 +31,11 @@ import org.ontosoft.shared.classes.vocabulary.MetadataType;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
 import com.github.gwtd3.api.D3;
+import com.github.gwtd3.api.core.Value;
+import com.github.gwtd3.api.functions.DatumFunction;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -60,6 +70,7 @@ public class BrowseView extends ParameterizedViewImpl
   Software software;
   String softwarename;
   String softwarerdf;
+  String softwarehtml;
   
   Vocabulary vocabulary;
   
@@ -179,35 +190,77 @@ public class BrowseView extends ParameterizedViewImpl
     EntityBrowser browser = new EntityBrowser(vocabulary);
     
     for(String lvl1catid: topcat.getChildren()) {
-      // Level 1 properties
-      Well lvl1well = new Well(); 
+      Row catrow = new Row();
       
+      // Level 1 category
       MetadataCategory lvl1cat = vocabulary.getCategory(lvl1catid);
+      
+      // Main panel
+      Column panelcol = new Column("SM_9");
+      catrow.add(panelcol);
+      Panel lvl1panel = new Panel(PanelType.INFO);
+      panelcol.add(lvl1panel);
+      PanelHeader header1 = new PanelHeader();
       Heading heading1 = new Heading(HeadingSize.valueOf("H2"));
-      heading1.setText(lvl1cat.getLabel());
-      heading1.addStyleName("catheading");
-      lvl1well.add(heading1);
+      heading1.setText(lvl1cat.getLabel().toUpperCase());
+      header1.add(heading1);
+      lvl1panel.add(header1);
+      PanelBody body1 = new PanelBody();
+      lvl1panel.add(body1);
+      
+      // Side panel
+      Column sidecol = new Column("SM_3");
+      sidecol.setHiddenOn(DeviceSize.XS);
+      catrow.add(sidecol);
+      Panel sidepanel = new Panel(PanelType.INFO);
+      sidecol.add(sidepanel);
+      PanelHeader sideheader = new PanelHeader();
+      Heading sideheading = new Heading(HeadingSize.valueOf("H2"));
+      sideheader.add(sideheading);
+      sidepanel.add(sideheader);
+      PanelBody sidebody = new PanelBody();
+      sidepanel.add(sidebody);
+      
+      CategoryPieChart pchart = new CategoryPieChart(lvl1cat.getName(), 250);
+      pchart.setSoftware(sw);
+      pchart.setEventEnabled(false);
+      pchart.setVocabulary(vocabulary);
+      pchart.drawCategories();
+      pchart.fillCategories(false);
+      pchart.setActiveCategoryId(lvl1catid, false);
+      sidebody.add(pchart);
+      
+      Double done = pchart.getDonePercentage(lvl1catid);
+      Double optdone = pchart.getDonePercentage(lvl1catid, true);
+      sideheading.setText("Done: "+done.intValue()+"% ("+optdone.intValue()+"% optional)");
+      
+      CategoryBarChart chart = new CategoryBarChart(lvl1cat.getName(), 250, 250);
+      chart.setSoftware(sw);
+      chart.setEventEnabled(false);
+      chart.setVocabulary(vocabulary);
+      chart.drawCategories(lvl1catid);
+      chart.fillCategories(false);
+      sidebody.add(chart);
       
       lvl1cat = vocabulary.orderChildCategories(lvl1cat);
       boolean hasSomeValues = false;
       
       for(String lvl2catid: lvl1cat.getChildren()) {
         MetadataCategory lvl2cat = vocabulary.getCategory(lvl2catid);
-        Heading heading2 = new Heading(HeadingSize.valueOf("H3"));
+        Heading heading2 = new Heading(HeadingSize.valueOf("H4"));
         heading2.setText(lvl2cat.getLabel());
-        heading2.addStyleName("catheading");
         String sublabel = lvl2cat.getSublabel();
         if(sublabel != null) {
           sublabel = Character.toUpperCase(sublabel.charAt(0)) + sublabel.substring(1);
           heading2.setSubText(" - " + sublabel);
         }
-        lvl1well.add(heading2);
-        
+        body1.add(heading2);
+
         List<MetadataProperty> props = vocabulary.getPropertiesForType(swtype);
         props.retainAll(vocabulary.getPropertiesInCategory(lvl2cat));
         props = vocabulary.orderProperties(props);
         
-        String html = browser.getEntitiesHTML(sw.getPropertyValues(), props, false);
+        String html = browser.getEntitiesHTML(sw, props, false);
         HTML lvl2html = new HTML(html);
         if(hasSomePropertyValues(props, sw)) {
           hasSomeValues = true;
@@ -217,12 +270,14 @@ public class BrowseView extends ParameterizedViewImpl
           lvl2html.addStyleName("hide-this-in-html");
         }
         
-        lvl1well.add(lvl2html);
+        body1.add(lvl2html);
       }
-      softwareBody.add(lvl1well);
       
-      if(!hasSomeValues)
-        lvl1well.addStyleName("hide-this-in-html");
+      softwareBody.add(catrow);
+      
+      if(!hasSomeValues) {
+        lvl1panel.addStyleName("hide-this-in-html");
+      }
     }
     
     htmlbutton.getParent().setVisible(true);
@@ -263,11 +318,16 @@ public class BrowseView extends ParameterizedViewImpl
     openWindow("application/json", codec.encode(software).toString());
   }
   
-  
   @UiHandler("htmlbutton")
   void onHTMLButtonClick(ClickEvent event) {
-    String contenthtml = softwareTitle.getElement().getInnerHTML()
-        + softwareBody.getElement().getInnerHTML();
+    softwarehtml = softwareTitle.getElement().getInnerHTML();
+    D3.selectAll(".col-sm-9").datum(new DatumFunction<Void>() {
+      @Override
+      public Void apply(Element context, Value d, int index) {
+        softwarehtml += context.getInnerHTML();
+        return null;
+      }
+    });
     String styles =  "<style>\n"+
         "* { font-family: Arial, Helvetica }"+
         ".browse-label {\n"+
@@ -310,7 +370,7 @@ public class BrowseView extends ParameterizedViewImpl
         "}\n"+
         "</style>\n";    
     String html = "<html><head>" + styles + 
-        "</head><body>"+ contenthtml +"</body></html>";
+        "</head><body>"+ softwarehtml +"</body></html>";
     openWindow("text/html", html);
   }
   

@@ -7,7 +7,8 @@ import org.gwtbootstrap3.client.ui.SuggestBox;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -29,7 +30,7 @@ import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 public class EnumerationEntityInput implements IEntityInput {
   private HandlerManager handlerManager;
 
-  Entity entity;
+  EnumerationEntity entity;
   SuggestBox myinput;
   MetadataProperty property;
   HashMap<String, Entity> enumerations;
@@ -47,7 +48,7 @@ public class EnumerationEntityInput implements IEntityInput {
   @Override
   public void createWidget(Entity e, final MetadataProperty prop, Vocabulary vocabulary) {
     this.property = prop;
-    this.entity = e;
+    this.entity = (EnumerationEntity) e;
     
     // Create suggestions
     final MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
@@ -58,7 +59,10 @@ public class EnumerationEntityInput implements IEntityInput {
           public void onSuccess(List<MetadataEnumeration> enumlist) {
             for(MetadataEnumeration menum : enumlist) {
               String label = menum.getLabel() != null ? menum.getLabel() : menum.getName();
-              Entity entity = new Entity(menum.getId(), label, prop.getRange());
+              EnumerationEntity entity = new EnumerationEntity();
+              entity.setId(menum.getId());
+              entity.setLabel(label);
+              entity.setType(prop.getRange());
               enumerations.put(label, entity);
             }
             oracle.addAll(enumerations.keySet());
@@ -112,9 +116,10 @@ public class EnumerationEntityInput implements IEntityInput {
 
   @Override
   public void setValue(Entity entity) {
-    if(entity.getValue() != null)
-      myinput.setValue(entity.getValue().toString());
-    this.entity = entity;
+    EnumerationEntity ee = (EnumerationEntity) entity;
+    if(ee.getLabel() != null)
+      myinput.setValue(ee.getLabel());
+    this.entity = ee;
   }
   
   @Override

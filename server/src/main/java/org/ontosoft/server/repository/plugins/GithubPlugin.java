@@ -9,8 +9,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.plugins.Plugin;
 import org.ontosoft.shared.plugins.PluginResponse;

@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.entities.Software;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

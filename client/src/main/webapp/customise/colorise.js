@@ -141,14 +141,13 @@ var STYLES =
 "	border-color: __BASE__ !important;" + 
 "}" + 
 ".selected-row, .selected-row td {" + 
-"	background-color: rgba(__BASE_RGB__, 0.3) !important;" +
-"	background-opacity: rgba(__BASE_RGB__, 0.3) !important;" + 
+"	background-color: rgba(__BASE_RGB__, 0.4) !important;" +
 "}" + 
 ".selected-row.even, .selected-row.even td {" + 
-"	background-color: rgba(__BASE_RGB__, 0.35) !important;" + 
+"	background-color: rgba(__BASE_RGB__, 0.45) !important;" + 
 "}" + 
 ".selected-row.active, .selected-row.active td {" + 
-"	background-color: rgba(__BASE_RGB__, 0.4) !important;" + 
+"	background-color: rgba(__BASE_RGB__, 0.5) !important;" + 
 "}" + 
 ".selected-row a {" + 
 "	color: __BASE_TEXT__;" + 

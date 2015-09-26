@@ -11,8 +11,8 @@ import org.fusesource.restygwt.client.REST;
 import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
-import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -225,10 +225,16 @@ public class SoftwareREST {
     REST.withCallback(new MethodCallback<Software>() {
       @Override
       public void onSuccess(Method method, Software sw) {
-        softwareCache.put(sw.getName(), sw);
-        softwareList.add(new SoftwareSummary(sw));
-        AppNotification.notifySuccess(software.getLabel() + " published. Now enter some details !", 1500);
-        callback.onSuccess(sw);
+        if(sw != null) {
+          softwareCache.put(sw.getName(), sw);
+          softwareList.add(new SoftwareSummary(sw));
+          AppNotification.notifySuccess(software.getLabel() + " published. Now enter some details !", 1500);
+          callback.onSuccess(sw);
+        }
+        else {
+          AppNotification.notifyFailure("Could not publish");
+          callback.onFailure(new Throwable("Returned null"));
+        }
       }
       @Override
       public void onFailure(Method method, Throwable exception) {

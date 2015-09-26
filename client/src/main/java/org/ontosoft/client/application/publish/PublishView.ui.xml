@@ -35,10 +35,10 @@
 								</b:ButtonGroup>
 							</g:VerticalPanel>
 							
-							<c:CategoryPieChart ui:field="piechart" size="200" />
+							<c:CategoryPieChart ui:field="piechart" name="piechart" size="200" />
 						</b:Column>
 						<b:Column size="XS_7, SM_6, MD_6" ui:field="barcolumn" styleName="vcenter">
-							<c:CategoryBarChart ui:field="barchart" width="280" height="200" />
+							<c:CategoryBarChart ui:field="barchart" name="barchart" width="280" height="200" />
 						</b:Column>
 					</b:Row>
 				</b:Column>

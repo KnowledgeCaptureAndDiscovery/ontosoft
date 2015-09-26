@@ -15,7 +15,7 @@
 			</g:VerticalPanel>
 			<g:FlowPanel>
 			    <b.html:Div styleName="chart-icon pull-right">
-			        <c:CategoryPieChart ui:field="piechart" size="100" />
+			        <c:CategoryPieChart ui:field="piechart" name="topchart" size="100" />
 			    </b.html:Div>
 				<b:PageHeader ui:field="softwareTitle" />				
 			</g:FlowPanel>

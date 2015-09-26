@@ -2,7 +2,6 @@ package org.ontosoft.server.repository;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -11,16 +10,14 @@ import java.util.Map;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.users.User;
 import org.ontosoft.server.util.Config;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Activity;
 import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
-
-import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
@@ -112,7 +109,7 @@ public class ProvenanceRepository {
       
       KBObject timeobj = provkb.getPropertyValue(activityobj, timeprop);
       if(timeobj != null && timeobj.getValue() != null) {
-        Date time = ((XSDDateTime)timeobj.getValue()).asCalendar().getTime();
+        Date time = (Date)timeobj.getValue();
         activity.setTime(time);
       }
       prov.addActivity(activity);
@@ -167,7 +164,7 @@ public class ProvenanceRepository {
     swentity.setGeneratedBy(activity.getId());
     prov.addEntity(swentity);
     
-    Map<String, List<Entity>> propEntities = sw.getPropertyValues();
+    Map<String, List<Entity>> propEntities = sw.getValue();
     for(String propid : propEntities.keySet()) {
       List<Entity> entities = propEntities.get(propid);
       for(Entity entity : entities) {
@@ -216,10 +213,7 @@ public class ProvenanceRepository {
         if(agentobj != null)
           provkb.setPropertyValue(activityobj, agentprop, agentobj);
         
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(activity.getTime());
-        XSDDateTime dtime = new XSDDateTime(cal);
-        KBObject timeobj = provkb.createLiteral(dtime);
+        KBObject timeobj = provkb.createLiteral(activity.getTime());
         if(timeobj != null)
           provkb.setPropertyValue(activityobj, timeprop, timeobj);
       }
@@ -271,8 +265,8 @@ public class ProvenanceRepository {
     prov.addActivity(activity);
     
 
-    Map<String, List<Entity>> curPropEntities = cursw.getPropertyValues();
-    Map<String, List<Entity>> newPropEntities = newsw.getPropertyValues();
+    Map<String, List<Entity>> curPropEntities = cursw.getValue();
+    Map<String, List<Entity>> newPropEntities = newsw.getValue();
     for(String propid : curPropEntities.keySet()) {
       List<Entity> curEntities = curPropEntities.get(propid);
       List<Entity> newEntities = newPropEntities.get(propid);
@@ -287,8 +281,9 @@ public class ProvenanceRepository {
         for(Entity curEntity : curEntities) {
           if(newEntity.getId().equals(curEntity.getId())) {
             found = true;
-            if(!newEntity.toString().equals(curEntity.toString()))
+            if(!newEntity.getValue().toString().equals(curEntity.getValue().toString())) {
               modified.put(curEntity, newEntity);
+            }
           }
         }
         if(!found) {

@@ -17,7 +17,7 @@ import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
 import org.ontosoft.client.components.form.notification.PluginNotifications;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;

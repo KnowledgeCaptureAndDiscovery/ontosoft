@@ -53,8 +53,8 @@ public class CategoryPieChart extends CategoryChartBase {
   }
   
   @UiConstructor
-  public CategoryPieChart(double size) {
-    super();
+  public CategoryPieChart(String name, double size) {
+    super(name);
     this.width = size;
     categorySlices = new HashMap<String, SliceDetails>();
   }
@@ -146,13 +146,14 @@ public class CategoryPieChart extends CategoryChartBase {
           .attr("transform", slicetransform)
           .attr("class", "slicegroup");
       
+      String sliceid = "slice_"+this.getName()+i;
       final Arc bgslicejson = Arc.constantArc().outerRadius(radius);
       final Selection bgslice = 
           slice.append("path")
           .datum(bgslicejson)
           .style("fill", bgcolor)
           .attr("d", arc)          
-          .attr("id", "slice"+i);
+          .attr("id", sliceid);
       
       if(this.isEventEnabled())
         bgslice.style("cursor", "pointer");
@@ -204,7 +205,7 @@ public class CategoryPieChart extends CategoryChartBase {
 
         slicetxt.append("textPath")
           .attr("startOffset", txtoffset+"%")
-          .attr("xlink:href", "#slice"+i)
+          .attr("xlink:href", "#"+sliceid)
           .text(category.getLabel());
       }
       
@@ -249,6 +250,13 @@ public class CategoryPieChart extends CategoryChartBase {
             return null;
           }
         });
+      }
+      
+      // If events disabled and no active category, show all bars full
+      if(!this.isEventEnabled() && activeCategoryId == null) {
+        optdoneslice.datum(Arc.constantArc().outerRadius(optradius));
+        slice.selectAll("text")
+          .attr("transform", "translate("+dx*dwidth+","+dy*dwidth+")");  
       }
 
       startangle = endangle;
@@ -314,7 +322,7 @@ public class CategoryPieChart extends CategoryChartBase {
       double optpercentage = 100*Math.sqrt(this.getDonePercentage(catId, true)/100);
       
       //GWT.log(catId+" :"+percentage);
-      String sfx = software.getName() + "_" + i;
+      String sfx = this.getName() + "_" + i;
       Selection grad = this.defs.append("radialGradient").attr("id", "innerGrad" + sfx)
             .attr("gradientUnits", "userSpaceOnUse")
             .attr("cx", 0).attr("cy", 0).attr("r", radius);

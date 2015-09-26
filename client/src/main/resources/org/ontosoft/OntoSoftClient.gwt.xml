@@ -28,10 +28,6 @@
 		<include name='fonts/*.woff' />
 		<include name='fonts/*.woff2' />
 	</public>
-	
-	<!--public path='client'>
-		<include name='images/*' />
-	</public-->
 
 	<stylesheet src='css/roboto.min.css'/>
 	<stylesheet src='css/roboto-condensed.css'/>
@@ -39,10 +35,10 @@
 	<stylesheet src='css/material-mod.css'/>
 	<stylesheet src='css/ripples.min.css'/>
 
-	<generate-with class="org.ontosoft.client.generator.EntityInputGenerator">
-		<when-type-assignable class="org.ontosoft.client.generator.EntityInputFactory" />
+	<generate-with class="org.ontosoft.client.generator.EntityGenerator">
+		<when-type-assignable class="org.ontosoft.client.generator.EntityFactory" />
 	</generate-with>
-	  
+        
 	<!-- GWT D3 -->
 	<inherits name='com.github.gwtd3.D3' />
 

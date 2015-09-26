@@ -1,26 +1,24 @@
 package org.ontosoft.client.components.form.formgroup.input;
 
-import java.util.Date;
-
 import org.gwtbootstrap3.extras.datepicker.client.ui.DatePicker;
 import org.gwtbootstrap3.extras.datepicker.client.ui.base.constants.DatePickerPosition;
 import org.gwtbootstrap3.extras.datepicker.client.ui.base.events.ChangeDateEvent;
 import org.gwtbootstrap3.extras.datepicker.client.ui.base.events.ChangeDateHandler;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.DateEntity;
+import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.ui.Widget;
 
 public class DateEntityInput implements IEntityInput {
   private HandlerManager handlerManager;
-  Entity entity;
+  DateEntity entity;
   DatePicker dateinput;
   MetadataProperty property;
   
@@ -31,7 +29,7 @@ public class DateEntityInput implements IEntityInput {
   @Override
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocab)  {
     this.property = prop;
-    this.entity = e;
+    this.entity = (DateEntity) e;
     dateinput = new DatePicker();
     dateinput.setPlaceholder(prop.getLabel());
     dateinput.setAutoClose(true);
@@ -50,23 +48,18 @@ public class DateEntityInput implements IEntityInput {
   @Override
   public Entity getValue() {
     if(dateinput.getValue() != null) {
-      DateTimeFormat fmt = DateTimeFormat.getFormat("yyyy-MM-dd");
-      entity.setValue(fmt.format(dateinput.getValue()));
+      entity.setValue(dateinput.getValue());
     }
     return entity;
   }
   
   @Override
   public void setValue(Entity entity) {
-    if(entity.getValue() != null) {
-      if(!(entity.getValue() instanceof Date)) {
-        DateTimeFormat fmt = DateTimeFormat.getFormat("yyyy-MM-dd");
-        dateinput.setValue(fmt.parse(entity.getValue().toString()));
-      }
-      else
-        dateinput.setValue((Date)entity.getValue());
+    DateEntity de = (DateEntity) entity;
+    if(de.getValue() != null) {
+      dateinput.setValue(de.getValue());
     }
-    this.entity = entity;
+    this.entity = de;
   }
 
   @Override

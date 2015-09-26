@@ -4,7 +4,8 @@ import org.gwtbootstrap3.client.ui.Container;
 import org.gwtbootstrap3.client.ui.TextArea;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.TextEntity;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -27,7 +28,7 @@ import com.google.gwt.user.client.ui.HTML;
 public class TextEntityInput extends Container implements IEntityInput {
   private HandlerManager handlerManager;
 
-  Entity entity;
+  TextEntity entity;
   MetadataProperty property;
   Vocabulary vocabulary;
   
@@ -77,7 +78,7 @@ public class TextEntityInput extends Container implements IEntityInput {
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocabulary)  {
     this.setFluid(true);
     this.addStyleName("no-pad-container");
-    this.entity = e;
+    this.entity = (TextEntity) e;
     this.property = prop;
     this.vocabulary = vocabulary;
     
@@ -149,11 +150,12 @@ public class TextEntityInput extends Container implements IEntityInput {
 
   @Override
   public void setValue(Entity entity) {
-    if(entity.getValue() != null) {
-      myinput.setValue(entity.getValue().toString());
+    TextEntity te = (TextEntity) entity;
+    if(te.getValue() != null) {
+      myinput.setValue(te.getValue());
       this.updateEditorDimensions();
     }
-    this.entity = entity;
+    this.entity = te;
   }
   
   @Override

@@ -21,13 +21,13 @@ import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.PluginResponseHandler;
 import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
-import org.ontosoft.client.components.form.formgroup.input.EntityInputRegistrar;
+import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
 import org.ontosoft.client.components.form.formgroup.input.IEntityInput;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Activity;
 import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
@@ -78,6 +78,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     this.setValue(propEntities);
     this.addPluginButtons();
   }
+  
   public void setRawValue(List<Object> objects) {
     List<Entity> propEntities = new ArrayList<Entity>();
     for(Object object: objects) {
@@ -167,7 +168,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     
     try {
       final InputGroup ig = new InputGroup();
-      final IEntityInput ip = EntityInputRegistrar.getInput(entity, property, vocabulary);
+      final IEntityInput ip = EntityRegistrar.getInput(entity, property, vocabulary);
       ig.add(ip);
       
       ip.addEntityChangeHandler(new EntityChangeHandler() {
@@ -248,13 +249,18 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       inputs.add(ip);
       
     } catch (Exception e) {
-      GWT.log("Problem adding input widget for "+property.getRange(), e);
+      GWT.log("Problem adding input widget for "+property.getName(), e);
     }
   }
   
   private Entity getNewEntity(Object value) {
-    return new Entity(GUID.randomEntityId(software.getId(), property.getRange()), 
-        value, property.getRange());
+    String id = GUID.randomEntityId(software.getId(), property.getRange());
+    try {
+      return EntityRegistrar.getEntity(id, value, property);
+    } catch (Exception e) {
+      GWT.log("Coult not get a new entity", e);
+      return null;
+    }
   }
   
   public boolean validate() {

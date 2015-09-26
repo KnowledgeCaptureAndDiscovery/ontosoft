@@ -3,7 +3,8 @@ package org.ontosoft.client.components.form.formgroup.input;
 import org.gwtbootstrap3.client.ui.DoubleBox;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.NumericEntity;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -17,7 +18,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 public class NumericEntityInput implements IEntityInput {
   private HandlerManager handlerManager;
 
-  Entity entity;
+  NumericEntity entity;
   DoubleBox input;
 
   MetadataProperty property;
@@ -35,7 +36,7 @@ public class NumericEntityInput implements IEntityInput {
   @Override
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocab)  {
     init(prop, vocab);
-    this.entity = e;
+    this.entity = (NumericEntity) e;
     input.setPlaceholder(prop.getLabel());
     input.addValidator(Validators.DOUBLE);
     input.addValueChangeHandler(new ValueChangeHandler<Double>() {
@@ -62,9 +63,10 @@ public class NumericEntityInput implements IEntityInput {
 
   @Override
   public void setValue(Entity entity) {
+    NumericEntity ne = (NumericEntity) entity;
     if(entity.getValue() != null)
       input.setValue((Double)entity.getValue());
-    this.entity = entity;
+    this.entity = ne;
   }
 
   @Override

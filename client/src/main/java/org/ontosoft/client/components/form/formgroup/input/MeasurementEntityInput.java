@@ -1,12 +1,11 @@
 package org.ontosoft.client.components.form.formgroup.input;
 
-import java.util.HashMap;
-
 import org.gwtbootstrap3.client.ui.DoubleBox;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.MeasurementEntity;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -21,7 +20,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 public class MeasurementEntityInput extends HorizontalPanel implements IEntityInput {
   private HandlerManager handlerManager;
 
-  Entity entity;
+  MeasurementEntity entity;
   MetadataProperty property;
   Vocabulary vocabulary;
   
@@ -34,7 +33,7 @@ public class MeasurementEntityInput extends HorizontalPanel implements IEntityIn
   
   @Override
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocabulary) {
-    this.entity = e;
+    this.entity = (MeasurementEntity) e;
     this.setWidth("100%");
     this.property = prop;
     
@@ -68,38 +67,29 @@ public class MeasurementEntityInput extends HorizontalPanel implements IEntityIn
   
   @Override
   public Entity getValue() {
-    HashMap<String, Object> value = new HashMap<String, Object>();
-    value.put("value", valuebox.getValue());
-    value.put("units", unitsbox.getValue());
+    entity.setValue(valuebox.getValue());
+    entity.setUnits(unitsbox.getValue());
+    return entity;
+  }
+  
+  private Entity getValue(Double value) {
     entity.setValue(value);
     return entity;
   }
   
-  private Entity getValue(Double val) {
-    HashMap<String, Object> value = new HashMap<String, Object>();
-    value.put("value", val);
-    value.put("units", unitsbox.getValue());
-    entity.setValue(value);
-    return entity;
-  }
-  
-  private Entity getValue(String val) {
-    HashMap<String, Object> value = new HashMap<String, Object>();
-    value.put("value", valuebox.getValue());
-    value.put("units", val);
-    entity.setValue(value);
+  private Entity getValue(String units) {
+    this.entity.setUnits(units);
     return entity;
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public void setValue(Entity entity) {
+    MeasurementEntity me = (MeasurementEntity) entity;
     if(entity.getValue() != null) {
-      HashMap<String, Object> value = (HashMap<String, Object>) entity.getValue();
-      valuebox.setValue((Double)value.get("value"));
-      unitsbox.setValue((String)value.get("units"));
+      valuebox.setValue(this.entity.getValue());
+      unitsbox.setValue(this.entity.getUnits());
     }
-    this.entity = entity;
+    this.entity = me;
   }
   
 

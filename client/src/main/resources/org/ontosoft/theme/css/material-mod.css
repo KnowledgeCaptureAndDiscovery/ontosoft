@@ -64,6 +64,28 @@ pre.wordbreak
     word-wrap: break-word; /* Internet Explorer 5.5+ */
 }
 
+.software-list-item {
+	padding: 5px 0px !important;
+}
+.software-list-item .software-name {
+	font-weight: bold !important;
+	font-size: 110% !important;
+}
+.software-list-item .software-description {
+	font-size:80% !important;
+	color:#AAA !important;
+}
+.software-list-item .software-meta {
+	font-size:85% !important;
+	color:#666 !important;
+}
+.selected-row .software-list-item .software-description {
+	color: #DDD !important;
+}
+.selected-row .software-list-item .software-meta {
+	color: #EEE !important;
+}
+
 /* Fixing the list items */
 .list-group .list-group-item {
   background-color: white;
@@ -254,7 +276,7 @@ h1 small {
 	padding: 0px 8px !important;
 	margin: 0px;
 	vertical-align: middle !important;
-	border: 0px !important;
+	/*border: 0px !important;*/
 	/*font-size: 0.95em;*/
 }
 .gwtb3-cell .btn {
@@ -263,30 +285,35 @@ h1 small {
 .button-cell .btn {
 	padding: 2px 4px !important;
 }
-.admin-cell, .selection-cell {
-	display: none;
-	width: 0px;
+
+.admin-cell {
+	display: none !important;
+	width: 0px !important;
 }
 .admin-table .admin-cell {
-	display: table-cell;
+	display: table-cell !important;
 	padding-left: 0px !important;
 	width: 64px;
 }
-.registered-user-cell button {
-	visibility: hidden;
-}
-.registered-user-table .registered-user-cell button {
-	visibility: visible;
+.registered-user-cell {
+	display: none !important;
+	width: 0px !important;	
 }
 .registered-user-table .registered-user-cell {
+	display: table-cell !important;
 	padding-left: 4px !important;
-	padding-right: 4px !important;
+	padding-right: 4px !important
+	width: 50px;
+}
+.selection-cell {
+	display:none !important;
+	width: 0px !important;
+}
+.selection-table .selection-cell {
+	display: table-cell !important;
+	width: 32px !important;
 }
 
-.selection-table .selection-cell {
-	display: table-cell;
-	width: 32px;
-}
 .fixed-layout-table {
 	table-layout: fixed;
 }
@@ -314,18 +341,6 @@ h1 small {
 .navbar-brand {
     padding-top: 10px !important;
     padding-bottom: 10px !important;
-}
-.selected-row, .selected-row td {
-	background-color: rgba(93, 123, 160, 0.3) !important;
-}
-.selected-row.even, .selected-row.even td {
-	background-color: rgba(93, 123, 160, 0.35) !important;
-}
-.selected-row.active, .selected-row.active td {
-	background-color: rgba(93, 123, 160, 0.4) !important;
-}
-.selected-row a {
-	color: white;
 }
 
 /* IE Specific CSS */

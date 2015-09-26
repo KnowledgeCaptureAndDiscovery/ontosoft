@@ -13,8 +13,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.fusesource.restygwt.client.DirectRestService;
-import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;

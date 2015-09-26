@@ -6,8 +6,8 @@ import org.ontosoft.client.Config;
 import org.ontosoft.client.components.chart.events.CategorySelectionEvent;
 import org.ontosoft.client.components.chart.events.CategorySelectionHandler;
 import org.ontosoft.client.components.chart.events.HasCategoryChartHandlers;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
@@ -23,7 +23,8 @@ import com.google.gwt.user.client.ui.SimplePanel;
 public class CategoryChartBase extends SimplePanel
     implements HasCategoryChartHandlers {
   private HandlerManager handlerManager;
-
+  String name;
+  
   Selection svg;
   Selection chart;
 
@@ -51,13 +52,22 @@ public class CategoryChartBase extends SimplePanel
   String notdonecolor = Config.getErrorColor();
   String midcolor = "#EEA6B3"; // #EA90A0
   
-  String optcolor = "#CCCCCC";
-  String midoptcolor = "#BBBBBB";
+  String optcolor = "#D9D9D9";
+  String midoptcolor = "#C9C9C9";
   
   boolean eventEnabled = true;
   
-  public CategoryChartBase() {
+  public CategoryChartBase(String name) {
+    this.name = name;
     handlerManager = new HandlerManager(this);
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   @Override
@@ -180,7 +190,7 @@ public class CategoryChartBase extends SimplePanel
       if((!optional && typeprop.isRequired()) || (optional && !typeprop.isRequired())) {
         total++;
         if(catprops.contains(typeprop)) {
-          List<Entity> list = this.software.getPropertyValues().get(typeprop.getId());
+          List<Entity> list = this.software.getPropertyValues(typeprop.getId());
           if(list != null && list.size() > 0)
             filled++;
         }

@@ -1,11 +1,11 @@
 package org.ontosoft.client.components.browse;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.ComplexEntity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.MeasurementEntity;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -35,7 +35,6 @@ public class EntityBrowser {
     return prophtml;
   }
     
-  @SuppressWarnings("unchecked")
   public String getEntityValuesHTML(MetadataProperty prop, List<Entity> entities, boolean simple) {
     MetadataType complexEntity = vocabulary.getType(KBConstants.ONTNS() + "ComplexEntity");
     MetadataType measurement = vocabulary.getType(KBConstants.ONTNS() + "MeasurementEntity");
@@ -55,31 +54,15 @@ public class EntityBrowser {
       if(!simple) 
         entitieshtml += "<li>";
       if(isComplex) {
-        HashMap<String, List<Entity>> subentities = new HashMap<String, List<Entity>>();
-        HashMap<String, List<HashMap<String, Object>>> valuemap =
-            (HashMap<String, List<HashMap<String, Object>>>)entity.getValue();
-        
+        ComplexEntity centity = (ComplexEntity) entity;
         List<MetadataProperty> subprops = new ArrayList<MetadataProperty>();
-        for(String subpropid : valuemap.keySet()) {
-          List<Entity> sublist = new ArrayList<Entity>();
-          List<HashMap<String, Object>> subentityhashes = valuemap.get(subpropid);
-          if(subentityhashes != null) {
-            for(HashMap<String, Object> subentityhash: subentityhashes) {
-              Entity subentity = new Entity(
-                  (String)subentityhash.get("id"), 
-                  subentityhash.get("value"),
-                  (String)subentityhash.get("type"));            
-              sublist.add(subentity);
-            }
-          }
-          subentities.put(subpropid, sublist);
+        for(String subpropid : centity.getValue().keySet())
           subprops.add(vocabulary.getProperty(subpropid));
-        }
-        entitieshtml += this.getEntitiesHTML(subentities, subprops, true);
+        entitieshtml += this.getEntitiesHTML(centity, subprops, true);
       }
       else if(isMeasurement) {
-        HashMap<String, Object> measure = (HashMap<String, Object>)entity.getValue(); 
-        entitieshtml += measure.get("value") + " " + measure.get("units");
+        MeasurementEntity me = (MeasurementEntity) entity;
+        entitieshtml += me.getValue()+ " " + me.getUnits();
       }
       else if(isLocation) {
         entitieshtml += "<a class='wrap-long-words' href='"+entity.getValue()+"'>"+entity.getValue()+"</a>";
@@ -111,11 +94,10 @@ public class EntityBrowser {
     return html;
   }
     
-  public String getEntitiesHTML(
-      Map<String, List<Entity>> pvals, List<MetadataProperty> props, boolean simple) {
+  public String getEntitiesHTML(ComplexEntity entity, List<MetadataProperty> props, boolean simple) {
     String html = "<ul style='padding:5px;padding-left:2px;list-style-type:none'>";
     for(MetadataProperty prop : props) {
-      html += this.getPropertyValuesHTML(prop, pvals.get(prop.getId()), simple);
+      html += this.getPropertyValuesHTML(prop, entity.getPropertyValues(prop.getId()), simple);
     }
     html += "</ul>";
     return html;

@@ -2,9 +2,11 @@ package org.ontosoft.server.repository;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.repository.adapters.EntityRegistrar;
@@ -13,9 +15,10 @@ import org.ontosoft.server.repository.plugins.CodeAnalysisPlugin;
 import org.ontosoft.server.repository.plugins.GithubPlugin;
 import org.ontosoft.server.users.User;
 import org.ontosoft.server.util.Config;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.EnumerationEntity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
@@ -30,6 +33,7 @@ import org.ontosoft.shared.plugins.PluginRegistrar;
 import org.ontosoft.shared.search.EnumerationFacet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
@@ -405,7 +409,7 @@ public class SoftwareRepository {
         return sw.getId();
       }
     }
-    String swid = updateOrAddSoftware(sw, user);
+    String swid = updateOrAddSoftware(sw, user, false);
     if(swid != null)  {
       Provenance prov = this.prov.getAddProvenance(sw, user);
       this.prov.addProvenance(prov);
@@ -421,16 +425,15 @@ public class SoftwareRepository {
     return GUID.randomEntityId(swid, entity.getType());
   }
   
-  private String updateOrAddSoftware(Software sw, User user) throws Exception {
+  private String updateOrAddSoftware(Software sw, User user, boolean update) throws Exception {
     KBAPI swkb = fac.getKB(sw.getId(), OntSpec.PLAIN, true);
     String swtype = sw.getType();
     if(swtype == null)
       swtype = topclass;
     KBObject swcls = this.ontkb.getConcept(swtype);
 
-    KBObject swobj = swkb.getIndividual(sw.getId());
-    if(swobj == null)
-      swobj = swkb.createObjectOfClass(sw.getId(), swcls);
+    KBObject swobj = update ? swkb.getIndividual(sw.getId())
+        : swkb.createObjectOfClass(sw.getId(), swcls);
     
     if(swobj == null)
       return null;
@@ -438,15 +441,17 @@ public class SoftwareRepository {
     if(sw.getLabel() != null)
       swkb.setLabel(swobj, sw.getLabel());
     
-    for(String propid : sw.getPropertyValues().keySet()) {
+    for(String propid : sw.getValue().keySet()) {
       KBObject swprop = this.ontkb.getProperty(propid);
       if (swprop != null) {
-        List<Entity> entities = sw.getPropertyValues().get(propid);
+        List<Entity> entities = sw.getValue().get(propid);
         MetadataProperty prop = vocabulary.getProperty(swprop.getID());
         
         // Remove existing property values if any
-        for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
-          swkb.removeTriple(t);
+        if (update) {
+          for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
+            swkb.removeTriple(t);
+        }
         
         for(Entity entity: entities) {
           MetadataType type = vocabulary.getType(entity.getType());
@@ -458,7 +463,8 @@ public class SoftwareRepository {
               String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
               String id = this.LIBNS() + etype + "-" + GUID.get();
               entity.setId(id);
-              Software subsw = new Software(id);
+              Software subsw = new Software();
+              subsw.setId(id);
               subsw.setLabel((String)entity.getValue());
               subsw.setType(entity.getType());
               String swid = this.addSoftware(subsw, user);
@@ -492,13 +498,15 @@ public class SoftwareRepository {
       }
     }
     if(swkb.save() && enumkb.save()) {
-      MetadataEnumeration menum = new MetadataEnumeration();
-      menum.setId(sw.getId());
-      menum.setLabel(sw.getLabel());
-      menum.setType(sw.getType());
-      menum.setName(sw.getName());
-      addEnumerationToVocabulary(menum);
-      //vocabulary.setNeedsReload(true);
+      if(!update) {
+        MetadataEnumeration menum = new MetadataEnumeration();
+        menum.setId(sw.getId());
+        menum.setLabel(sw.getLabel());
+        menum.setType(sw.getType());
+        menum.setName(sw.getName());
+        addEnumerationToVocabulary(menum);
+        //vocabulary.setNeedsReload(true);
+      }
       return sw.getId();
     }
     return null;    
@@ -515,14 +523,13 @@ public class SoftwareRepository {
   public boolean updateSoftware(Software newsw, String swid, User user) 
       throws Exception {
     Software cursw = this.getSoftware(swid);
-    this.prov.getUpdateProvenance(cursw, newsw, user);
-    String nswid = this.updateOrAddSoftware(newsw, user);
+    Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
+    String nswid = this.updateOrAddSoftware(newsw, user, true);
     if(nswid != null) {
-      Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
       this.prov.addProvenance(prov);
       return true;
     }
-    return false;
+    return true;
   }
   
   // TODO: Change this call. Make it more efficient than
@@ -542,33 +549,79 @@ public class SoftwareRepository {
         int i=0;
         int num = facet.getEnumerationIds().size();
         if(num > 0) {
-          facetquery += "\t{\n";
+          facetquery += "\t {\n";
           for(String propid : facet.getPropertyIds()) {
             for(String enumid : facet.getEnumerationIds()) {
               if(i > 0)
-                facetquery += "\t\tUNION\n";
-              facetquery += "\t\t{ ?x <"+propid+"> <"+enumid+"> }\n";
+                facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
               i++;
             }
           }
-          facetquery += "\t} .\n";
+          facetquery += "\t } .\n";
         }
       }
     }
-    
-    String swquery = "\t?x a <" + KBConstants.ONTNS()+"Software> .\n";
-    String query = "SELECT DISTINCT ?x WHERE {\n" + swquery + facetquery + "}\n";
-    //System.out.println(query);
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
+    String swquery = "\t ?x a <" + ons +"Software> .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
+                   + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
+                   + "\t } .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasCreator> ?creator .\n"
+                   + "\t } .\n"
+                   + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
+                   + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
+                   + "\t ?act <" + pns + "endedAtTime> ?time \n";                  
+    String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
+        + " (GROUP_CONCAT(?creator) as ?creators)"
+        + " (SAMPLE(?agent) as ?user)"
+        + " (SAMPLE(?time) as ?posttime)"
+        + " WHERE {\n" + swquery + facetquery + "}"
+        + " GROUP BY ?x\n";
     
     ArrayList<SoftwareSummary> list = new ArrayList<SoftwareSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
       KBObject sw = soln.get(0).getObject();
+      KBObject desc = soln.get(1).getObject();
+      KBObject creator = soln.get(2).getObject();
+      KBObject agent = soln.get(3).getObject();
+      KBObject time = soln.get(4).getObject();
+      
+      if(sw == null)
+        continue;
+      
       SoftwareSummary summary = new SoftwareSummary();
       summary.setId(sw.getID());
       summary.setName(sw.getName());
       summary.setLabel(allkb.getLabel(sw));
       summary.setType(topclass);
+      
+      if(desc != null && desc.getValue() != null) {
+        String description = desc.getValue().toString();
+        description = Pattern.compile("\\n\\nInitial metadata was retrieved .*$", Pattern.DOTALL).
+          matcher(description).replaceAll("");
+        if(description.length() > 300)
+          description = description.substring(0, 297) + "...";
+        summary.setDescription(description);
+      }
+      if(creator != null && creator.getValue() != null) {
+        List<String> authors = new ArrayList<String>();
+        for(String creatorid : creator.getValue().toString().split("\\s")) {
+          KBObject authobj = allkb.getResource(creatorid);
+          authors.add(allkb.getLabel(authobj));
+        }
+        summary.setAuthors(authors);
+      }
+      if(agent != null)
+        summary.setUser(agent.getName());
+      if(time != null && time.getValue() != null) {
+        Date timestamp = ((XSDDateTime)time.getValue()).asCalendar().getTime();
+        summary.setTime(timestamp.getTime());
+      }
       list.add(summary);
     }
     return list;
@@ -582,7 +635,8 @@ public class SoftwareRepository {
     KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
     KBObject swobj = swkb.getIndividual(swid);
     if(swobj != null) {
-      Software sw = new Software(swid);
+      Software sw = new Software();
+      sw.setId(swid);
       sw.setLabel(swkb.getLabel(swobj));
       sw.setName(swobj.getName());
       
@@ -603,8 +657,10 @@ public class SoftwareRepository {
             KBAPI tmpkb = fac.getKB(valobj.getID(), OntSpec.PLAIN);
             KBObject valswobj = tmpkb.getIndividual(valobj.getID());
             if(valswobj != null) {
-              Entity entity = new Entity(valobj.getID(), 
-                  tmpkb.getLabel(valswobj), prop.getRange());
+              Entity entity = new EnumerationEntity();
+              entity.setId(valobj.getID());
+              entity.setLabel(tmpkb.getLabel(valswobj));
+              entity.setType(prop.getRange());
               entities.add(entity);
             }
           }

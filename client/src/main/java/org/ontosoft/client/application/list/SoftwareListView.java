@@ -3,6 +3,7 @@ package org.ontosoft.client.application.list;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,24 +24,24 @@ import org.ontosoft.client.components.form.facet.FacetedSearchPanel;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Software;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
 import com.google.gwt.cell.client.CheckboxCell;
-import com.google.gwt.cell.client.ClickableTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.SafeHtmlCell;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-import com.google.gwt.text.shared.AbstractSafeHtmlRenderer;
-import com.google.gwt.text.shared.SafeHtmlRenderer;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -84,7 +85,7 @@ public class SoftwareListView extends ParameterizedViewImpl
   FacetedSearchPanel facets;
   
   @UiField(provided = true)
-  CellTable<SoftwareSummary> table = new CellTable<SoftwareSummary>(20);
+  CellTable<SoftwareSummary> table = new CellTable<SoftwareSummary>(40);
 
   @UiField
   SimplePager pager;
@@ -94,9 +95,6 @@ public class SoftwareListView extends ParameterizedViewImpl
       new HashMap<String, Boolean>();
   private ListDataProvider<SoftwareSummary> listProvider = 
       new ListDataProvider<SoftwareSummary>();
-
-  Column<SoftwareSummary, String> deletecolumn;
-  Column<SoftwareSummary, Boolean> checkboxcolumn;
 
   private List<SoftwareSummary> selections;
   
@@ -191,7 +189,7 @@ public class SoftwareListView extends ParameterizedViewImpl
       }
     };
     
-    SafeHtmlRenderer<String> anchorRenderer = new AbstractSafeHtmlRenderer<String>() {
+    /*SafeHtmlRenderer<String> anchorRenderer = new AbstractSafeHtmlRenderer<String>() {
       @Override
       public SafeHtml render(String object) {
         SafeHtmlBuilder sb = new SafeHtmlBuilder();
@@ -199,25 +197,70 @@ public class SoftwareListView extends ParameterizedViewImpl
             .appendHtmlConstant("</a>");
         return sb.toSafeHtml();
       }
-    };
+    };*/
     
     // Name Column
     // TODO: Add extra rows for associated Software Versions too (indented)
-    Column<SoftwareSummary, String> namecol = 
+    final SafeHtmlCell progressCell = new SafeHtmlCell();
+    Column<SoftwareSummary, SafeHtml> namecol = new Column<SoftwareSummary, SafeHtml>(progressCell) {
+        @Override
+        public SafeHtml getValue(SoftwareSummary summary) {
+            SafeHtmlBuilder sb = new SafeHtmlBuilder();
+            sb.appendHtmlConstant("<div class='software-list-item'>");
+            sb.appendHtmlConstant("<div class='software-name'>");
+            sb.appendHtmlConstant("<a href='#" + NameTokens.browse + "/" + 
+                summary.getName() + "'>" + summary.getLabel() + "</a>");
+            sb.appendHtmlConstant("</div>");
+            
+            if(summary.getDescription() != null)
+              sb.appendHtmlConstant("<div class='wrap-pre wrap-long-words software-description'>" + 
+                  summary.getDescription() + "</div>");
+            
+            if(summary.getAuthors() != null) {
+              if(summary.getAuthors().size() == 1) {
+                sb.appendHtmlConstant("<div class='software-meta'>Author: " +
+                    summary.getAuthors().get(0)+" </div>");
+              }
+              else {
+                String authors = "";
+                for(int i=0; i<summary.getAuthors().size(); i++) {
+                  if(i > 0) authors += ", ";
+                  authors += summary.getAuthors().get(i);
+                }
+                sb.appendHtmlConstant("<div class='software-meta'>Authors: " +
+                    authors+" </div>");
+              }
+            }
+            
+            if(summary.getUser() != null) {
+              String poststring = "<div class='software-meta'>Posted by: " + summary.getUser();
+              if(summary.getTime() > 0) {
+                DateTimeFormat fmt = DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_SHORT);
+                String datestr = fmt.format(new Date(summary.getTime()));
+                poststring += " at " + datestr;
+              }
+              poststring += "</div>";
+              sb.appendHtmlConstant(poststring);
+            }
+            sb.appendHtmlConstant("</div>");
+            return sb.toSafeHtml();
+        }
+    };
+    /*Column<SoftwareSummary, String> namecol = 
         new Column<SoftwareSummary, String>(new ClickableTextCell(anchorRenderer)) {
       @Override
       public String getValue(SoftwareSummary summary) {
-        return summary.getLabel();
+        return summary.getLabel() + "\n" + summary.getDescription();
       }
     };
-    namecol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
+    namecol.setFieldUpdater(new FieldUpdater<SoftwareSummary, SafeHtml>() {
       @Override
-      public void update(int index, SoftwareSummary summary, String value) {
+      public void update(int index, SoftwareSummary summary, SafeHtml value) {
         String swname = summary.getName();
         History.newItem(NameTokens.browse + "/" + swname);
       }
-    });
-    table.addColumn(namecol, "Name");
+    });*/
+    table.addColumn(namecol);
     namecol.setSortable(true);
     sortHandler.setComparator(namecol, this.swcompare);
     table.getColumnSortList().push(namecol);
@@ -239,12 +282,14 @@ public class SoftwareListView extends ParameterizedViewImpl
         History.newItem(NameTokens.publish + "/" + swname);
       }
     });
-    table.setColumnWidth(editcol, "50px");
+    //table.setColumnWidth(editcol, "0px");
     editcol.setCellStyleNames("registered-user-cell");
     table.addColumn(editcol);
     
     // Delete Button Column
-    deletecolumn = new Column<SoftwareSummary, String>(
+
+    Column<SoftwareSummary, String> deletecolumn = 
+        new Column<SoftwareSummary, String>(
             new ButtonCell(IconType.REMOVE, ButtonType.DANGER, ButtonSize.EXTRA_SMALL)) {
       @Override
       public String getValue(SoftwareSummary details) {
@@ -257,12 +302,12 @@ public class SoftwareListView extends ParameterizedViewImpl
         deleteSoftware(summary);
       }
     });
-    table.setColumnWidth(deletecolumn, "0px");
     deletecolumn.setCellStyleNames("admin-cell");
     table.addColumn(deletecolumn);
     
     // Checkbox, software selection column (to select software to compare)
-    checkboxcolumn = new Column<SoftwareSummary, Boolean>(new CheckboxCell(true, true)) {
+    Column<SoftwareSummary, Boolean> checkboxcolumn = 
+        new Column<SoftwareSummary, Boolean>(new CheckboxCell(true, true)) {
         @Override
         public Boolean getValue(SoftwareSummary summary) {
           return selections.contains(summary);
@@ -280,7 +325,6 @@ public class SoftwareListView extends ParameterizedViewImpl
         }
     });
     
-    table.setColumnWidth(checkboxcolumn, "0px");
     checkboxcolumn.setCellStyleNames("selection-cell");
     table.addColumn(checkboxcolumn);
     

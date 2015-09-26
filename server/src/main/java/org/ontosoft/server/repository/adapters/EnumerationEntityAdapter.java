@@ -1,7 +1,8 @@
 package org.ontosoft.server.repository.adapters;
 
 import org.ontosoft.server.repository.SoftwareRepository;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 
@@ -11,26 +12,27 @@ import edu.isi.wings.ontapi.KBObject;
 public class EnumerationEntityAdapter extends EntityAdapter {
   
   public EnumerationEntityAdapter(KBAPI kb, KBAPI ontkb, KBAPI enumkb, String clsid) {
-    super(kb, ontkb, enumkb, clsid, null);
+    super(kb, ontkb, enumkb, clsid, null, EnumerationEntity.class);
   }
   
   @Override
   public Entity getEntity(String id) {
-    String label = null;
+    Entity entity = new EnumerationEntity();
+    entity.setId(id);
     KBObject entityobj = this.ontkb.getIndividual(id);
     if(entityobj != null)
-      label = this.ontkb.getLabel(entityobj);
+      entity = this.fetchEntityDetailsFromKB(entity, this.ontkb);
     else {
       entityobj = this.enumkb.getIndividual(id);
-      label = this.enumkb.getLabel(entityobj);
+      entity = this.fetchEntityDetailsFromKB(entity, this.enumkb);
     }
     if(entityobj == null)
       return null;
     
-    if(label == null) 
-      label = entityobj.getName();
+    if(entity.getLabel() == null) 
+      entity.setLabel(entityobj.getName());
 
-    return new Entity(id, label, entityClass.getID());
+    return entity;
   }
 
   @Override
@@ -56,7 +58,7 @@ public class EnumerationEntityAdapter extends EntityAdapter {
     if(entityobj == null) {
       String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
       entity.setId(repo.ENUMNS() + etype + "-" + GUID.get());
-      entityobj = this.enumkb.createObjectOfClass(entity.getId(), entityClass);
+      entityobj = this.enumkb.createObjectOfClass(entity.getId(), kbClass);
       this.enumkb.setLabel(entityobj, (String)entity.getValue());
       
       // Add new enumeration to vocabulary
@@ -64,7 +66,7 @@ public class EnumerationEntityAdapter extends EntityAdapter {
       menum.setId(entityobj.getID());
       menum.setName(entityobj.getName());
       menum.setLabel((String)entity.getValue());
-      menum.setType(entityClass.getID());
+      menum.setType(kbClass.getID());
       SoftwareRepository.get().addEnumerationToVocabulary(menum);
     }
     return true;

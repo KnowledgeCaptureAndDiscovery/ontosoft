@@ -1,6 +1,6 @@
 package org.ontosoft.shared.plugins;
 
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Software;
 
 public class Plugin {
   String name;

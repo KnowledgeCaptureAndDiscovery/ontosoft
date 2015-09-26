@@ -13,7 +13,7 @@ import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.components.browse.EntityBrowser;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.rest.SoftwareREST;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
@@ -181,7 +181,7 @@ public class CompareView extends ParameterizedViewImpl
     int i=0;
     FlexCellFormatter cellFormatter = table.getFlexCellFormatter();    
     for(Software sw : softwares) {
-      CategoryPieChart piechart = new CategoryPieChart(200);
+      CategoryPieChart piechart = new CategoryPieChart(sw.getName(), 200);
       piechart.setVocabulary(vocabulary);
       piechart.setSoftware(sw);
       piechart.setEventEnabled(false);;
@@ -190,8 +190,8 @@ public class CompareView extends ParameterizedViewImpl
       table.setWidget(1, i, piechart);
       if(!piechart.drawnCategories())
         piechart.drawCategories();
-      piechart.fillCategories(true); 
-      piechart.setActiveCategoryId(null, false);
+      piechart.fillCategories(false); 
+      //piechart.setActiveCategoryId(null, false);
       i++;
     }
     cellFormatter.addStyleName(1, i-1, "no-border-cell");    

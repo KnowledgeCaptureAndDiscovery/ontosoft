@@ -37,8 +37,8 @@ public class CategoryBarChart extends CategoryChartBase {
   }
   
   @UiConstructor
-  public CategoryBarChart(double width, double height) {
-    super();
+  public CategoryBarChart(String name, double width, double height) {
+    super(name);
     this.categoryBars = new HashMap<String, BarDetails>();
     this.width = width;
     this.height = height;
@@ -124,8 +124,10 @@ public class CategoryBarChart extends CategoryChartBase {
           .attr("y", caty)
           .attr("width", mainBarWidth)
           .attr("height", catbary - caty + cath)
-          .style("cursor", "pointer")
           .attr("fill", bgcolor);
+      
+      if(this.isEventEnabled())
+        bgbar.style("cursor", "pointer");
 
       final Selection donebar = bar.append("rect")
         .attr("pointer-events", "none")
@@ -184,46 +186,56 @@ public class CategoryBarChart extends CategoryChartBase {
         changeTextColor(bar, strokecolor, false);
       }
     
-      bgbar.on(BrowserEvents.MOUSEOVER, new DatumFunction<Void>() {
-        @Override
-        public Void apply(Element context, Value d, int index) {
-          if(!catid.equals(activeCategoryId)) {
-            doneoptbar.attr("opacity", 1);
-            if(activeCategoryId != null) {
-              fadeIn(donebar, false);
-              fadeIn(doneoptbar, false);
+      if(this.isEventEnabled()) {
+        bgbar.on(BrowserEvents.MOUSEOVER, new DatumFunction<Void>() {
+          @Override
+          public Void apply(Element context, Value d, int index) {
+            if(!catid.equals(activeCategoryId)) {
+              doneoptbar.attr("opacity", 1);
+              if(activeCategoryId != null) {
+                fadeIn(donebar, false);
+                fadeIn(doneoptbar, false);
+              }
+              makeBarBigger(donebar, true);
+              makeBarBigger(doneoptbar, true);
+              changeTextColor(bar, strokecolor, true);
             }
-            makeBarBigger(donebar, true);
-            makeBarBigger(doneoptbar, true);
-            changeTextColor(bar, strokecolor, true);
+            return null;
           }
-          return null;
-        }
-      });
-      bgbar.on(BrowserEvents.MOUSEOUT, new DatumFunction<Void>() {
-        @Override
-        public Void apply(Element context, Value d, int index) {
-          if(!catid.equals(activeCategoryId)) {
-            doneoptbar.attr("opacity", 0);
-            if(activeCategoryId != null) {
-              fadeOut(donebar, false);
-              fadeOut(doneoptbar, false);
+        });
+        bgbar.on(BrowserEvents.MOUSEOUT, new DatumFunction<Void>() {
+          @Override
+          public Void apply(Element context, Value d, int index) {
+            if(!catid.equals(activeCategoryId)) {
+              doneoptbar.attr("opacity", 0);
+              if(activeCategoryId != null) {
+                fadeOut(donebar, false);
+                fadeOut(doneoptbar, false);
+              }
+              makeBarSmaller(donebar, true);
+              makeBarSmaller(doneoptbar, true);
+              changeTextColor(bar, textcolor, true);
             }
-            makeBarSmaller(donebar, true);
-            makeBarSmaller(doneoptbar, true);
-            changeTextColor(bar, textcolor, true);
+            return null;
           }
-          return null;
-        }
-      });
-
-      bgbar.on(BrowserEvents.CLICK, new DatumFunction<Void>() {
-        @Override
-        public Void apply(Element context, Value d, int index) {
-          me.setActiveCategoryId(catid, true);
-          return null;
-        }
-      });
+        });
+  
+        bgbar.on(BrowserEvents.CLICK, new DatumFunction<Void>() {
+          @Override
+          public Void apply(Element context, Value d, int index) {
+            me.setActiveCategoryId(catid, true);
+            return null;
+          }
+        });
+      } 
+      
+      // If events disabled and no active category, show all bars full
+      if(!this.isEventEnabled() && activeCategoryId == null) {
+        doneoptbar.attr("opacity", 1);
+        makeBarBigger(donebar, false);
+        makeBarBigger(doneoptbar, false);
+        changeTextColor(bar, strokecolor, false);
+      }
 
       caty += categoryHeight + catdy;
     }
@@ -268,14 +280,15 @@ public class CategoryBarChart extends CategoryChartBase {
       double percentage = this.getDonePercentage(catId);
       double optpercentage = this.getDonePercentage(catId, true);
       
-      Selection grad = defs.append("linearGradient").attr("id", "barGrad" + i);
+      String sfx = this.getName()+i;
+      Selection grad = defs.append("linearGradient").attr("id", "barGrad_" + sfx);
       this.setGradient(grad, percentage);
 
-      Selection optgrad = defs.append("linearGradient").attr("id", "optbarGrad" + i);
+      Selection optgrad = defs.append("linearGradient").attr("id", "optbarGrad_" + sfx);
       this.setOptGradient(optgrad, optpercentage, 0);
       
-      bd.fillBar.attr("fill", "url(#barGrad"+i+")");
-      bd.fillOptBar.attr("fill", "url(#optbarGrad"+i+")");
+      bd.fillBar.attr("fill", "url(#barGrad_" + sfx + ")");
+      bd.fillOptBar.attr("fill", "url(#optbarGrad_" + sfx + ")");
       if(animate) {
         int duration = induration*2;
         if(quickanimation) 

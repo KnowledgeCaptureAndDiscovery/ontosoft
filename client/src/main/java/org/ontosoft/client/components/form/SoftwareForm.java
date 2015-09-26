@@ -18,9 +18,9 @@ import org.ontosoft.client.components.form.events.SoftwareSaveEvent;
 import org.ontosoft.client.components.form.events.SoftwareSaveHandler;
 import org.ontosoft.client.components.form.formgroup.PropertyFormGroup;
 import org.ontosoft.client.components.form.formgroup.input.EntityInput;
-import org.ontosoft.client.components.form.formgroup.input.EntityInputRegistrar;
-import org.ontosoft.shared.classes.Entity;
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
+import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -95,8 +95,10 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 
   public void setVocabulary(Vocabulary vocabulary) {
     this.vocabulary = vocabulary;
-    if(this.vocabulary != null)
+    if(this.vocabulary != null) {
+      registerEntities();
       registerEntityInputs();
+    }
   }
 
   public Software getSoftware() {
@@ -133,7 +135,31 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         if(qtype != null) {
           String qInputWidgetClass = pkg + qtype.getName() + "Input";
           //GWT.log("Checking for "+qtype.getName()+ " = "+qInputWidgetClass);
-          if(EntityInputRegistrar.register(type.getId(), qInputWidgetClass)) {
+          if(EntityRegistrar.registerInputClass(type.getId(), qInputWidgetClass)) {
+            registered = true;
+            break;
+          }
+          queue.add(qtype.getParent());
+        }
+      }
+      if(!registered)
+        GWT.log("** Cannot find adapter for "+type.getId());
+    }
+  }
+  
+  private void registerEntities() {
+    final String pkg = Entity.class.getName().replaceAll("(.*\\.).*?$", "$1");
+    for(MetadataType type : vocabulary.getTypes().values()) {
+      ArrayList<String> queue = new ArrayList<String>();
+      //GWT.log("-------- "+type.getName());
+      queue.add(type.getId());
+      boolean registered = false;
+      while(!queue.isEmpty()) {
+        MetadataType qtype = vocabulary.getType(queue.remove(0));
+        if(qtype != null) {
+          String qInputWidgetClass = pkg + qtype.getName();
+          //GWT.log("Checking for "+qtype.getName()+ " = "+qInputWidgetClass);
+          if(EntityRegistrar.registerEntityClass(type.getId(), qInputWidgetClass)) {
             registered = true;
             break;
           }

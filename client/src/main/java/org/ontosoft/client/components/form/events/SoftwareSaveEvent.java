@@ -1,6 +1,6 @@
 package org.ontosoft.client.components.form.events;
 
-import org.ontosoft.shared.classes.Software;
+import org.ontosoft.shared.classes.entities.Software;
 
 import com.google.gwt.event.shared.GwtEvent;
 

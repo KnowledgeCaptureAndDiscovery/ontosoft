@@ -1,7 +1,7 @@
 package org.ontosoft.client.components.form.formgroup.input;
 
 import org.gwtbootstrap3.client.ui.constants.InputType;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 

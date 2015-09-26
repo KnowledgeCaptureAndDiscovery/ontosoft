@@ -1,6 +1,6 @@
 package org.ontosoft.server.repository.adapters;
 
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.Entity;
 
 public interface IEntityAdapter {
   

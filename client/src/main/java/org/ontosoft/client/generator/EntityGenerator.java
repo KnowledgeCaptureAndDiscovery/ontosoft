@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.ontosoft.client.components.form.formgroup.input.IEntityInput;
+import org.ontosoft.shared.classes.entities.Entity;
 
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
@@ -16,13 +17,7 @@ import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 
-public class EntityInputGenerator extends Generator {
-
-  /**
-   * Only classes implementing this interface will be supported by EntityInputFactoryImpl.
-   * Some filter is required otherwise 
-   */
-  public static final Class<?> MARKING_INTERFACE = IEntityInput.class;
+public class EntityGenerator extends Generator {
 
   /**
    * Generate Java code for factory class capable of returning instance for a class name.
@@ -49,10 +44,10 @@ public class EntityInputGenerator extends Generator {
     // Filter all classes visible to GWT client side and return only supported ones
     List<JClassType> allInstantiableClasses = getAllInstantiableClassesByThisfactory(context);
 
-    final String genPackageName = EntityInputFactory.class.getPackage().getName();
+    final String genPackageName = EntityFactory.class.getPackage().getName();
     logger.log(Type.INFO, "genPackageName: " + genPackageName);
 
-    final String genClassName = EntityInputFactory.class.getSimpleName() + "Impl";
+    final String genClassName = EntityFactory.class.getSimpleName() + "Impl";
 
     // prepare Composer. Composer prepares shell of the Java code, so we need to set package and class name
     ClassSourceFileComposerFactory composer = new ClassSourceFileComposerFactory(genPackageName, genClassName);
@@ -62,7 +57,7 @@ public class EntityInputGenerator extends Generator {
     
     PrintWriter printWriter = context.tryCreate(logger, genPackageName, genClassName);
     if (printWriter != null) {
-      composer.addImplementedInterface(EntityInputFactory.class.getSimpleName());
+      composer.addImplementedInterface(EntityFactory.class.getSimpleName());
 
       // Get source stream from Composer. It already contains shell of the new class
       // like package, imports and full class signature
@@ -89,11 +84,15 @@ public class EntityInputGenerator extends Generator {
    */
   private List<JClassType> getAllInstantiableClassesByThisfactory(GeneratorContext context) {
     TypeOracle oracle = context.getTypeOracle();
-    JClassType markerInterface = oracle.findType(MARKING_INTERFACE.getName());
+    JClassType markerInterface1 = oracle.findType(IEntityInput.class.getName());
+    JClassType markerInterface2 = oracle.findType(Entity.class.getName());
     List<JClassType> allInstantiableClasses = new LinkedList<JClassType>();
 
     for (JClassType classType : oracle.getTypes()) {
-      if (!classType.equals(markerInterface) && classType.isAssignableTo(markerInterface)) {
+      if (!classType.equals(markerInterface1) && classType.isAssignableTo(markerInterface1)) {
+        allInstantiableClasses.add(classType);
+      }
+      else if (!classType.equals(markerInterface2) && classType.isAssignableTo(markerInterface2)) {
         allInstantiableClasses.add(classType);
       }
     }

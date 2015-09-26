@@ -10,7 +10,8 @@ import org.gwtbootstrap3.client.ui.constants.Placement;
 import org.gwtbootstrap3.client.ui.constants.Trigger;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.ComplexEntity;
+import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -24,7 +25,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 public class ComplexEntityInput extends FieldSet implements IEntityInput {
   private HandlerManager handlerManager;
 
-  Entity entity;
+  ComplexEntity entity;
   MetadataProperty property;
   Vocabulary vocabulary;
   
@@ -43,8 +44,14 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
     
     MetadataType type = vocabulary.getType(this.property.getRange());
     for(MetadataProperty subprop : vocabulary.getPropertiesForType(type)) {
-      String subentityid = e.getId() + "-" + GUID.get();  
-      Entity subentity = new Entity(subentityid, null, subprop.getRange());
+      String subentityid = e.getId() + "-" + GUID.get();
+      Entity subentity = null;
+      try {
+        subentity = EntityRegistrar.getEntity(subentityid, null, subprop);
+      } catch (Exception ex) {
+        GWT.log("Could not get a new entity", ex);
+        continue;
+      }
       try {
         subprop.setRequired(prop.isRequired());
         String tip = subprop.getQuestion();
@@ -53,7 +60,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
         Tooltip tooltip = new Tooltip(tip);
         tooltip.setPlacement(Placement.BOTTOM);
         tooltip.setTrigger(Trigger.FOCUS);
-        IEntityInput ip = EntityInputRegistrar.getInput(subentity, subprop, vocabulary);
+        IEntityInput ip = EntityRegistrar.getInput(subentity, subprop, vocabulary);
         tooltip.add(ip.asWidget());
         this.add(tooltip);
         
@@ -70,7 +77,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
         GWT.log("Problem adding sub widget: "+subprop.getId()+" for "+prop.getId(), exception);
       }
     }
-    this.entity = e;
+    this.entity = (ComplexEntity) e;
     this.setValue(e);
   }
   
@@ -79,19 +86,14 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
    **/
   @Override
   public Entity getValue() {
-    HashMap<String, List<HashMap<String, Object>>> subentities = 
-        new HashMap<String, List<HashMap<String, Object>>>();
+    HashMap<String, List<Entity>> subentities = 
+        new HashMap<String, List<Entity>>();
     for(String propid: inputs.keySet()) {
       IEntityInput input = inputs.get(propid);
-      List<HashMap<String, Object>> entities = new ArrayList<HashMap<String, Object>>();
+      List<Entity> entities = new ArrayList<Entity>();
       Entity subentity = input.getValue();
-      if(subentity != null) {
-        HashMap<String, Object> entityhash = new HashMap<String, Object>();
-        entityhash.put("id", subentity.getId());
-        entityhash.put("value", subentity.getValue());
-        entityhash.put("type", subentity.getType());
-        entities.add(entityhash);
-      }
+      if(subentity != null)
+        entities.add(subentity);
       subentities.put(propid, entities);
     }
     this.entity.setValue(subentities);;
@@ -100,27 +102,20 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
 
 
   @Override
-  @SuppressWarnings("unchecked")
   public void setValue(Entity e) {
-    HashMap<String, List<HashMap<String, Object>>> valuemap = 
-        (HashMap<String, List<HashMap<String, Object>>>) e.getValue();
-    
-    if(valuemap != null) {
+    ComplexEntity ce = (ComplexEntity) e;
+    if(ce.getValue() != null) {
       for(String propid: inputs.keySet()) {
         IEntityInput input = inputs.get(propid);
-        List<HashMap<String, Object>> subentityhashes = valuemap.get(propid);
-        if(subentityhashes != null) {
-          for(HashMap<String, Object> subentityhash: subentityhashes) {
-            Entity subentity = new Entity(
-                (String)subentityhash.get("id"), 
-                subentityhash.get("value"),
-                (String)subentityhash.get("type"));            
+        List<Entity> subentities = ce.getPropertyValues(propid);
+        if(subentities != null) {
+          for(Entity subentity: subentities) {
             input.setValue(subentity);
           }
         }
       }
     }
-    this.entity = e;
+    this.entity = ce;
   }
 
   @Override

@@ -22,7 +22,7 @@
 		<gwtp.version>1.5</gwtp.version>
 		<gin.version>2.1.2</gin.version>
 		<gwt.d3.version>1.1.1</gwt.d3.version>
-		<restygwt.version>2.0.2</restygwt.version>		
+		<restygwt.version>2.0.3</restygwt.version>		
 		<validation.version>1.0.0.GA</validation.version>
 		<gwtbootstrap3.version>1.0-SNAPSHOT</gwtbootstrap3.version>
 		
@@ -137,6 +137,7 @@
 					<soycReport>true</soycReport>
 					<nodetailedSoyc>true</nodetailedSoyc-->
 					<optimize>9</optimize>
+					<logLevel>DEBUG</logLevel>
 					<!--enableClosureCompiler>true</enableClosureCompiler-->
 				</configuration>
 			</plugin>

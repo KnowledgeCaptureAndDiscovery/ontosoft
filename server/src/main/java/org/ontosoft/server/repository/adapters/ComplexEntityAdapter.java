@@ -2,10 +2,10 @@ package org.ontosoft.server.repository.adapters;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.ontosoft.shared.classes.Entity;
+import org.ontosoft.shared.classes.entities.ComplexEntity;
+import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.GUID;
 
 import edu.isi.wings.ontapi.KBAPI;
@@ -15,14 +15,15 @@ public class ComplexEntityAdapter extends EntityAdapter {
   protected ArrayList<KBObject> properties;
   
   public ComplexEntityAdapter(KBAPI kb, KBAPI ontkb, KBAPI enumkb, String clsid) {
-    super(kb, ontkb, enumkb, clsid, null);
-    properties = ontkb.getPropertiesOfClass(this.entityClass, true);
+    super(kb, ontkb, enumkb, clsid, null, ComplexEntity.class);
+    properties = ontkb.getPropertiesOfClass(this.kbClass, true);
   }
 
   @Override
   public Entity getEntity(String id) {
     KBObject entityobj = this.kb.getIndividual(id);
-
+    ComplexEntity entity = (ComplexEntity) super.getEntity(id);
+    
     HashMap<String, List<Entity>> subentities = new HashMap<String, List<Entity>>();
     for(KBObject propobj: properties) {
       List<Entity> entities = new ArrayList<Entity>();
@@ -30,15 +31,17 @@ public class ComplexEntityAdapter extends EntityAdapter {
       for(KBObject valobj: kb.getPropertyValues(entityobj, propobj)) {
         IEntityAdapter adapter = EntityRegistrar.getAdapter(kb, ontkb, enumkb, range.getID());
         if(adapter != null) {
-          Entity entity = adapter.getEntity(valobj.getID());
-          if(entity != null)
-            entities.add(entity);
+          Entity subentity = adapter.getEntity(valobj.getID());
+          if(subentity != null)
+            entities.add(subentity);
         }
       }
       subentities.put(propobj.getID(), entities);
     }
+    entity.setValue(subentities);
+    
     if(subentities.keySet().size() > 0)
-      return new Entity(entityobj.getID(), subentities, this.entityClass.getID());
+      return entity;
 
     return null;
   }
@@ -47,22 +50,17 @@ public class ComplexEntityAdapter extends EntityAdapter {
   @Override
   @SuppressWarnings("unchecked")
   public boolean saveEntity(Entity entity) {
-    KBObject entityobj = this.kb.createObjectOfClass(entity.getId(), entityClass);
+    KBObject entityobj = this.kb.createObjectOfClass(entity.getId(), kbClass);
     
-    HashMap<String, List<LinkedHashMap<String, Object>>> subentitypropvals = 
-        (HashMap<String, List<LinkedHashMap<String, Object>>>) entity.getValue();
+    HashMap<String, List<Entity>> subentitypropvals = 
+        (HashMap<String, List<Entity>>) entity.getValue();
     
     for(String propid : subentitypropvals.keySet()) {
       KBObject swprop = this.ontkb.getProperty(propid);
       if (swprop != null) {
-        List<LinkedHashMap<String, Object>> subentityhashes = subentitypropvals.get(propid);
+        List<Entity> subentityhashes = subentitypropvals.get(propid);
         
-        for(LinkedHashMap<String, Object> subentityhash: subentityhashes) {
-          Entity subentity = new Entity(
-              (String)subentityhash.get("id"), 
-              subentityhash.get("value"),
-              (String)subentityhash.get("type"));
-          
+        for(Entity subentity: subentityhashes) {
           // Get entity adapter for class
           IEntityAdapter adapter = EntityRegistrar.getAdapter(kb, ontkb, enumkb, subentity.getType());
           if(adapter != null) {
