@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 public class ComplexEntity extends EnumerationEntity {
-  @JsonDeserialize(converter=PropertyValuesDeserializer.class)
+  @JsonDeserialize(converter=ComplexEntityDeserializer.class)
   protected Map<String, List<Entity>> value;
   
   public ComplexEntity() {

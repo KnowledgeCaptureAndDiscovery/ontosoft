@@ -13,8 +13,8 @@ public class DateEntity extends EnumerationEntity {
   @Override
   public void setValue(Object value) {
     if(value == null)
-      return;
-    if(value instanceof Date)
+      this.value = null;
+    else if(value instanceof Date)
       this.value = (Date) value;
   }
 }

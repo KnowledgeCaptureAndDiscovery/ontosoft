@@ -1,7 +1,7 @@
 package org.ontosoft.shared.classes.entities;
 
 public class NumericEntity extends EnumerationEntity {
-  double value;
+  Double value;
 
   @Override
   public Double getValue() {
@@ -11,8 +11,8 @@ public class NumericEntity extends EnumerationEntity {
   @Override
   public void setValue(Object value) {
     if(value == null)
-      return;
-    if (!(value instanceof Double))
+      this.value = null;
+    else if (!(value instanceof Double))
       this.value = new Double(value.toString());
     else
       this.value = (Double) value;

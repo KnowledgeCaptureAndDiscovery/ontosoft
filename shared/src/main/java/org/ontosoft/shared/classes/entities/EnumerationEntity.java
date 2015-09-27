@@ -10,6 +10,8 @@ public class EnumerationEntity extends Entity {
   public void setValue(Object value) {
     if(value != null)
       this.setLabel(value.toString());
+    else
+      this.setLabel(null);
   }
 
 }

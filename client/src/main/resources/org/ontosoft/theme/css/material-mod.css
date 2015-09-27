@@ -293,7 +293,7 @@ h1 small {
 .admin-table .admin-cell {
 	display: table-cell !important;
 	padding-left: 0px !important;
-	width: 64px;
+	width: 64px !important;
 }
 .registered-user-cell {
 	display: none !important;
@@ -302,8 +302,8 @@ h1 small {
 .registered-user-table .registered-user-cell {
 	display: table-cell !important;
 	padding-left: 4px !important;
-	padding-right: 4px !important
-	width: 50px;
+	padding-right: 4px !important;
+	width: 50px !important;
 }
 .selection-cell {
 	display:none !important;
