@@ -137,7 +137,7 @@
 					<soycReport>true</soycReport>
 					<nodetailedSoyc>true</nodetailedSoyc-->
 					<optimize>9</optimize>
-					<logLevel>DEBUG</logLevel>
+					<!--logLevel>DEBUG</logLevel-->
 					<!--enableClosureCompiler>true</enableClosureCompiler-->
 				</configuration>
 			</plugin>
