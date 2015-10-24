@@ -47,7 +47,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
       String subentityid = e.getId() + "-" + GUID.get();
       Entity subentity = null;
       try {
-        subentity = EntityRegistrar.getEntity(subentityid, null, subprop);
+        subentity = EntityRegistrar.getEntity(subentityid, null, subprop.getRange());
       } catch (Exception ex) {
         GWT.log("Could not get a new entity", ex);
         continue;

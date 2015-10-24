@@ -61,7 +61,7 @@ public class EnumerationEntityInput implements IEntityInput {
               String label = menum.getLabel() != null ? menum.getLabel() : menum.getName();
               EnumerationEntity entity = new EnumerationEntity();
               entity.setId(menum.getId());
-              entity.setLabel(label);
+              entity.setValue(label);
               entity.setType(prop.getRange());
               enumerations.put(label, entity);
             }

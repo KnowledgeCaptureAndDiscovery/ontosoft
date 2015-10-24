@@ -458,13 +458,9 @@ public class SoftwareRepository {
           
           // Treat software entities specially 
           if(vocabulary.isA(type, vocabulary.getType(topclass))) {
-            if(entity.getId() == null || !this.hasSoftware(entity.getId())) {
-              entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
-              String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
-              String id = this.LIBNS() + etype + "-" + GUID.get();
-              entity.setId(id);
+            if(!this.hasSoftware(entity.getId())) {
               Software subsw = new Software();
-              subsw.setId(id);
+              subsw.setId(entity.getId());
               subsw.setLabel((String)entity.getValue());
               subsw.setType(entity.getType());
               String swid = this.addSoftware(subsw, user);

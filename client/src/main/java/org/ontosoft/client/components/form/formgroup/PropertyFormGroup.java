@@ -33,6 +33,8 @@ import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.util.GUID;
+import org.ontosoft.shared.classes.util.KBConstants;
+import org.ontosoft.shared.classes.vocabulary.MetadataClass;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.Plugin;
@@ -254,9 +256,21 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   }
   
   private Entity getNewEntity(Object value) {
-    String id = GUID.randomEntityId(software.getId(), property.getRange());
+    String proptype = property.getRange();
+    String id = GUID.randomEntityId(software.getId(), proptype);
+    
+    // Convert software entities to enumerations
+    MetadataClass topclass = vocabulary.getType(KBConstants.ONTNS()+"Software");
+    MetadataClass eclass = vocabulary.getType(proptype);
+    if(vocabulary.isA(eclass, topclass)) {
+      proptype = KBConstants.ONTNS()+"EnumerationEntity";
+      id = id.replace(software.getName()+"#", "");
+    }
+    
     try {
-      return EntityRegistrar.getEntity(id, value, property);
+      Entity entity = EntityRegistrar.getEntity(id, value, proptype);
+      entity.setType(property.getRange());
+      return entity;
     } catch (Exception e) {
       GWT.log("Coult not get a new entity", e);
       return null;

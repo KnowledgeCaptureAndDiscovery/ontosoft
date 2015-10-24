@@ -52,19 +52,19 @@ public class EntityRegistrar {
     return null;
   }
   
-  public static Entity getEntity(String id, Object value, MetadataProperty mprop) 
+  public static Entity getEntity(String id, Object value, String type) 
       throws Exception {
-    String entityClass = entityClasses.get(mprop.getRange());
+    String entityClass = entityClasses.get(type);
     if(entityClass != null) {
       Object item = entityFactory.instantiate(entityClass);
       if(item == null) {
-        GWT.log("Cannot instantiate entity for "+mprop.getRange());
-        throw new Exception("Cannot instantiate entity for "+mprop.getRange());
+        GWT.log("Cannot instantiate entity for "+type);
+        throw new Exception("Cannot instantiate entity for "+type);
       }
       else if(item instanceof Entity) {
         Entity entity = (Entity) item;
         entity.setId(id);
-        entity.setType(mprop.getRange());
+        entity.setType(type);
         if(value != null)
           entity.setValue(value);
         return entity;

@@ -278,7 +278,7 @@ public class PublishView extends ParameterizedViewImpl
   @UiHandler("reloadbutton")
   public void onReload(ClickEvent event) {
     initSoftware(softwarename, true);
-    History.replaceItem(History.getToken(), false);
+    //History.replaceItem(History.getToken(), false);
   }
   
   @UiHandler("softwareform")
