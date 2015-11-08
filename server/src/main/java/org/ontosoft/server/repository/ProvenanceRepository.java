@@ -28,12 +28,13 @@ import edu.isi.wings.ontapi.OntSpec;
 public class ProvenanceRepository {
   OntFactory fac;
   KBAPI ontkb;
+  public static String PROV_GRAPH = "provenance";
   
   String ontns, owlns, rdfns, rdfsns;
   String server;
 
   private String PROVURI(String swid) {
-    return swid + "/provenance";
+    return swid + "/" + PROV_GRAPH;
   }
 
   private String USERURI() {

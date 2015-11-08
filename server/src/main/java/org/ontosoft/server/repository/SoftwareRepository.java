@@ -570,7 +570,8 @@ public class SoftwareRepository {
                    + "\t } .\n"
                    + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
                    + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
-                   + "\t ?act <" + pns + "endedAtTime> ?time \n";                  
+                   + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))";
     String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
         + " (GROUP_CONCAT(?creator) as ?creators)"
         + " (SAMPLE(?agent) as ?user)"
