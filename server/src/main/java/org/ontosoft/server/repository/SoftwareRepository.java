@@ -75,7 +75,6 @@ public class SoftwareRepository {
     setConfiguration();
     initializeKB();
     registerPlugins();
-    initializeVocabularyFromKB();
     this.prov = new ProvenanceRepository();
   }
   
