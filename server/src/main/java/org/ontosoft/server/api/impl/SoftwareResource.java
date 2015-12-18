@@ -315,7 +315,7 @@ public class SoftwareResource implements SoftwareService {
   @Override
   public List<String> getPermissionTypes()
   {
-	  return this.repo.getPermissionTypes();
+    return this.repo.getPermissionTypes();
   }
   
   @POST
@@ -325,15 +325,15 @@ public class SoftwareResource implements SoftwareService {
   @RolesAllowed("user")
   @Override 
   public Boolean setSoftwarePermissionForUser(@PathParam("name") String name, 
-		  @JsonProperty("authorization") Authorization authorization) {
-	  String swid = name;
-	  if(!name.startsWith("http:"))
-	    swid = repo.LIBNS() + name;
-	  
-	  if (!swid.equals(authorization.getAccessToObjId()))
-		  return false;
-	  
-	  return this.repo.setSoftwarePermissionForUser((User) securityContext.getUserPrincipal(), authorization);
+    @JsonProperty("authorization") Authorization authorization) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+
+    if (!swid.equals(authorization.getAccessToObjId()))
+      return false;
+
+    return this.repo.setSoftwarePermissionForUser((User) securityContext.getUserPrincipal(), authorization);
   }
   
   @GET
@@ -354,12 +354,12 @@ public class SoftwareResource implements SoftwareService {
   @Produces("application/json")
   @Consumes("application/json")
   public AccessMode getSoftwareAccessLevelForUser(@PathParam("name") String swname, 
-		  @PathParam("username") String username) {
-	  String swid = swname;
-	  if(!swname.startsWith("http:"))
-	    swid = repo.LIBNS() + swname;
-	  
-	  return this.repo.getSoftwareAccessLevelForUser(swid, username);
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.getSoftwareAccessLevelForUser(swid, username);
   }
   /**
    * Exports

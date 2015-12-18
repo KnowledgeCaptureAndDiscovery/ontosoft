@@ -162,8 +162,8 @@ public class SoftwareListView extends ParameterizedViewImpl
   }
   
   public void redrawControls() {
-	table.removeStyleName("edit-col");
-	table.removeStyleName("delete-col");
+    table.removeStyleName("edit-col");
+    table.removeStyleName("delete-col");
 	
     bigpublishbutton.getParent().setVisible(false);
     
@@ -278,17 +278,17 @@ public class SoftwareListView extends ParameterizedViewImpl
         public String getValue(SoftwareSummary details) {
           return "Edit";
         }
+
         @Override
         public void render(Cell.Context context, SoftwareSummary summary, SafeHtmlBuilder sb) {
-        	UserSession session = SessionStorage.getSession();
-        	String accesslevel = "Read";
+          UserSession session = SessionStorage.getSession();
+          String accesslevel = "Read";
         	if (session != null)
         		accesslevel = PermUtils.getAccessLevelForUser(summary.getPermission(), session.getUsername());
         	
-	    	if (isadmin || (isreguser && accesslevel.equals("Write")))
-	    	{
-	    		super.render(context,summary,sb);
-	    	}
+	    	  if (isadmin || (isreguser && accesslevel.equals("Write"))) {
+            super.render(context,summary,sb);
+	    	  }
         }        
     };
     
@@ -312,15 +312,17 @@ public class SoftwareListView extends ParameterizedViewImpl
       public String getValue(SoftwareSummary details) {
         return "Delete";
       }
+
       @Override
       public void render(Cell.Context context, SoftwareSummary summary, SafeHtmlBuilder sb) {
-    	UserSession session = SessionStorage.getSession();
-    	if (isadmin || (isreguser && PermUtils.hasOwnerAccess(summary.getPermission(), session.getUsername())))
-    	{
-      		super.render(context, summary, sb);
-    	}
+        UserSession session = SessionStorage.getSession();
+        if (isadmin || 
+          (isreguser && PermUtils.hasOwnerAccess(summary.getPermission(), session.getUsername()))) {
+          super.render(context, summary, sb);
+        }
       }
     };
+    
     deletecolumn.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
       @Override
       public void update(int index, SoftwareSummary summary, String value) {

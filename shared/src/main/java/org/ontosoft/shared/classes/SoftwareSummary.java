@@ -136,10 +136,10 @@ public class SoftwareSummary {
   }
   
   public void setPermission(Permission permission) {
-	  this.permission = permission;
+    this.permission = permission;
   }
   
   public Permission getPermission() {
-	  return this.permission;
+    return this.permission;
   } 
 }

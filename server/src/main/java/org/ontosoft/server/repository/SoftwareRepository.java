@@ -96,11 +96,11 @@ public class SoftwareRepository {
   }
   
   private String USERURI() {
-	return server.replaceAll("\\/$", "") + "/users/"; 
+    return server.replaceAll("\\/$", "") + "/users/"; 
   }
   
   private String USERNS() {
-	return USERURI();
+    return USERURI();
   }
   
   public String LIBNS() {
@@ -541,14 +541,13 @@ public class SoftwareRepository {
     Software cursw = this.getSoftware(swid);
     
     String accesslevel = PermUtils.getAccessLevelForUser(cursw.getPermission(), user.getName());
-    if (user.getRoles().contains("admin") || accesslevel.equals("Write"))
-    {
+    if (user.getRoles().contains("admin") || accesslevel.equals("Write")) {
         Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
         String nswid = this.updateOrAddSoftware(newsw, user, true);
         if(nswid != null) {
           this.prov.addProvenance(prov);
           return true;
-        }    	
+        }
     }
 
     return false;
@@ -709,73 +708,69 @@ public class SoftwareRepository {
   }
 
   public Permission getSoftwarePermission(String swid) {
-	  try {
-		  return this.perm_repo.getSoftwarePermission(swid);
-	  } catch (Exception e) {
-		  return null;
-	  }
+    try {
+      return this.perm_repo.getSoftwarePermission(swid);
+    } catch (Exception e) {
+      return null;
+    }
   }
   
   public AccessMode getSoftwareAccessLevelForUser(String swid, String username) {
-	  UserCredentials user = UserDatabase.get().getUser(username);
-	  AccessMode mode = new AccessMode();
-	  mode.setMode("Read");
-	  if (user.getRoles().contains("admin"))
-		  mode.setMode("Write");
-	  else 
-	  {
-		  try {
-			  Permission permission = this.perm_repo.getSoftwarePermission(swid);
-			  mode.setMode(PermUtils.getAccessLevelForUser(permission, username));
-		  } catch (Exception e) {
-			  mode.setMode("Read");
-		  }
-	  }
-	  return mode;
+    UserCredentials user = UserDatabase.get().getUser(username);
+    AccessMode mode = new AccessMode();
+    mode.setMode("Read");
+    if (user.getRoles().contains("admin"))
+      mode.setMode("Write");
+    else {
+      try {
+        Permission permission = this.perm_repo.getSoftwarePermission(swid);
+        mode.setMode(PermUtils.getAccessLevelForUser(permission, username));
+      } catch (Exception e) {
+        mode.setMode("Read");
+      }
+    }
+    return mode;
   }
   
   public List<String> getPermissionTypes()
   {
-	  return this.perm_repo.getPermissionTypes();
+    return this.perm_repo.getPermissionTypes();
   }
   
   public Boolean setSoftwarePermissionForUser(User loggedinuser, Authorization authorization) {	  
-	  String swid = authorization.getAccessToObjId();
-	  String username = authorization.getAgentName();
-	  String accessmodeid = authorization.getAccessMode().getId();
-	  
-	  boolean updated = false;
-	  
-	  try {
-		  Permission perm = getSoftwarePermission(swid);
-		  if (loggedinuser.getRoles().contains("admin") || PermUtils.hasOwnerAccess(perm, loggedinuser.getName()))
-		  {
-			  String permns = perm.getId() + "#";
-			  
-			  Map<String, Authorization> auths = perm.getAuthorizations();
-			  for (Authorization authobj : auths.values())
-			  {
-				  if (authobj.getAgentName().equals(username))
-				  {
-					  AccessMode mode = new AccessMode();
-					  mode.setId(accessmodeid);
-					  authobj.setAccessMode(mode);
-					  updated = true;
-				  }
-			  }
-			  if (!updated)
-			  {
-				  authorization.setId(permns + "Auth-" + GUID.get());
-				  UserCredentials user = UserDatabase.get().getUser(username);
-				  authorization.setAgentId(this.getUserId(user));
-				  perm.addAuth(authorization);
-			  }
-			  
-			  this.perm_repo.commitPermission(perm);
-			  return true;
-		  }		  
-	  } catch (Exception e) {}
-	  return false;
+    String swid = authorization.getAccessToObjId();
+    String username = authorization.getAgentName();
+    String accessmodeid = authorization.getAccessMode().getId();
+
+    boolean updated = false;
+
+    try {
+      Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        String permns = perm.getId() + "#";
+
+        Map<String, Authorization> auths = perm.getAuthorizations();
+        for (Authorization authobj : auths.values()) {
+          if (authobj.getAgentName().equals(username)) {
+            AccessMode mode = new AccessMode();
+            mode.setId(accessmodeid);
+            authobj.setAccessMode(mode);
+            updated = true;
+          }
+        }
+        if (!updated) {
+          authorization.setId(permns + "Auth-" + GUID.get());
+          UserCredentials user = UserDatabase.get().getUser(username);
+          authorization.setAgentId(this.getUserId(user));
+          perm.addAuth(authorization);
+        }
+
+        this.perm_repo.commitPermission(perm);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
   }
   
   public String getProvenanceGraph(String swid) throws Exception {

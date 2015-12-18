@@ -50,19 +50,19 @@ public class KBConstants {
   }
   
   public static String ACLURI() {
-	  return acluri;
+    return acluri;
   }
-	  
+
   public static String ACLNS() {
-	  return aclns;
+    return aclns;
   }
 
   public static String FOAFNS() {
-	  return foafns;
+    return foafns;
   }
-  
+
   public static String FOAFURI() {
-	  return foafuri;
+    return foafuri;
   }
   
   public static String DCTERMSNS() {

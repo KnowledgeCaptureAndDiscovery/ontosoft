@@ -10,7 +10,7 @@ public class Permission {
   Map<String, Authorization> authorizations;
   
   public Permission() {
-	  this.authorizations = new HashMap<String, Authorization>();
+    this.authorizations = new HashMap<String, Authorization>();
   }
 
   public String getId() {
@@ -20,23 +20,23 @@ public class Permission {
   public void setId(String id) {
     this.id = id;
   }
-  
+
   public void setOwnerId(String id) {
-	  Agent owner = new Agent();
-	  owner.setId(id);
-	  this.owner = owner;
+    Agent owner = new Agent();
+    owner.setId(id);
+    this.owner = owner;
   }
-  
+
   public Agent getOwner() {
-	  return this.owner;
+  return this.owner;
   }
- 
+
   public void setType(String type) {
-	  this.type = type;
+    this.type = type;
   }
-  
+
   public String getType() {
-	  return this.type;
+    return this.type;
   }
   
   public Map<String, Authorization> getAuthorizations() {

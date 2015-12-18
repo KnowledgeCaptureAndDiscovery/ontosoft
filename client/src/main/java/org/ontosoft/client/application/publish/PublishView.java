@@ -179,8 +179,9 @@ public class PublishView extends ParameterizedViewImpl
         UserSession session = SessionStorage.getSession();
         
         if ((session != null && session.getRoles().contains("admin")) || 
-        		loggedinuser.equals(sw.getPermission().getOwner().getName()))
-        	permbutton.setVisible(true);
+          loggedinuser.equals(sw.getPermission().getOwner().getName())) {
+          permbutton.setVisible(true);
+        }
         
         software = sw;
         initialDraw();
@@ -440,156 +441,155 @@ public class PublishView extends ParameterizedViewImpl
   
   @UiHandler("permbutton")
   void onPermButtonClick(ClickEvent event) {
-	  permissiondialog.show();
-      userlist.setVisible(true);
-      permlist.setVisible(true);
-      if (userlist.getItemCount() == 0)
-    	  setUserList();
-      if (permlist.getItemCount() == 0)
-    	  setPermissionList();
+    permissiondialog.show();
+    userlist.setVisible(true);
+    permlist.setVisible(true);
+    if (userlist.getItemCount() == 0)
+      setUserList();
+    if (permlist.getItemCount() == 0)
+      setPermissionList();
   }
   
   @UiHandler("userlist")
   void onUserChangedEvent(ChangeEvent event) {
-	  permlist.setEnabled(true);
-	  setpermbutton.setEnabled(true);
-	  int index = userlist.getSelectedIndex();
-	  String newuser = userlist.getValue(index);
-	  selectPermissionForUser(newuser);
+    permlist.setEnabled(true);
+    setpermbutton.setEnabled(true);
+    int index = userlist.getSelectedIndex();
+    String newuser = userlist.getValue(index);
+    selectPermissionForUser(newuser);
   }
   
   private void selectAccessLevel(String accesslevel)
   {
-	  for (int i=0; i<permlist.getItemCount(); i++) {
-		    if (permlist.getItemText(i).equals(accesslevel)) {
-		        permlist.setSelectedIndex(i);
-		        break;
-		    }
-		}	  
+    for (int i = 0; i < permlist.getItemCount(); i++) {
+      if (permlist.getItemText(i).equals(accesslevel)) {
+        permlist.setSelectedIndex(i);
+        break;
+      }
+    }
   }
   
   private void selectPermissionForUser(final String username)
   {
-	  SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), username, new Callback<AccessMode, Throwable>() {
-	      @Override
-	      public void onFailure(Throwable reason) {
-	        AppNotification.notifyFailure(reason.getMessage());
-	      }
-	      @Override
-	      public void onSuccess(AccessMode accessmode) {
-	    	  selectAccessLevel(accessmode.getMode());
-	      }
-	    });
+    SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), 
+      username, new Callback<AccessMode, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(AccessMode accessmode) {
+        selectAccessLevel(accessmode.getMode());
+      }
+    });
 	  
-	  if (software.getPermission().getOwner().getName().equals(username))
-	  {
-		  permlist.setEnabled(false);
-		  setpermbutton.setEnabled(false);		  
-	  }
-	  else
-	  {
-		  UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
-		      @Override
-		      public void onFailure(Throwable reason) {
-		        AppNotification.notifyFailure(reason.getMessage());
-		      }
-		      @Override
-		      public void onSuccess(List<String> roles) {
-		    	  if (roles.contains("admin"))
-		    	  {
-		    		  permlist.setEnabled(false);
-		    		  setpermbutton.setEnabled(false);
-		    	  }
-		      }
-		    });		  
-	  }	  
+	  if (software.getPermission().getOwner().getName().equals(username)) {
+      permlist.setEnabled(false);
+      setpermbutton.setEnabled(false);		  
+    } else {
+      UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+        }
+
+        @Override
+        public void onSuccess(List<String> roles) {
+          if (roles.contains("admin")) {
+            permlist.setEnabled(false);
+            setpermbutton.setEnabled(false);
+          }
+        }
+      });		  
+    }	  
   }
   
   private void setUserList() {
-	    userlist.clear();
-	    UserREST.getUsers(new Callback<List<String>, Throwable>() {
-	      @Override
-	      public void onFailure(Throwable reason) {
-	        AppNotification.notifyFailure(reason.getMessage());
-	      }
-	      @Override
-	      public void onSuccess(List<String> list) {
-	        int i=0;
-	        for(String name : list) {
-	          userlist.addItem(name);
-	          if(name.equals(loggedinuser))
-	          {
-	            userlist.setItemSelected(i, true);
-	            selectPermissionForUser(loggedinuser);
-	          }
-	          i++;
-	        }
-	      }
-	    });
-	  }
+    userlist.clear();
+    UserREST.getUsers(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        int i=0;
+        for(String name : list) {
+          userlist.addItem(name);
+          if(name.equals(loggedinuser)) {
+            userlist.setItemSelected(i, true);
+            selectPermissionForUser(loggedinuser);
+          }
+          i++;
+        }
+      }
+    });
+  }
   
   private void setPermissionList() {
-	  permlist.clear();
-	  SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
-	      @Override
-	      public void onFailure(Throwable reason) {
-	        AppNotification.notifyFailure(reason.getMessage());
-	      }
-	      @Override
-	      public void onSuccess(List<String> list) {
-	        for(String name : list) {
-	          permlist.addItem(name);
-	        }
-	      }
-	    });	  
+    permlist.clear();
+    SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        for(String name : list) {
+          permlist.addItem(name);
+        }
+      }
+    });	  
   }
   
   @UiHandler("setpermbutton")
   void onSetPermissionButtonClick(ClickEvent event) {
-	submitPermissionForm();
+    submitPermissionForm();
     event.stopPropagation();
   }
   
   private void submitPermissionForm() {
-	 final String username = userlist.getSelectedValue();
-	 final String permtype = permlist.getSelectedValue();
-	 String ownername = software.getPermission().getOwner().getName();
-	 UserSession session = SessionStorage.getSession();
-	 
-	 if ((session != null && session.getRoles().contains("admin")) || ownername.equals(this.loggedinuser))
-	 {
-		 Authorization authorization = new Authorization();
-		 authorization.setId("");
-		 authorization.setAgentId("");
-		 authorization.setAccessToObjId(software.getId());
-		 authorization.setAgentName(username);
-		 AccessMode mode = new AccessMode();
-		 mode.setMode(permtype);
-		 authorization.setAccessMode(mode);
+    final String username = userlist.getSelectedValue();
+    final String permtype = permlist.getSelectedValue();
+    String ownername = software.getPermission().getOwner().getName();
+    UserSession session = SessionStorage.getSession();
 
-		 SoftwareREST.setSoftwarePermissionForUser(software.getName(), authorization, new Callback<Boolean, Throwable>() {
-		      @Override
-		      public void onFailure(Throwable reason) {
-		    	permissiondialog.hide();
-		        AppNotification.notifyFailure(reason.getMessage());
-		      }
-		      @Override
-		      public void onSuccess(Boolean success) {
-		    	  permissiondialog.hide();
-		    	  AppNotification.notifySuccess("Permission updated!", 2000);
-		      }
-		    });
-	 }
-	 else
-	 {
-		 AppNotification.notifyFailure("Not Allowed!");
-	 }
+    if ((session != null && session.getRoles().contains("admin")) || 
+      ownername.equals(this.loggedinuser)) {
+      Authorization authorization = new Authorization();
+      authorization.setId("");
+      authorization.setAgentId("");
+      authorization.setAccessToObjId(software.getId());
+      authorization.setAgentName(username);
+      AccessMode mode = new AccessMode();
+      mode.setMode(permtype);
+      authorization.setAccessMode(mode);
+
+      SoftwareREST.setSoftwarePermissionForUser(software.getName(), authorization, 
+        new Callback<Boolean, Throwable>() {
+          @Override
+          public void onFailure(Throwable reason) {
+            permissiondialog.hide();
+            AppNotification.notifyFailure(reason.getMessage());
+          }
+        
+          @Override
+          public void onSuccess(Boolean success) {
+            permissiondialog.hide();
+            AppNotification.notifySuccess("Permission updated!", 2000);
+          }
+      });
+    } else {
+      AppNotification.notifyFailure("Not Allowed!");
+    }
   }
   
   @UiHandler("cancelbutton")
   void onCancelButtonClick(ClickEvent event) {
-	permissiondialog.hide();
+    permissiondialog.hide();
     event.stopPropagation();
   }
-  
 }

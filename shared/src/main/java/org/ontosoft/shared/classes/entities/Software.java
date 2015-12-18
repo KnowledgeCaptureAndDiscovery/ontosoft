@@ -29,10 +29,10 @@ public class Software extends ComplexEntity {
   }
   
   public Permission getPermission() {
-	  return permission;
+    return permission;
   }
 
   public void setPermission(Permission permission) {
-	  this.permission = permission;
+    this.permission = permission;
   } 
 }

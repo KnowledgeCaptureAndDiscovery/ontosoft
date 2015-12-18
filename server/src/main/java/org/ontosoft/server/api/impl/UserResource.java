@@ -157,12 +157,11 @@ public class UserResource implements UserService {
   @Path("user/{username}/roles")
   @Produces("application/json")
   @RolesAllowed("user")
-  public List<String> getUserRoles(@PathParam("username") String username)
-  {
-	  UserCredentials user = UserDatabase.get().getUser(username);
-	  if (user != null)
-		  return user.getRoles();
-	  return null;
+  public List<String> getUserRoles(@PathParam("username") String username) {
+    UserCredentials user = UserDatabase.get().getUser(username);
+    if (user != null)
+      return user.getRoles();
+    return null;
   }
   
   private UserCredentials sanitizeUserCredentials(UserCredentials user, User loggedinuser) {

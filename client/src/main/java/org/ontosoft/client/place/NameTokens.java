@@ -54,6 +54,6 @@ public class NameTokens {
   }
   
   public static String getPermission() {
-	return permission;
+    return permission;
   }
 }

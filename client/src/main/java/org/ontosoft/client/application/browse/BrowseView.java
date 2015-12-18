@@ -96,24 +96,23 @@ public class BrowseView extends ParameterizedViewImpl
       initSoftware(this.softwarename);
     }
     final UserSession session = SessionStorage.getSession();
-    if(session != null && session.getUsername() != null)
-    {
-	  SoftwareREST.getSoftwarePermissions(this.softwarename, new Callback<Permission, Throwable>() {
-	      @Override
-	      public void onFailure(Throwable reason) {
-	        AppNotification.notifyFailure(reason.getMessage());
-	      }
-	      @Override
-	      public void onSuccess(Permission permission) {
-	    	  String loggedinuser = session.getUsername();
-	    	  String level = PermUtils.getAccessLevelForUser(permission, loggedinuser);
-	    	  
-	    	  if (session.getRoles().contains("admin") || level.equals("Write"))
-	    		  editbutton.setVisible(true);
-	    	  else
-	    		  editbutton.setVisible(false);
-	      }
-	    });	
+    if(session != null && session.getUsername() != null) {
+      SoftwareREST.getSoftwarePermissions(this.softwarename, new Callback<Permission, Throwable>() {
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+        }
+        @Override
+        public void onSuccess(Permission permission) {
+          String loggedinuser = session.getUsername();
+          String level = PermUtils.getAccessLevelForUser(permission, loggedinuser);
+
+          if (session.getRoles().contains("admin") || level.equals("Write"))
+            editbutton.setVisible(true);
+          else
+            editbutton.setVisible(false);
+        }
+      });	
     } 
   }
   

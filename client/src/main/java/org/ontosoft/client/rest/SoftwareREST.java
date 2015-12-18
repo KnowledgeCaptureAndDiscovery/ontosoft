@@ -303,59 +303,63 @@ public class SoftwareREST {
     }).call(getSoftwareService()).runPlugin(pluginname, software);  
   }
   
-  public static void getPermissionTypes(
-		final Callback<List<String>, Throwable> callback) {
-	    REST.withCallback(new MethodCallback<List<String>>() {
-	      @Override
-	      public void onSuccess(Method method, List<String> permlist) {
-	        callback.onSuccess(permlist);            
-	      }
-	      @Override
-	      public void onFailure(Method method, Throwable exception) {
-	        callback.onFailure(exception);
-	      }
-	    }).call(getSoftwareService()).getPermissionTypes();
-	  }
+  public static void getPermissionTypes (
+    final Callback<List<String>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<String>>() {
+      @Override
+      public void onSuccess(Method method, List<String> permlist) {
+        callback.onSuccess(permlist);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).getPermissionTypes();
+  }
   
   public static void setSoftwarePermissionForUser(String name, Authorization authorization,
-		final Callback<Boolean, Throwable> callback) {
-	    REST.withCallback(new MethodCallback<Boolean>() {
-	      @Override
-	      public void onSuccess(Method method, Boolean success) {
-	        callback.onSuccess(success);            
-	      }
-	      @Override
-	      public void onFailure(Method method, Throwable exception) {
-	        callback.onFailure(exception);
-	      }
-	    }).call(getSoftwareService()).setSoftwarePermissionForUser(name, authorization);
-	  }
+    final Callback<Boolean, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Boolean>() {
+      @Override
+      public void onSuccess(Method method, Boolean success) {
+        callback.onSuccess(success);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).setSoftwarePermissionForUser(name, authorization);
+  }
 
   public static void getSoftwarePermissions(String name,
-		final Callback<Permission, Throwable> callback) {
-	    REST.withCallback(new MethodCallback<Permission>() {
-	      @Override
-	      public void onSuccess(Method method, Permission permission) {
-	        callback.onSuccess(permission);            
-	      }
-	      @Override
-	      public void onFailure(Method method, Throwable exception) {
-	        callback.onFailure(exception);
-	      }
-	    }).call(getSoftwareService()).getSoftwarePermissions(name);
-	  }
+    final Callback<Permission, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Permission>() {
+      @Override
+      public void onSuccess(Method method, Permission permission) {
+        callback.onSuccess(permission);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).getSoftwarePermissions(name);
+  }
   
   public static void getSoftwareAccessLevelForUser(String swname, String username,
-		final Callback<AccessMode, Throwable> callback) {
-	    REST.withCallback(new MethodCallback<AccessMode>() {
-	      @Override
-	      public void onSuccess(Method method, AccessMode accessmode) {
-	        callback.onSuccess(accessmode);            
-	      }
-	      @Override
-	      public void onFailure(Method method, Throwable exception) {
-	        callback.onFailure(exception);
-	      }
-	    }).call(getSoftwareService()).getSoftwareAccessLevelForUser(swname, username);
-	  }
+    final Callback<AccessMode, Throwable> callback) {
+      REST.withCallback(new MethodCallback<AccessMode>() {
+      @Override
+      public void onSuccess(Method method, AccessMode accessmode) {
+        callback.onSuccess(accessmode);            
+      }
+  
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).getSoftwareAccessLevelForUser(swname, username);
+  }
 }
