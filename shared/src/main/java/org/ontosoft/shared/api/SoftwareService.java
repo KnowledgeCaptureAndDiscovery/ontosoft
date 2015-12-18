@@ -16,10 +16,13 @@ import org.fusesource.restygwt.client.DirectRestService;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
 import org.ontosoft.shared.search.EnumerationFacet;
+import org.ontosoft.shared.classes.permission.Permission;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -117,5 +120,28 @@ public interface SoftwareService extends DirectRestService {
       @PathParam("name") String name,
       @JsonProperty("software") Software software);
   
+  @GET
+  @Path("permissions") 
+  @Produces("application/json")
+  public List<String> getPermissionTypes();
   
+  @POST
+  @Path("software/{name}/permissions")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean setSoftwarePermissionForUser(@PathParam("name") String name, 
+		  @JsonProperty("authorization") Authorization authorization);
+  
+  @GET
+  @Path("software/{name}/permissions")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Permission getSoftwarePermissions(@PathParam("name") String name);
+  
+  @GET
+  @Path("software/{name}/access/{username}") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public AccessMode getSoftwareAccessLevelForUser(@PathParam("name") String swname, 
+		  @PathParam("username") String username);
 }

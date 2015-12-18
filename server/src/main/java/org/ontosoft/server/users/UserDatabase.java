@@ -402,6 +402,25 @@ public class UserDatabase {
     }
     return -1;
   }
+
+  public String getUsername(int userid) {
+    try {
+      String sql = "SELECT username FROM users WHERE id = ?";
+      PreparedStatement ps = dbc.prepareStatement(sql);
+      ps.setInt(1, userid);
+      ResultSet rs = ps.executeQuery();
+      String username = "";
+      if(rs.next())
+    	  username = rs.getString(1);
+      rs.close();
+      ps.close();
+      return username;
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
   
   public void deleteUser(String username) {
     try {

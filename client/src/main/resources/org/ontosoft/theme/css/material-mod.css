@@ -286,20 +286,20 @@ h1 small {
 	padding: 2px 4px !important;
 }
 
-.admin-cell {
+.delete-cell {
 	display: none !important;
 	width: 0px !important;
 }
-.admin-table .admin-cell {
+.delete-col .delete-cell {
 	display: table-cell !important;
 	padding-left: 0px !important;
 	width: 64px !important;
 }
-.registered-user-cell {
+.edit-cell {
 	display: none !important;
 	width: 0px !important;	
 }
-.registered-user-table .registered-user-cell {
+.edit-col .edit-cell {
 	display: table-cell !important;
 	padding-left: 4px !important;
 	padding-right: 4px !important;

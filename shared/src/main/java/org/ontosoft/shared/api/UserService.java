@@ -42,7 +42,7 @@ public interface UserService extends DirectRestService {
 
   /**
    * Query users
-   */
+   */  
   @GET
   @Produces("application/json")
   public List<String> getUsers();
@@ -74,4 +74,9 @@ public interface UserService extends DirectRestService {
   @Produces("application/json")
   public UserCredentials updateUser(@PathParam("username") String username, 
       @JsonProperty("user") UserCredentials user);
+  
+  @GET
+  @Path("user/{username}/roles")
+  @Produces("application/json")
+  public List<String> getUserRoles(@PathParam("username") String username);
 }

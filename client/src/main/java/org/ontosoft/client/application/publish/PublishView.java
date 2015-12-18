@@ -1,5 +1,7 @@
 package org.ontosoft.client.application.publish;
 
+import java.util.List;
+
 import org.gwtbootstrap3.client.ui.AnchorListItem;
 import org.gwtbootstrap3.client.ui.Breadcrumbs;
 import org.gwtbootstrap3.client.ui.Button;
@@ -16,8 +18,13 @@ import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
 import org.ontosoft.client.components.form.notification.PluginNotifications;
 import org.ontosoft.client.place.NameTokens;
+import org.ontosoft.client.rest.AppNotification;
 import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
+import org.ontosoft.shared.classes.users.UserCredentials;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -26,6 +33,8 @@ import org.ontosoft.shared.plugins.PluginResponse;
 
 import com.github.gwtd3.api.D3;
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -33,6 +42,8 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.ListBox;
+import org.gwtbootstrap3.client.ui.Modal;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -59,7 +70,10 @@ public class PublishView extends ParameterizedViewImpl
   ButtonGroup buttons;
   
   @UiField
-  Button savebutton, reloadbutton;
+  Button savebutton, reloadbutton, permbutton;
+  
+  @UiField
+  Button setpermbutton;
   
   @UiField
   VerticalPanel loading;
@@ -70,10 +84,16 @@ public class PublishView extends ParameterizedViewImpl
   @UiField
   PluginNotifications notifications;
   
+  @UiField
+  ListBox userlist, permlist;
+  
+  @UiField
+  Modal permissiondialog;
+  
   Vocabulary vocabulary;
   String softwarename;
   Software software;
-
+  String loggedinuser;
   
   interface Binder extends UiBinder<Widget, PublishView> { }
 
@@ -92,6 +112,10 @@ public class PublishView extends ParameterizedViewImpl
       //SoftwareREST.notifyFailure("You need to be logged in to edit software description");
       return;
     }
+    
+    if(session.getUsername() != null)
+      this.loggedinuser = session.getUsername();
+    
     // Parse tokens
     if(params.length > 0) {
       this.softwarename = params[0];
@@ -120,6 +144,7 @@ public class PublishView extends ParameterizedViewImpl
     buttons.setVisible(false);
     barchart.setVisible(false);
     breadcrumbs.clear();  
+    permbutton.setVisible(false);
   }
   
   private void initVocabulary() {
@@ -151,6 +176,11 @@ public class PublishView extends ParameterizedViewImpl
         reloadbutton.setIconSpin(false);
         loading.setVisible(false);
         savebutton.setEnabled(sw.isDirty());
+        UserSession session = SessionStorage.getSession();
+        
+        if ((session != null && session.getRoles().contains("admin")) || 
+        		loggedinuser.equals(sw.getPermission().getOwner().getName()))
+        	permbutton.setVisible(true);
         
         software = sw;
         initialDraw();
@@ -406,6 +436,160 @@ public class PublishView extends ParameterizedViewImpl
   private void easeIn(Widget w) {
     D3.select(w.getElement()).style("opacity", 0);
     D3.select(w.getElement()).transition().duration(400).style("opacity", 1);
+  }
+  
+  @UiHandler("permbutton")
+  void onPermButtonClick(ClickEvent event) {
+	  permissiondialog.show();
+      userlist.setVisible(true);
+      permlist.setVisible(true);
+      if (userlist.getItemCount() == 0)
+    	  setUserList();
+      if (permlist.getItemCount() == 0)
+    	  setPermissionList();
+  }
+  
+  @UiHandler("userlist")
+  void onUserChangedEvent(ChangeEvent event) {
+	  permlist.setEnabled(true);
+	  setpermbutton.setEnabled(true);
+	  int index = userlist.getSelectedIndex();
+	  String newuser = userlist.getValue(index);
+	  selectPermissionForUser(newuser);
+  }
+  
+  private void selectAccessLevel(String accesslevel)
+  {
+	  for (int i=0; i<permlist.getItemCount(); i++) {
+		    if (permlist.getItemText(i).equals(accesslevel)) {
+		        permlist.setSelectedIndex(i);
+		        break;
+		    }
+		}	  
+  }
+  
+  private void selectPermissionForUser(final String username)
+  {
+	  SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), username, new Callback<AccessMode, Throwable>() {
+	      @Override
+	      public void onFailure(Throwable reason) {
+	        AppNotification.notifyFailure(reason.getMessage());
+	      }
+	      @Override
+	      public void onSuccess(AccessMode accessmode) {
+	    	  selectAccessLevel(accessmode.getMode());
+	      }
+	    });
+	  
+	  if (software.getPermission().getOwner().getName().equals(username))
+	  {
+		  permlist.setEnabled(false);
+		  setpermbutton.setEnabled(false);		  
+	  }
+	  else
+	  {
+		  UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
+		      @Override
+		      public void onFailure(Throwable reason) {
+		        AppNotification.notifyFailure(reason.getMessage());
+		      }
+		      @Override
+		      public void onSuccess(List<String> roles) {
+		    	  if (roles.contains("admin"))
+		    	  {
+		    		  permlist.setEnabled(false);
+		    		  setpermbutton.setEnabled(false);
+		    	  }
+		      }
+		    });		  
+	  }	  
+  }
+  
+  private void setUserList() {
+	    userlist.clear();
+	    UserREST.getUsers(new Callback<List<String>, Throwable>() {
+	      @Override
+	      public void onFailure(Throwable reason) {
+	        AppNotification.notifyFailure(reason.getMessage());
+	      }
+	      @Override
+	      public void onSuccess(List<String> list) {
+	        int i=0;
+	        for(String name : list) {
+	          userlist.addItem(name);
+	          if(name.equals(loggedinuser))
+	          {
+	            userlist.setItemSelected(i, true);
+	            selectPermissionForUser(loggedinuser);
+	          }
+	          i++;
+	        }
+	      }
+	    });
+	  }
+  
+  private void setPermissionList() {
+	  permlist.clear();
+	  SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+	      @Override
+	      public void onFailure(Throwable reason) {
+	        AppNotification.notifyFailure(reason.getMessage());
+	      }
+	      @Override
+	      public void onSuccess(List<String> list) {
+	        for(String name : list) {
+	          permlist.addItem(name);
+	        }
+	      }
+	    });	  
+  }
+  
+  @UiHandler("setpermbutton")
+  void onSetPermissionButtonClick(ClickEvent event) {
+	submitPermissionForm();
+    event.stopPropagation();
+  }
+  
+  private void submitPermissionForm() {
+	 final String username = userlist.getSelectedValue();
+	 final String permtype = permlist.getSelectedValue();
+	 String ownername = software.getPermission().getOwner().getName();
+	 UserSession session = SessionStorage.getSession();
+	 
+	 if ((session != null && session.getRoles().contains("admin")) || ownername.equals(this.loggedinuser))
+	 {
+		 Authorization authorization = new Authorization();
+		 authorization.setId("");
+		 authorization.setAgentId("");
+		 authorization.setAccessToObjId(software.getId());
+		 authorization.setAgentName(username);
+		 AccessMode mode = new AccessMode();
+		 mode.setMode(permtype);
+		 authorization.setAccessMode(mode);
+
+		 SoftwareREST.setSoftwarePermissionForUser(software.getName(), authorization, new Callback<Boolean, Throwable>() {
+		      @Override
+		      public void onFailure(Throwable reason) {
+		    	permissiondialog.hide();
+		        AppNotification.notifyFailure(reason.getMessage());
+		      }
+		      @Override
+		      public void onSuccess(Boolean success) {
+		    	  permissiondialog.hide();
+		    	  AppNotification.notifySuccess("Permission updated!", 2000);
+		      }
+		    });
+	 }
+	 else
+	 {
+		 AppNotification.notifyFailure("Not Allowed!");
+	 }
+  }
+  
+  @UiHandler("cancelbutton")
+  void onCancelButtonClick(ClickEvent event) {
+	permissiondialog.hide();
+    event.stopPropagation();
   }
   
 }

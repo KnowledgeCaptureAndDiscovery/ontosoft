@@ -172,4 +172,17 @@ public class UserREST {
       }
     }).call(getUserService()).userExists(username);
   }
+
+  public static void getUserRoles(String username, final Callback<List<String>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<String>>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+      @Override
+      public void onSuccess(Method method, List<String> response) {
+        callback.onSuccess(response);
+      }
+    }).call(getUserService()).getUserRoles(username);
+  }
 }
