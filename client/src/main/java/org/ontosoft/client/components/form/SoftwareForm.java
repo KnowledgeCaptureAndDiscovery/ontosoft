@@ -299,6 +299,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     
     if (userlist.getItemCount() == 0)
       setUserList();
+    
+    String defaultusername = userlist.getItemText(0);
+    selectPermissionForUser(defaultusername);
   }
   
   private void setUserList() {
