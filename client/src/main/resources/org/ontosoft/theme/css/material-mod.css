@@ -24,7 +24,7 @@
 }
 
 .form-group-disable {
-	opacity: 0.7;
+  opacity: 0.7;
 }
 
 .form-group.has-error .material-input:focus, 
