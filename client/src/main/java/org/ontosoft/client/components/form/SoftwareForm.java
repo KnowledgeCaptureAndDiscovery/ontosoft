@@ -76,7 +76,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   
   Vocabulary vocabulary;
   Software software;
-  String propid;
+  String propidselected;
   
   Map<String, PropertyFormGroup> propeditors;
   
@@ -288,7 +288,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
 
   public void initPermDialog(String propid) {
-    this.propid = propid;
+    this.propidselected = propid;
     
     permissiondialog.show();
     userlist.setVisible(true);
@@ -352,7 +352,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
             permlist.setEnabled(false);
             setpermbutton.setEnabled(false);
           } else {
-            SoftwareREST.getPropertyAccessLevelForUser(software.getName(), propid, 
+            SoftwareREST.getPropertyAccessLevelForUser(software.getName(), propidselected, 
               username, new Callback<AccessMode, Throwable>() {
               @Override
               public void onFailure(Throwable reason) {
@@ -417,9 +417,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         Authorization authorization = new Authorization();
         authorization.setId("");
         authorization.setAgentId("");
-        String propid = KBConstants.ONTNS() + this.propid;
+        
+        String propid = KBConstants.ONTNS() + this.propidselected;
         authorization.setAccessToObjId(propid);
+        
         authorization.setAgentName(username);
+        
         AccessMode mode = new AccessMode();
         mode.setMode(permtype);
         authorization.setAccessMode(mode);
