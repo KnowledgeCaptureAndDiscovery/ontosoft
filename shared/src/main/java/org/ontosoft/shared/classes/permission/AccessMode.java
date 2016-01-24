@@ -7,11 +7,11 @@ public class AccessMode {
   String mode;
 
   public String RMODEURI() {
-    return KBConstants.ACLNS() + "Read";
+    return KBConstants.PERMNS() + "Read";
   }
 
   public String WMODEURI() {
-    return KBConstants.ACLNS() + "Write";
+    return KBConstants.PERMNS() + "Write";
   }
   
   public void setId(String id) {

@@ -16,6 +16,7 @@ import org.gwtbootstrap3.client.ui.constants.ButtonSize;
 import org.gwtbootstrap3.client.ui.constants.ButtonType;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.SoftwareForm;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
@@ -32,6 +33,7 @@ import org.ontosoft.shared.classes.provenance.Activity;
 import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
 import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataClass;
@@ -39,6 +41,7 @@ import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.Plugin;
 import org.ontosoft.shared.plugins.PluginResponse;
+import org.ontosoft.shared.utils.PermUtils;
 
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
@@ -62,6 +65,8 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   private List<IEntityInput> inputs;
   private Map<String, Button> pluginbuttons;
   private ButtonGroup pluginButtonGroup;
+  private boolean proplocked;
+  private boolean isModerator;
   
   public PropertyFormGroup(MetadataProperty property, SoftwareForm formview) {
     super();
@@ -76,9 +81,33 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     this.inputs = new ArrayList<IEntityInput>();
     this.pluginbuttons = new HashMap<String, Button>();
     
+    updatePropertyPermissions();
+    
     List<Entity> propEntities = software.getPropertyValues(property.getId());
     this.setValue(propEntities);
     this.addPluginButtons();
+  }
+  
+  private void updatePropertyPermissions() {
+    this.proplocked = false;
+    this.isModerator = false;
+	  
+    UserSession session = SessionStorage.getSession();
+    if (session != null) {
+      String username = session.getUsername();
+      String swaccesslevel = PermUtils.getAccessLevelForUser(software, username, software.getId());
+      if (software.getPermission().getOwner().getName().equals(username) ||
+        session.getRoles().contains("admin") ||
+        swaccesslevel.equals("Write")) {
+          this.proplocked = false;
+          this.isModerator = true;
+      } else {
+        String propaccesslevel = PermUtils.getAccessLevelForUser(software, username, property.getId());
+        if (!propaccesslevel.equals("Write")) {
+          this.proplocked = true;
+        }
+      }
+    }
   }
   
   public void setRawValue(List<Object> objects) {
@@ -115,6 +144,9 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     final HelpBlock infoblock = new HelpBlock();
     infoblock.setIconType(IconType.EXCLAMATION_TRIANGLE);
     
+    InputGroup labelpanel = new InputGroup();
+    InputGroupButton igbtn = new InputGroupButton();
+    
     if(property.isMultiple()) {
       final Button btn = new Button();
       btn.addStyleName("btn-flat");
@@ -133,16 +165,43 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         }
       });
       
-      InputGroup labelpanel = new InputGroup();
-      InputGroupButton igbtn = new InputGroupButton();
+      if (this.proplocked) {
+        btn.setEnabled(false);
+      }
+
       igbtn.add(btn);
-      labelpanel.add(flabel);
-      labelpanel.add(igbtn);
-      this.add(labelpanel);
     }
-    else {
-      this.add(flabel);
+    
+    if (this.isModerator) {
+      final Button permbtn = new Button();
+      permbtn.addStyleName("btn-flat");
+      permbtn.setTabIndex(-2);
+      permbtn.setIcon(IconType.GEAR);
+      permbtn.setSize(ButtonSize.EXTRA_SMALL);
+      permbtn.getElement().setAttribute("data-id", property.getName());
+      permbtn.addClickHandler(new ClickHandler() {
+        @Override
+        public void onClick(ClickEvent event) {
+          Object source = event.getSource();
+          if (source instanceof Button) { 
+            form.initPermDialog(((Button) source).getElement().getAttribute("data-id"));
+          }
+        }
+      });
+      igbtn.add(permbtn);	
+    } else if (this.proplocked) {
+      final Button lockbtn = new Button();
+      lockbtn.addStyleName("btn-flat");
+      lockbtn.setIcon(IconType.LOCK);
+      lockbtn.setSize(ButtonSize.EXTRA_SMALL);
+      lockbtn.setEnabled(false);
+      igbtn.add(lockbtn);	 
     }
+    
+    labelpanel.add(flabel);
+    labelpanel.add(igbtn);
+    this.add(labelpanel);    
+    
     if(!empty) {
       for(Entity ey : entities) {
         addEntityEditor(ey, infoblock);
@@ -154,6 +213,12 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
 
     this.add(infoblock);
 
+    if (this.proplocked) {
+      for(IEntityInput ip : inputs) {
+        ip.disable();
+      }
+    }
+    
     if(empty)
       this.setValidationState(ValidationState.ERROR);    
   }
@@ -223,6 +288,11 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
           handleEntityPlugins(entity);
         }
       });
+      
+      if (this.proplocked) {
+        btn.setEnabled(false);
+      }
+      
       InputGroupButton igbtn = new InputGroupButton();
       igbtn.add(btn);
       ig.add(igbtn);

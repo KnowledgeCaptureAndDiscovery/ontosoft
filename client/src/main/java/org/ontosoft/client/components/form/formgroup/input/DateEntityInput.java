@@ -92,4 +92,9 @@ public class DateEntityInput implements IEntityInput {
   
   @Override
   public void layout() { }
+  
+  @Override
+  public void disable() {
+    dateinput.setEnabled(false);
+  }
 }

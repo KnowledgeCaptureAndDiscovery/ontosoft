@@ -120,4 +120,10 @@ public class MeasurementEntityInput extends HorizontalPanel implements IEntityIn
   
   @Override
   public void layout() { }
+  
+  @Override
+  public void disable() {
+    valuebox.setEnabled(false);
+    unitsbox.setEnabled(false);
+  }
 }

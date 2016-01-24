@@ -20,5 +20,18 @@
 				<b:TabPane b:id="optional" ui:field="optionaltab" />
 			</b:TabContent>
 		</b:Well>
+			<b:Modal title="Set Permissions" closable="true" fade="true" ui:field="permissiondialog">
+		<b:ModalBody>
+			<b:FormGroup>
+				<b:ListBox ui:field="userlist" visible="false" />
+				<b:HelpBlock />
+				<b:ListBox ui:field="permlist" visible="false" />
+			</b:FormGroup>
+		</b:ModalBody>
+		<b:ModalFooter>
+			<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton" text="Cancel" />				
+			<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="setpermbutton" text="Submit" />
+		</b:ModalFooter>
+	</b:Modal>
 	</b:Form>
 </ui:UiBinder>

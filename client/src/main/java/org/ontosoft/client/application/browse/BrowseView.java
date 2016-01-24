@@ -20,7 +20,6 @@ import org.ontosoft.client.components.browse.EntityBrowser;
 import org.ontosoft.client.components.chart.CategoryBarChart;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.place.NameTokens;
-import org.ontosoft.client.rest.AppNotification;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Software;
@@ -30,8 +29,6 @@ import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
-import org.ontosoft.shared.utils.PermUtils;
-import org.ontosoft.shared.classes.permission.Permission;
 
 import com.github.gwtd3.api.D3;
 import com.github.gwtd3.api.core.Value;
@@ -95,25 +92,9 @@ public class BrowseView extends ParameterizedViewImpl
       this.softwarename = params[0];
       initSoftware(this.softwarename);
     }
-    final UserSession session = SessionStorage.getSession();
-    if(session != null && session.getUsername() != null) {
-      SoftwareREST.getSoftwarePermissions(this.softwarename, new Callback<Permission, Throwable>() {
-        @Override
-        public void onFailure(Throwable reason) {
-          AppNotification.notifyFailure(reason.getMessage());
-        }
-        @Override
-        public void onSuccess(Permission permission) {
-          String loggedinuser = session.getUsername();
-          String level = PermUtils.getAccessLevelForUser(permission, loggedinuser);
-
-          if (session.getRoles().contains("admin") || level.equals("Write"))
-            editbutton.setVisible(true);
-          else
-            editbutton.setVisible(false);
-        }
-      });	
-    } 
+    UserSession session = SessionStorage.getSession();
+    if(session != null && session.getUsername() != null)
+      editbutton.setVisible(true);
   }
   
   private void initVocabulary() {
@@ -133,6 +114,7 @@ public class BrowseView extends ParameterizedViewImpl
   
   private void initSoftware(String softwarename) {
     loading.setVisible(true);
+    
     SoftwareREST.getSoftware(softwarename, new Callback<Software, Throwable>() {
       @Override
       public void onSuccess(Software sw) {
@@ -161,7 +143,7 @@ public class BrowseView extends ParameterizedViewImpl
       }
     });
   }
-    
+  
   private void clear() {
     htmlbutton.getParent().setVisible(false);
     editbutton.getParent().setVisible(false);

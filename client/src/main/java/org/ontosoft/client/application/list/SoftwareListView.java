@@ -269,40 +269,6 @@ public class SoftwareListView extends ParameterizedViewImpl
     sortHandler.setComparator(namecol, this.swcompare);
     table.getColumnSortList().push(namecol);
     
-    // Edit Button Column
-    final Column<SoftwareSummary, String> editcol = 
-        new Column<SoftwareSummary, String>(
-            new ButtonCell(IconType.EDIT, ButtonType.INFO, 
-                ButtonSize.EXTRA_SMALL)) {
-        @Override
-        public String getValue(SoftwareSummary details) {
-          return "Edit";
-        }
-
-        @Override
-        public void render(Cell.Context context, SoftwareSummary summary, SafeHtmlBuilder sb) {
-          UserSession session = SessionStorage.getSession();
-          String accesslevel = "Read";
-        	if (session != null)
-        		accesslevel = PermUtils.getAccessLevelForUser(summary.getPermission(), session.getUsername());
-        	
-	    	  if (isadmin || (isreguser && accesslevel.equals("Write"))) {
-            super.render(context,summary,sb);
-	    	  }
-        }        
-    };
-    
-    editcol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
-      @Override
-      public void update(int index, SoftwareSummary summary, String value) {
-        String swname = summary.getName();
-        History.newItem(NameTokens.publish + "/" + swname);
-      }
-    });
-    //table.setColumnWidth(editcol, "0px");
-    editcol.setCellStyleNames("edit-cell");
-    table.addColumn(editcol);
-
     // Delete Button Column
 
     Column<SoftwareSummary, String> deletecolumn = 
@@ -332,6 +298,28 @@ public class SoftwareListView extends ParameterizedViewImpl
 
     deletecolumn.setCellStyleNames("delete-cell");
     table.addColumn(deletecolumn);
+
+    // Edit Button Column
+    final Column<SoftwareSummary, String> editcol = 
+        new Column<SoftwareSummary, String>(
+            new ButtonCell(IconType.EDIT, ButtonType.INFO, 
+                ButtonSize.EXTRA_SMALL)) {
+        @Override
+        public String getValue(SoftwareSummary details) {
+          return "Edit";
+        }      
+    };
+    
+    editcol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
+      @Override
+      public void update(int index, SoftwareSummary summary, String value) {
+        String swname = summary.getName();
+        History.newItem(NameTokens.publish + "/" + swname);
+      }
+    });
+    //table.setColumnWidth(editcol, "0px");
+    editcol.setCellStyleNames("edit-cell");
+    table.addColumn(editcol);
     
     // Checkbox, software selection column (to select software to compare)
     Column<SoftwareSummary, Boolean> checkboxcolumn = 

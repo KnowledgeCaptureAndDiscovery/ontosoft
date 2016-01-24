@@ -404,9 +404,6 @@ h1 small {
 /**
  Buttons & form elements
  */
-.btn.disabled, .btn[disabled] {
-  background-color: #AAAAAA !important;
-}
 .btn-info, .panel-info > .panel-heading {
   background-color: #5D7BA0 !important;
   color: rgba(255,255,255,.84);
@@ -428,6 +425,9 @@ fieldset.bordered-fieldset {
   border: 1px dashed #F0F0F0;
 }
 /* Labels */
+.form-group .input-label {
+  display: inline;
+}
 .form-group .control-label,
 .browse-label {
 	color: #5D7BA0 !important;

@@ -21,4 +21,5 @@ public interface IEntityInput extends IsWidget, HasEntityHandlers {
   
   public void layout();
   
+  public void disable();
 }

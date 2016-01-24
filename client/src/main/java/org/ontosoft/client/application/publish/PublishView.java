@@ -24,7 +24,6 @@ import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Authorization;
-import org.ontosoft.shared.classes.users.UserCredentials;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -33,7 +32,6 @@ import org.ontosoft.shared.plugins.PluginResponse;
 
 import com.github.gwtd3.api.D3;
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -484,7 +482,7 @@ public class PublishView extends ParameterizedViewImpl
       }
     });
 	  
-	  if (software.getPermission().getOwner().getName().equals(username)) {
+	if (software.getPermission().getOwner().getName().equals(username)) {
       permlist.setEnabled(false);
       setpermbutton.setEnabled(false);		  
     } else {

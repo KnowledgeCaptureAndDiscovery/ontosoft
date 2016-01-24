@@ -446,6 +446,15 @@ public class SoftwareRepository {
   }
   
   private String updateOrAddSoftware(Software sw, User user, boolean update) throws Exception {
+    boolean isModerator = false;
+    
+    if (update) {
+      String accesslevel = PermUtils.getAccessLevelForUser(sw, user.getName(), sw.getId());
+      if (user.getRoles().contains("admin") || accesslevel.equals("Write")) {
+        isModerator = true;
+      }
+    }
+
     KBAPI swkb = fac.getKB(sw.getId(), OntSpec.PLAIN, true);
     String swtype = sw.getType();
     if(swtype == null)
@@ -462,57 +471,62 @@ public class SoftwareRepository {
       swkb.setLabel(swobj, sw.getLabel());
     
     for(String propid : sw.getValue().keySet()) {
-      KBObject swprop = this.ontkb.getProperty(propid);
-      if (swprop != null) {
-        List<Entity> entities = sw.getValue().get(propid);
-        MetadataProperty prop = vocabulary.getProperty(swprop.getID());
-        
-        // Remove existing property values if any
-        if (update) {
-          for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
-            swkb.removeTriple(t);
-        }
-        
-        for(Entity entity: entities) {
-          MetadataType type = vocabulary.getType(entity.getType());
-          
-          // Treat software entities specially 
-          if(vocabulary.isA(type, vocabulary.getType(topclass))) {
-            if(!this.hasSoftware(entity.getId())) {
-              Software subsw = new Software();
-              subsw.setId(entity.getId());
-              subsw.setLabel((String)entity.getValue());
-              subsw.setType(entity.getType());
-              String swid = this.addSoftware(subsw, user);
-              entity.setId(swid);
-            }
-
-            KBObject swval = swkb.getResource(entity.getId());
-            swkb.addPropertyValue(swobj, swprop, swval);
-            continue;
+      if (!update      || 
+           isModerator || 
+           PermUtils.getAccessLevelForUser(sw, user.getName(), propid).equals("Write")) {
+        KBObject swprop = this.ontkb.getProperty(propid);
+        if (swprop != null) {
+          List<Entity> entities = sw.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(swprop.getID());
+	        
+          // Remove existing property values if any
+          if (update) {
+            for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
+              swkb.removeTriple(t);
           }
-          
-          // Get entity adapter for class
-          IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
-          if(adapter != null) {
-            if(entity.getId() == null) {
-              entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
+	      
+          for(Entity entity: entities) {
+            MetadataType type = vocabulary.getType(entity.getType());
+	          
+            // Treat software entities specially 
+            if(vocabulary.isA(type, vocabulary.getType(topclass))) {
+              if(!this.hasSoftware(entity.getId())) {
+                Software subsw = new Software();
+                subsw.setId(entity.getId());
+                subsw.setLabel((String)entity.getValue());
+                subsw.setType(entity.getType());
+                String swid = this.addSoftware(subsw, user);
+                entity.setId(swid);
+              }
+	
+              KBObject swval = swkb.getResource(entity.getId());
+              swkb.addPropertyValue(swobj, swprop, swval);
+              continue;
             }
-            if(adapter.saveEntity(entity)) {
-              KBObject entityobj = swkb.getIndividual(entity.getId());
-              if(entityobj == null)
-                entityobj = ontkb.getIndividual(entity.getId());
-              if(entityobj == null)
-                entityobj = enumkb.getIndividual(entity.getId());
-              if(entityobj != null)
-                swkb.addPropertyValue(swobj, swprop, entityobj);
+	          
+            // Get entity adapter for class
+            IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
+            if(adapter != null) {
+              if(entity.getId() == null) {
+                entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
+              }
+              if(adapter.saveEntity(entity)) {
+                KBObject entityobj = swkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = ontkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = enumkb.getIndividual(entity.getId());
+                if(entityobj != null)
+                  swkb.addPropertyValue(swobj, swprop, entityobj);
+              }
+            } else {
+              System.out.println("No adapter registered for type: "+entity.getType());
             }
-          } else {
-            System.out.println("No adapter registered for type: "+entity.getType());
           }
         }
       }
     }
+    
     if(swkb.save() && enumkb.save()) {
       if(!update) {
         MetadataEnumeration menum = new MetadataEnumeration();
@@ -540,16 +554,12 @@ public class SoftwareRepository {
       throws Exception {  
     Software cursw = this.getSoftware(swid);
     
-    String accesslevel = PermUtils.getAccessLevelForUser(cursw.getPermission(), user.getName());
-    if (user.getRoles().contains("admin") || accesslevel.equals("Write")) {
-        Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
-        String nswid = this.updateOrAddSoftware(newsw, user, true);
-        if(nswid != null) {
-          this.prov.addProvenance(prov);
-          return true;
-        }
+    Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
+    String nswid = this.updateOrAddSoftware(newsw, user, true);
+    if(nswid != null) {
+       this.prov.addProvenance(prov);
+       return true;
     }
-
     return false;
   }
   
@@ -723,8 +733,25 @@ public class SoftwareRepository {
       mode.setMode("Write");
     else {
       try {
-        Permission permission = this.perm_repo.getSoftwarePermission(swid);
-        mode.setMode(PermUtils.getAccessLevelForUser(permission, username));
+        Software software = this.getSoftware(swid);
+        mode.setMode(PermUtils.getAccessLevelForUser(software, username, swid));
+      } catch (Exception e) {
+        mode.setMode("Read");
+      }
+    }
+    return mode;
+  }
+
+  public AccessMode getPropertyAccessLevelForUser(String swid, String propid, String username) {
+    UserCredentials user = UserDatabase.get().getUser(username);
+    AccessMode mode = new AccessMode();
+    mode.setMode("Read");
+    if (user.getRoles().contains("admin"))
+      mode.setMode("Write");
+    else {
+      try {
+        Software software = this.getSoftware(swid);
+        mode.setMode(PermUtils.getAccessLevelForUser(software, username, propid));
       } catch (Exception e) {
         mode.setMode("Read");
       }
@@ -753,6 +780,43 @@ public class SoftwareRepository {
         Map<String, Authorization> auths = perm.getAuthorizations();
         for (Authorization authobj : auths.values()) {
           if (authobj.getAgentName().equals(username)) {
+            AccessMode mode = new AccessMode();
+            mode.setId(accessmodeid);
+            authobj.setAccessMode(mode);
+            updated = true;
+          }
+        }
+        if (!updated) {
+          authorization.setId(permns + "Auth-" + GUID.get());
+          UserCredentials user = UserDatabase.get().getUser(username);
+          authorization.setAgentId(this.getUserId(user));
+          perm.addAuth(authorization);
+        }
+
+        this.perm_repo.commitPermission(perm);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+
+  public Boolean setPropertyPermissionForUser(User loggedinuser, String swid, Authorization authorization) {
+    String username = authorization.getAgentName();
+    String accessmodeid = authorization.getAccessMode().getId();
+
+    boolean updated = false;
+
+    try {
+      Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName()) ||
+        PermUtils.getAccessLevelForUser(perm, loggedinuser.getName(), swid).equals("Write")) {
+        String permns = perm.getId() + "#";
+
+        Map<String, Authorization> auths = perm.getAuthorizations();
+        for (Authorization authobj : auths.values()) {
+          if (authobj.getAgentName().equals(username) && 
+            authobj.getAccessToObjId().equals(authorization.getAccessToObjId())) {
             AccessMode mode = new AccessMode();
             mode.setId(accessmodeid);
             authobj.setAccessMode(mode);

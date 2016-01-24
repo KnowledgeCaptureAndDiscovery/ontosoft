@@ -144,4 +144,19 @@ public interface SoftwareService extends DirectRestService {
   @Consumes("application/json")
   public AccessMode getSoftwareAccessLevelForUser(@PathParam("name") String swname, 
 		  @PathParam("username") String username);
+  
+  @GET
+  @Path("software/{name}/property/{propname}/access/{username}") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public AccessMode getPropertyAccessLevelForUser(@PathParam("name") String swname, 
+    @PathParam("propname") String propname, 
+    @PathParam("username") String username);
+  
+  @POST
+  @Path("software/{name}/property/permissions")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean setPropertyPermissionForUser(@PathParam("name") String name, 
+    @JsonProperty("authorization") Authorization authorization);
 }

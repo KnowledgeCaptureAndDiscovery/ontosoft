@@ -361,6 +361,38 @@ public class SoftwareResource implements SoftwareService {
 
     return this.repo.getSoftwareAccessLevelForUser(swid, username);
   }
+  
+  @GET
+  @Path("software/{name}/property/{propname}/access/{username}") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public AccessMode getPropertyAccessLevelForUser(@PathParam("name") String swname,
+    @PathParam("propname") String propname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+	  
+    String propid = propname;
+    if(!propname.startsWith("http:"))
+      propid = KBConstants.ONTNS() + propname;
+	  
+    return this.repo.getPropertyAccessLevelForUser(swid, propid, username);
+  }
+  
+  @POST
+  @Path("software/{name}/property/permissions")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean setPropertyPermissionForUser(@PathParam("name") String name, 
+    @JsonProperty("authorization") Authorization authorization) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+
+    return this.repo.setPropertyPermissionForUser((User) securityContext.getUserPrincipal(), 
+      swid, authorization);
+  }
   /**
    * Exports
    */

@@ -5,9 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Form;
+import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TabListItem;
 import org.gwtbootstrap3.client.ui.TabPane;
+import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.HasSoftwareHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
@@ -19,15 +22,25 @@ import org.ontosoft.client.components.form.events.SoftwareSaveHandler;
 import org.ontosoft.client.components.form.formgroup.PropertyFormGroup;
 import org.ontosoft.client.components.form.formgroup.input.EntityInput;
 import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
+import org.ontosoft.client.rest.AppNotification;
+import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
+import org.ontosoft.shared.classes.users.UserSession;
+import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
+import org.ontosoft.shared.utils.PermUtils;
 
+import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
@@ -36,6 +49,7 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public class SoftwareForm extends Composite 
@@ -51,8 +65,18 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   @UiField
   TabListItem requiredtabitem, optionaltabitem;
   
+  @UiField
+  Button setpermbutton;
+  
+  @UiField
+  ListBox userlist, permlist;
+  
+  @UiField
+  Modal permissiondialog;
+  
   Vocabulary vocabulary;
   Software software;
+  String propid;
   
   Map<String, PropertyFormGroup> propeditors;
   
@@ -263,4 +287,158 @@ implements HasSoftwareHandlers, HasPluginHandlers {
       this.layout();
   }
 
+  public void initPermDialog(String propid) {
+    this.propid = propid;
+    
+    permissiondialog.show();
+    userlist.setVisible(true);
+    permlist.setVisible(true);
+    
+    if (permlist.getItemCount() == 0)
+      setPermissionList();
+    
+    if (userlist.getItemCount() == 0)
+      setUserList();
+  }
+  
+  private void setUserList() {
+    userlist.clear();
+    UserREST.getUsers(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        for(String name : list) {
+          userlist.addItem(name);
+        }
+        userlist.setItemSelected(0, true);
+        selectPermissionForUser(list.get(0));
+      }
+    });
+  }
+
+  private void selectAccessLevel(String accesslevel) {
+    for (int i = 0; i < permlist.getItemCount(); i++) {
+      if (permlist.getItemText(i).equals(accesslevel)) {
+        permlist.setSelectedIndex(i);
+        break;
+      }
+    }
+  }
+  
+  private void selectPermissionForUser(final String username) {	  
+    if (software.getPermission().getOwner().getName().equals(username) ||
+      PermUtils.getAccessLevelForUser(software.getPermission(), username, software.getId()).equals("Write")) {
+      selectAccessLevel("Write");
+      permlist.setEnabled(false);
+      setpermbutton.setEnabled(false);		      	
+    } else {
+      UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
+        @Override
+        public void onFailure(Throwable reason) {
+          AppNotification.notifyFailure(reason.getMessage());
+        }
+
+        @Override
+        public void onSuccess(List<String> roles) {
+          if (roles.contains("admin")) {
+            selectAccessLevel("Write");  
+            permlist.setEnabled(false);
+            setpermbutton.setEnabled(false);
+          } else {
+            SoftwareREST.getPropertyAccessLevelForUser(software.getName(), propid, 
+              username, new Callback<AccessMode, Throwable>() {
+              @Override
+              public void onFailure(Throwable reason) {
+                AppNotification.notifyFailure(reason.getMessage());
+              }
+
+              @Override
+              public void onSuccess(AccessMode accessmode) {
+                selectAccessLevel(accessmode.getMode());
+              }
+            });
+          }
+        }
+      });		  
+    }	  
+  }
+  
+  private void setPermissionList() {
+    permlist.clear();
+    SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        for(String name : list) {
+          permlist.addItem(name);
+        }
+      }
+    });
+  }
+  
+  @UiHandler("userlist")
+  void onUserChangedEvent(ChangeEvent event) {
+    permlist.setEnabled(true);
+    setpermbutton.setEnabled(true);
+    
+    int index = userlist.getSelectedIndex();
+    String newuser = userlist.getValue(index);
+    selectPermissionForUser(newuser);
+  }
+  
+  @UiHandler("setpermbutton")
+  void onSetPermissionButtonClick(ClickEvent event) {
+    submitPermissionForm();
+    event.stopPropagation();
+  }
+  
+  private void submitPermissionForm() {
+    final String username = userlist.getSelectedValue();
+    final String permtype = permlist.getSelectedValue();
+    
+    String ownername = software.getPermission().getOwner().getName();
+    UserSession session = SessionStorage.getSession();
+    if (session != null) {
+      String loggedinuser = session.getUsername();
+      String swaccesslevel = PermUtils.getAccessLevelForUser(software, loggedinuser, software.getId());
+      if (loggedinuser.equals(ownername) ||
+        session.getRoles().contains("admin") ||
+        swaccesslevel.equals("Write")) {
+        Authorization authorization = new Authorization();
+        authorization.setId("");
+        authorization.setAgentId("");
+        String propid = KBConstants.ONTNS() + this.propid;
+        authorization.setAccessToObjId(propid);
+        authorization.setAgentName(username);
+        AccessMode mode = new AccessMode();
+        mode.setMode(permtype);
+        authorization.setAccessMode(mode);
+
+        SoftwareREST.setPropertyPermissionForUser(software.getName(), authorization, 
+          new Callback<Boolean, Throwable>() {
+          @Override
+          public void onFailure(Throwable reason) {
+            permissiondialog.hide();
+            AppNotification.notifyFailure(reason.getMessage());
+          }
+	    		        
+          @Override
+          public void onSuccess(Boolean success) {
+            permissiondialog.hide();
+            AppNotification.notifySuccess("Permission updated!", 2000);
+          }
+        });
+      } else {
+        AppNotification.notifyFailure("Not Allowed!");
+      }
+    }
+  }
 }

@@ -362,4 +362,34 @@ public class SoftwareREST {
       }
     }).call(getSoftwareService()).getSoftwareAccessLevelForUser(swname, username);
   }
+  
+  public static void getPropertyAccessLevelForUser(String swname, String propid, String username,
+    final Callback<AccessMode, Throwable> callback) {
+    REST.withCallback(new MethodCallback<AccessMode>() {
+      @Override
+      public void onSuccess(Method method, AccessMode accessmode) {
+        callback.onSuccess(accessmode);            
+      }
+  
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).getPropertyAccessLevelForUser(swname, propid, username);
+  }
+  
+  public static void setPropertyPermissionForUser(String name, Authorization authorization,
+    final Callback<Boolean, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Boolean>() {
+      @Override
+      public void onSuccess(Method method, Boolean success) {
+        callback.onSuccess(success);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).setPropertyPermissionForUser(name, authorization);
+  }
 }
