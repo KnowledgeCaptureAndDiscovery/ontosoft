@@ -809,8 +809,7 @@ public class SoftwareRepository {
     try {
       Permission perm = getSoftwarePermission(swid);
       if (loggedinuser.getRoles().contains("admin") || 
-        PermUtils.hasOwnerAccess(perm, loggedinuser.getName()) ||
-        PermUtils.getAccessLevelForUser(perm, loggedinuser.getName(), swid).equals("Write")) {
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
         String permns = perm.getId() + "#";
 
         Map<String, Authorization> auths = perm.getAuthorizations();

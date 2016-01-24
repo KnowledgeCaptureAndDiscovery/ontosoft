@@ -88,23 +88,26 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     this.addPluginButtons();
   }
   
-  private void updatePropertyPermissions() {
-    this.proplocked = false;
-    this.isModerator = false;
-	  
+  private void updatePropertyPermissions() {  
     UserSession session = SessionStorage.getSession();
     if (session != null) {
       String username = session.getUsername();
       String swaccesslevel = PermUtils.getAccessLevelForUser(software, username, software.getId());
+      /*
+       * Property permissions can only be updated by the admin or software owner.
+       */
       if (software.getPermission().getOwner().getName().equals(username) ||
-        session.getRoles().contains("admin") ||
-        swaccesslevel.equals("Write")) {
-          this.proplocked = false;
-          this.isModerator = true;
+        session.getRoles().contains("admin")) {
+        this.isModerator = true;
+        this.proplocked = false;
+      } else if (swaccesslevel.equals("Write")) {
+        this.proplocked = false;
+        this.isModerator = false;
       } else {
         String propaccesslevel = PermUtils.getAccessLevelForUser(software, username, property.getId());
         if (!propaccesslevel.equals("Write")) {
           this.proplocked = true;
+          this.isModerator = false;
         }
       }
     }
@@ -172,12 +175,19 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       igbtn.add(btn);
     }
     
+    /*
+     * If user is admin or software owner, show the set permission button.
+     * Else if property is locked, show locked icon.
+     * Else if user is software editor, give complete edit access and add no controls.
+     * Else if user is only property editor, give edit access to the specific property and add no controls.
+     */    
     if (this.isModerator) {
       final Button permbtn = new Button();
       permbtn.addStyleName("btn-flat");
       permbtn.setTabIndex(-2);
-      permbtn.setIcon(IconType.GEAR);
+      permbtn.setIcon(IconType.USER_PLUS);
       permbtn.setSize(ButtonSize.EXTRA_SMALL);
+      permbtn.setColor("#5D7BA0");
       permbtn.getElement().setAttribute("data-id", property.getName());
       permbtn.addClickHandler(new ClickHandler() {
         @Override

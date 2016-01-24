@@ -408,10 +408,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     UserSession session = SessionStorage.getSession();
     if (session != null) {
       String loggedinuser = session.getUsername();
-      String swaccesslevel = PermUtils.getAccessLevelForUser(software, loggedinuser, software.getId());
+      
       if (loggedinuser.equals(ownername) ||
-        session.getRoles().contains("admin") ||
-        swaccesslevel.equals("Write")) {
+        session.getRoles().contains("admin")) {
         Authorization authorization = new Authorization();
         authorization.setId("");
         authorization.setAgentId("");
