@@ -205,7 +205,8 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       lockbtn.setIcon(IconType.LOCK);
       lockbtn.setSize(ButtonSize.EXTRA_SMALL);
       lockbtn.setEnabled(false);
-      igbtn.add(lockbtn);	 
+      igbtn.add(lockbtn);	
+      thisfg.addStyleName("form-group-disable");
     }
     
     labelpanel.add(flabel);
