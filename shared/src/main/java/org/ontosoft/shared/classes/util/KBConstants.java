@@ -4,11 +4,11 @@ public class KBConstants {
   private static String onturi = "http://ontosoft.org/software";
   private static String caturi = "http://ontosoft.org/softwareCategories";
   private static String provuri = "http://www.w3.org/ns/prov-o";
-  private static String acluri = "http://www.w3.org/ns/auth/acl";
+  private static String permuri = "http://www.w3.org/ns/auth/acl";
   private static String foafuri = "http://xmlns.com/foaf/0.1";
   
   private static String provns = "http://www.w3.org/ns/prov#";
-  private static String aclns = "http://www.w3.org/ns/auth/acl#";
+  private static String permns = "http://www.w3.org/ns/auth/acl#";
   private static String owlns = "http://www.w3.org/2002/07/owl#";
   private static String rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
   private static String rdfsns = "http://www.w3.org/2000/01/rdf-schema#";
@@ -49,12 +49,12 @@ public class KBConstants {
     return provns;
   }
   
-  public static String ACLURI() {
-    return acluri;
+  public static String PERMURI() {
+    return permuri;
   }
 
-  public static String ACLNS() {
-    return aclns;
+  public static String PERMNS() {
+    return permns;
   }
 
   public static String FOAFNS() {
