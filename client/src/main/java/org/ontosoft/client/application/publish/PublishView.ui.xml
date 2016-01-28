@@ -29,8 +29,8 @@
 								<b:ButtonGroup visible="false" ui:field="buttons"
 									styleName="btn-group btn-group-responsive has-bottom-margin">
 									<b:Button type="INFO" ui:field="reloadbutton" icon="REFRESH"
-										dataLoadingText="" size="SMALL" />
-									<b:Button size="SMALL" type="INFO" text="" icon="USER_PLUS" ui:field="permbutton" />
+										dataLoadingText="" size="SMALL" title="Reload"/>
+									<b:Button size="SMALL" type="INFO" text="" icon="USER_PLUS" ui:field="permbutton" title="Set Permission"/>
 									<b:Button type="SUCCESS" ui:field="savebutton" text="Save"
 										icon="SAVE" size="SMALL" enabled="false" dataLoadingText="Saving.." />
 								</b:ButtonGroup>

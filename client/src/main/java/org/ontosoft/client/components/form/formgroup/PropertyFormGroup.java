@@ -189,6 +189,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       permbtn.setSize(ButtonSize.EXTRA_SMALL);
       permbtn.setColor("#5D7BA0");
       permbtn.getElement().setAttribute("data-id", property.getName());
+      permbtn.getElement().setAttribute("title", "Set Permission");
       permbtn.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
