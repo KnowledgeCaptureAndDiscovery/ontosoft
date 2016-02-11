@@ -96,7 +96,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       /*
        * Property permissions can only be updated by the admin or software owner.
        */
-      if (software.getPermission().getOwner().getName().equals(username) ||
+      if (software.getPermission().ownernameExists(username) ||
         session.getRoles().contains("admin")) {
         this.isModerator = true;
         this.proplocked = false;

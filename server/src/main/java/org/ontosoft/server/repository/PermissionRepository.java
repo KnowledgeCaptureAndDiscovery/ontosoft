@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.users.User;
-import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.server.util.Config;
 import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.permission.Authorization;
@@ -24,14 +23,13 @@ import edu.isi.wings.ontapi.OntSpec;
 
 public class PermissionRepository {
   OntFactory fac;
-  KBAPI permkb;
-  KBAPI ontkb;
+  KBAPI permontkb;
   KBAPI foafkb;
   public static String ACL_GRAPH = "permission";
 
   String ontns, owlns, rdfns, rdfsns, foafns;
   String server;
-  String topclass, authclass, readclass, writeclass;
+  String authclass, readclass, writeclass;
 
   private String PERMURI(String swid) {
     return swid + "/" + ACL_GRAPH;
@@ -65,16 +63,14 @@ public class PermissionRepository {
     ontns = KBConstants.PERMNS();
     foafns = KBConstants.FOAFNS();
 
-    topclass = ontns + "Access";
     authclass = ontns + "Authorization";
     readclass = ontns + "Read";
     writeclass = ontns + "Write";
 
     this.fac = new OntFactory(OntFactory.JENA, tdbdir);
     try {
-      this.permkb = fac.getKB(KBConstants.PERMURI(), OntSpec.PLAIN, false, true);
+      this.permontkb = fac.getKB(KBConstants.PERMURI(), OntSpec.PLAIN, false, true);
       this.foafkb = fac.getKB(KBConstants.FOAFURI(), OntSpec.PLAIN, false, true);
-      this.ontkb = fac.getKB(KBConstants.ONTURI(), OntSpec.PELLET, false, true);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -95,7 +91,7 @@ public class PermissionRepository {
     auth.setAgentId(this.getUserId(owner));
     auth.setAccessToObjId(swid);
 
-    perm.setOwnerId(this.getUserId(owner));
+    perm.addOwnerid(this.getUserId(owner));
     perm.setType(KBConstants.PERMNS() + "Access");
     perm.addAuth(auth);
 
@@ -107,40 +103,38 @@ public class PermissionRepository {
     return permkb.delete();
   }
 
-  public boolean commitPermission(Permission perm) throws Exception {
+  public boolean commitPermission(Permission perm, String swid) throws Exception {
     KBAPI permkb = fac.getKB(perm.getId(), OntSpec.PLAIN, true);
-
-    KBObject permcls = this.permkb.getConcept(topclass);
-    KBObject authcls = this.permkb.getConcept(authclass);
-    KBObject readcls = this.permkb.getConcept(readclass);
-    KBObject writecls = this.permkb.getConcept(writeclass);
+    
+    KBObject authcls = this.permontkb.getConcept(authclass);
+    KBObject readcls = this.permontkb.getConcept(readclass);
+    KBObject writecls = this.permontkb.getConcept(writeclass);
     KBObject agentcls = this.foafkb.getConcept(foafns + "Agent");
 
-    KBObject permobj = permkb.getIndividual(perm.getId());
-    if (permobj == null)
-      permobj = permkb.createObjectOfClass(perm.getId(), permcls);
+    KBObject swobj = permkb.getResource(swid);
 
-    KBObject ownerprop = permkb.getProperty(ontns + "owner");
-    KBObject modeprop = permkb.getProperty(ontns + "mode");
-    KBObject agentprop = permkb.getProperty(ontns + "agent");
-    KBObject accesstoprop = permkb.getProperty(ontns + "accessTo");
+    KBObject ownerprop = this.permontkb.getProperty(ontns + "owner");
+    KBObject modeprop = this.permontkb.getProperty(ontns + "mode");
+    KBObject agentprop = this.permontkb.getProperty(ontns + "agent");
+    KBObject accesstoprop = this.permontkb.getProperty(ontns + "accessTo");
 
-    Agent ownerAgent = perm.getOwner();
-    KBObject ownerobj = permkb.getIndividual(ownerAgent.getId());
-    if(ownerobj == null) {
-      ownerobj = permkb.createObjectOfClass(ownerAgent.getId(), agentcls);
+    for(KBTriple t : permkb.genericTripleQuery(swobj, ownerprop, null)) {
+      permkb.removeTriple(t);
+    }
+    
+    List<Agent> ownerAgents = perm.getOwners();
+    for (Agent ownerAgent: ownerAgents) {
+      KBObject ownerobj = permkb.getIndividual(ownerAgent.getId());
+      if(ownerobj == null) {
+        ownerobj = permkb.createObjectOfClass(ownerAgent.getId(), agentcls);
+      }
+      permkb.addTriple(swobj, ownerprop, ownerobj);   
     }
 
-    permkb.setPropertyValue(permobj, ownerprop, ownerobj);
-
     for(Authorization auth : perm.getAuthorizations().values()) {
-      KBObject modeobj = permkb.getIndividual(auth.getAccessMode().getId());
-      if(modeobj == null) {
-        if (auth.getAccessMode().getId().equals(auth.getAccessMode().WMODEURI()))
-          modeobj = permkb.createObjectOfClass(auth.getAccessMode().getId(), writecls);
-        else
-          modeobj = permkb.createObjectOfClass(auth.getAccessMode().getId(), readcls);
-      }
+      KBObject modeobj = readcls;
+      if (auth.getAccessMode().getId().equals(auth.getAccessMode().WMODEURI()))
+        modeobj = writecls;
 
       KBObject agentobj = permkb.getIndividual(auth.getAgentId());
       if(agentobj == null) {
@@ -148,19 +142,30 @@ public class PermissionRepository {
           agentobj = permkb.createObjectOfClass(auth.getAgentId(), agentcls);
       }
 
-      KBObject accesstoobj = this.ontkb.getProperty(auth.getAccessToObjId());
+      KBObject accesstoobj = permkb.getResource(auth.getAccessToObjId());
       
       if(modeobj != null && agentobj != null && accesstoobj != null) {
         KBObject authobj = permkb.getIndividual(auth.getId());
         if(authobj == null)
           authobj = permkb.createObjectOfClass(auth.getId(), authcls);
 
-        permkb.setPropertyValue(authobj, modeprop, modeobj);
+        for(KBTriple t : permkb.genericTripleQuery(authobj, modeprop, null))
+          permkb.removeTriple(t);
+        permkb.addTriple(authobj, modeprop, modeobj);
         permkb.setPropertyValue(authobj, agentprop, agentobj);
         permkb.setPropertyValue(authobj, accesstoprop, accesstoobj);
       }
     }
     return permkb.save();
+  }
+  
+  public String getSoftwarePermissionGraph(String swid) throws Exception {
+    Permission perm = new Permission();
+    String permid = PERMURI(swid);
+    perm.setId(permid);
+
+    KBAPI permkb = fac.getKB(permid, OntSpec.PLAIN);
+    return permkb.toAbbrevRdf(false);
   }
 
   public Permission getSoftwarePermission(String swid) throws Exception {
@@ -170,13 +175,13 @@ public class PermissionRepository {
 
     KBAPI permkb = fac.getKB(permid, OntSpec.PLAIN);
 
-    KBObject authcls = this.permkb.getConcept(authclass);
+    KBObject authcls = this.permontkb.getConcept(authclass);
 
-    KBObject modeprop = permkb.getProperty(ontns + "mode");
-    KBObject agentprop = permkb.getProperty(ontns + "agent");
-    KBObject ownerprop = permkb.getProperty(ontns + "owner");
-    KBObject accesstoprop = permkb.getProperty(ontns + "accessTo");
-    KBObject typeprop = permkb.getProperty(rdfns + "type");
+    KBObject modeprop = this.permontkb.getProperty(ontns + "mode");
+    KBObject agentprop = this.permontkb.getProperty(ontns + "agent");
+    KBObject ownerprop = this.permontkb.getProperty(ontns + "owner");
+    KBObject accesstoprop = this.permontkb.getProperty(ontns + "accessTo");
+    KBObject typeprop = this.permontkb.getProperty(rdfns + "type");
 
     // Get Authorizations
     for(KBTriple t : permkb.genericTripleQuery(null, typeprop, authcls)) {
@@ -198,12 +203,13 @@ public class PermissionRepository {
       }
     }
 
-    KBObject permobj = permkb.getIndividual(permid);
-    if (permobj != null) {
-      KBObject owner = permkb.getPropertyValue(permobj, ownerprop);
-      String ownername = owner.getID().replaceAll(".*\\/", "");
-      UserCredentials user = UserDatabase.get().getUser(ownername);
-      perm.setOwnerId(this.getUserId(user));	
+    KBObject swobj = permkb.getResource(swid);
+    
+    if (swobj != null) {
+      for(KBTriple t : permkb.genericTripleQuery(swobj, ownerprop, null)) {
+        KBObject owner = t.getObject();
+        perm.addOwnerid(owner.getID());  
+      }
     }    
     return perm;
   }

@@ -310,7 +310,7 @@ public class SoftwareResource implements SoftwareService {
   }
 
   @GET
-  @Path("permissions") 
+  @Path("permission") 
   @Produces("application/json")
   @Override
   public List<String> getPermissionTypes()
@@ -319,7 +319,7 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @POST
-  @Path("software/{name}/permissions")
+  @Path("software/{name}/permission")
   @Produces("application/json")
   @Consumes("application/json")
   @RolesAllowed("user")
@@ -337,7 +337,7 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @GET
-  @Path("software/{name}/permissions")
+  @Path("software/{name}/permission")
   @Produces("application/json")
   @Consumes("application/json")
   @RolesAllowed("user")
@@ -350,7 +350,17 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @GET
-  @Path("software/{name}/access/{username}")
+  @Path("software/{name}/permission")
+  @Produces("application/rdf+xml")
+  public String getSoftwarePermissionsGraph(@PathParam("name") String name) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+    return this.repo.getSoftwarePermissionGraph(swid);
+  }
+  
+  @GET
+  @Path("software/{name}/permission/{username}")
   @Produces("application/json")
   @Consumes("application/json")
   public AccessMode getSoftwareAccessLevelForUser(@PathParam("name") String swname, 
@@ -363,7 +373,7 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @GET
-  @Path("software/{name}/property/{propname}/access/{username}") 
+  @Path("software/{name}/property/{propname}/permission/{username}") 
   @Produces("application/json")  
   @Consumes("application/json")
   public AccessMode getPropertyAccessLevelForUser(@PathParam("name") String swname,
@@ -381,7 +391,7 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @POST
-  @Path("software/{name}/property/permissions")
+  @Path("software/{name}/property/permission")
   @Produces("application/json")
   @Consumes("application/json")
   public Boolean setPropertyPermissionForUser(@PathParam("name") String name, 
@@ -392,6 +402,34 @@ public class SoftwareResource implements SoftwareService {
 
     return this.repo.setPropertyPermissionForUser((User) securityContext.getUserPrincipal(), 
       swid, authorization);
+  }
+
+  @POST
+  @Path("software/{name}/owner/permission/{username}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean addSoftwareOwner(@PathParam("name") String swname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.addSoftwareOwner((User) securityContext.getUserPrincipal(), 
+      swid, username);
+  }
+  
+  @DELETE
+  @Path("software/{name}/owner/permission/{username}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean removeSoftwareOwner(@PathParam("name") String swname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.removeSoftwareOwner((User) securityContext.getUserPrincipal(), 
+      swid, username);	  
   }
   /**
    * Exports

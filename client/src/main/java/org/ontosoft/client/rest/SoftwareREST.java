@@ -58,6 +58,10 @@ public class SoftwareREST {
     return softwareService;
   }
   
+  public static void clearSwCache() {
+    softwareCache.clear();
+  }
+  
   public static void getVocabulary(final Callback<Vocabulary, Throwable> callback,
       boolean reload) {
     if(vocabulary != null && !reload) {
@@ -391,5 +395,35 @@ public class SoftwareREST {
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).setPropertyPermissionForUser(name, authorization);
+  }
+  
+  public static void addSoftwareOwner(String swname, String username,
+    final Callback<Boolean, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Boolean>() {
+      @Override
+      public void onSuccess(Method method, Boolean success) {
+        callback.onSuccess(success);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).addSoftwareOwner(swname, username);
+  }
+
+  public static void removeSoftwareOwner(String swname, String username,
+    final Callback<Boolean, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Boolean>() {
+      @Override
+      public void onSuccess(Method method, Boolean success) {
+        callback.onSuccess(success);            
+      }
+
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(getSoftwareService()).removeSoftwareOwner(swname, username);
   }
 }

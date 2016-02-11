@@ -432,7 +432,7 @@ public class SoftwareRepository {
       Provenance prov = this.prov.getAddProvenance(sw, user);
       this.prov.addProvenance(prov);
       Permission perm = this.perm_repo.createSoftwarePermisson(sw.getId(), user);
-      this.perm_repo.commitPermission(perm);
+      this.perm_repo.commitPermission(perm, sw.getId());
     }
     return swid;
   }
@@ -725,6 +725,14 @@ public class SoftwareRepository {
     }
   }
   
+  public String getSoftwarePermissionGraph(String swid) {
+    try {
+      return this.perm_repo.getSoftwarePermissionGraph(swid);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+  
   public AccessMode getSoftwareAccessLevelForUser(String swid, String username) {
     UserCredentials user = UserDatabase.get().getUser(username);
     AccessMode mode = new AccessMode();
@@ -793,7 +801,7 @@ public class SoftwareRepository {
           perm.addAuth(authorization);
         }
 
-        this.perm_repo.commitPermission(perm);
+        this.perm_repo.commitPermission(perm, swid);
         return true;
       }
     } catch (Exception e) {}
@@ -829,7 +837,36 @@ public class SoftwareRepository {
           perm.addAuth(authorization);
         }
 
-        this.perm_repo.commitPermission(perm);
+        this.perm_repo.commitPermission(perm, swid);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+  
+  public boolean addSoftwareOwner(User loggedinuser, String swid, String ownername) {
+    try {
+	  Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        UserCredentials user = UserDatabase.get().getUser(ownername);
+        perm.addOwnerid(this.getUserId(user));
+        this.perm_repo.commitPermission(perm, swid);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+
+  public boolean removeSoftwareOwner(User loggedinuser, String swid, String ownername) {
+    try {
+	  Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        UserCredentials user = UserDatabase.get().getUser(ownername);
+        if (perm.removeOwnerid(this.getUserId(user))) {
+          this.perm_repo.commitPermission(perm, swid);
+        }
         return true;
       }
     } catch (Exception e) {}

@@ -10,6 +10,8 @@ import org.gwtbootstrap3.client.ui.Form;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TabListItem;
 import org.gwtbootstrap3.client.ui.TabPane;
+import org.gwtbootstrap3.extras.select.client.ui.Option;
+import org.gwtbootstrap3.extras.select.client.ui.Select;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.HasSoftwareHandlers;
@@ -49,7 +51,6 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Widget;
 
 public class SoftwareForm extends Composite 
@@ -69,7 +70,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   Button setpermbutton;
   
   @UiField
-  ListBox userlist, permlist;
+  Select userlist, permlist;
   
   @UiField
   Modal permissiondialog;
@@ -294,18 +295,14 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     userlist.setVisible(true);
     permlist.setVisible(true);
     
-    if (permlist.getItemCount() == 0)
+    if (permlist.getItemCount() == 1)
       setPermissionList();
     
-    if (userlist.getItemCount() == 0)
+    if (userlist.getItemCount() == 1)
       setUserList();
-    
-    String defaultusername = userlist.getItemText(0);
-    selectPermissionForUser(defaultusername);
   }
   
   private void setUserList() {
-    userlist.clear();
     UserREST.getUsers(new Callback<List<String>, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
@@ -315,25 +312,30 @@ implements HasSoftwareHandlers, HasPluginHandlers {
       @Override
       public void onSuccess(List<String> list) {
         for(String name : list) {
-          userlist.addItem(name);
+          Option opt = new Option();
+          opt.setText(name);
+          opt.setValue(name);
+          userlist.add(opt);
         }
-        userlist.setItemSelected(0, true);
-        selectPermissionForUser(list.get(0));
+        userlist.refresh();
       }
     });
   }
 
   private void selectAccessLevel(String accesslevel) {
-    for (int i = 0; i < permlist.getItemCount(); i++) {
-      if (permlist.getItemText(i).equals(accesslevel)) {
-        permlist.setSelectedIndex(i);
+    for (int i = 1; i < permlist.getItemCount(); i++) {
+      if (permlist.getValue(i).equals(accesslevel)) {
+        permlist.setValue(accesslevel);
         break;
       }
     }
   }
   
-  private void selectPermissionForUser(final String username) {	  
-    if (software.getPermission().getOwner().getName().equals(username) ||
+  private void selectPermissionForUser(final String username) {	 
+	permlist.setEnabled(true);
+	setpermbutton.setEnabled(true);
+	
+	if (software.getPermission().ownernameExists(username) ||
       PermUtils.getAccessLevelForUser(software.getPermission(), username, software.getId()).equals("Write")) {
       selectAccessLevel("Write");
       permlist.setEnabled(false);
@@ -351,6 +353,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
             selectAccessLevel("Write");  
             permlist.setEnabled(false);
             setpermbutton.setEnabled(false);
+            permlist.refresh();
           } else {
             SoftwareREST.getPropertyAccessLevelForUser(software.getName(), propidselected, 
               username, new Callback<AccessMode, Throwable>() {
@@ -367,11 +370,11 @@ implements HasSoftwareHandlers, HasPluginHandlers {
           }
         }
       });		  
-    }	  
+    }
+	permlist.refresh();
   }
   
   private void setPermissionList() {
-    permlist.clear();
     SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
@@ -381,8 +384,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
       @Override
       public void onSuccess(List<String> list) {
         for(String name : list) {
-          permlist.addItem(name);
+          Option opt = new Option();
+          opt.setText(name);
+          opt.setValue(name);
+          permlist.add(opt);
         }
+        permlist.refresh();
       }
     });
   }
@@ -390,10 +397,10 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   @UiHandler("userlist")
   void onUserChangedEvent(ChangeEvent event) {
     permlist.setEnabled(true);
+    permlist.refresh();
     setpermbutton.setEnabled(true);
     
-    int index = userlist.getSelectedIndex();
-    String newuser = userlist.getValue(index);
+    String newuser = userlist.getSelectedValue();
     selectPermissionForUser(newuser);
   }
   
@@ -407,12 +414,11 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     final String username = userlist.getSelectedValue();
     final String permtype = permlist.getSelectedValue();
     
-    String ownername = software.getPermission().getOwner().getName();
     UserSession session = SessionStorage.getSession();
     if (session != null) {
       String loggedinuser = session.getUsername();
       
-      if (loggedinuser.equals(ownername) ||
+      if (software.getPermission().ownernameExists(loggedinuser) ||
         session.getRoles().contains("admin")) {
         Authorization authorization = new Authorization();
         authorization.setId("");

@@ -1,16 +1,19 @@
 package org.ontosoft.shared.classes.permission;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class Permission {
   String id;
-  Agent owner;
+  List<Agent> owners;
   String type;
   Map<String, Authorization> authorizations;
   
   public Permission() {
     this.authorizations = new HashMap<String, Authorization>();
+    this.owners = new ArrayList<Agent>();
   }
 
   public String getId() {
@@ -21,14 +24,30 @@ public class Permission {
     this.id = id;
   }
 
-  public void setOwnerId(String id) {
-    Agent owner = new Agent();
-    owner.setId(id);
-    this.owner = owner;
+  public void addOwnerid(String id) {
+    if (!owneridExists(id)) {
+      Agent owner = new Agent();
+      owner.setId(id);
+      this.owners.add(owner);    	
+    }
   }
 
-  public Agent getOwner() {
-  return this.owner;
+  public boolean removeOwnerid(String id) {
+	int index = 0;
+	boolean removed = false;
+    for (Agent owner: owners) {
+      if (owner.getId().equals(id)) {
+        this.owners.remove(index);
+        removed = true;
+        break;
+      }
+      index++;
+	}
+    return removed;
+  }
+  
+  public List<Agent> getOwners() {
+    return this.owners;
   }
 
   public void setType(String type) {
@@ -53,5 +72,29 @@ public class Permission {
  
   public void addAuth(Authorization auth) {
     this.authorizations.put(auth.getId(), auth);
+  }
+  
+  public boolean owneridExists(String ownerid) {
+    boolean exists = false;
+    
+    for (Agent owner: owners) {
+      if (owner.getId().equals(ownerid)) {
+        exists = true;
+        break;
+      }
+    }
+    return exists;
+  }
+  
+  public boolean ownernameExists(String ownername) {
+    boolean exists = false;
+
+    for (Agent owner: owners) {
+      if (owner.getName().equals(ownername)) {
+        exists = true;
+        break;
+      }
+    }
+    return exists;
   }
 }
