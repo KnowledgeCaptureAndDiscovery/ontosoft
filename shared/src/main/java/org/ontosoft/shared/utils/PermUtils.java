@@ -9,7 +9,7 @@ import org.ontosoft.shared.classes.permission.Permission;
 
 public class PermUtils {
   static public boolean hasOwnerAccess(Permission perm, String username) {
-    if (username == null || !username.equals(perm.getOwner().getName()))
+    if (username == null || !perm.ownernameExists(username))
       return false;
     return true;
   }
