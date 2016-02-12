@@ -147,4 +147,9 @@ public class EnumerationEntityInput implements IEntityInput {
   
   @Override
   public void layout() { }
+  
+  @Override
+  public void disable() {
+    myinput.setEnabled(false);
+  }
 }

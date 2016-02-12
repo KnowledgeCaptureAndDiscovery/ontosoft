@@ -4,7 +4,8 @@
 	xmlns:c="urn:import:org.ontosoft.client.components.chart"
 	xmlns:f="urn:import:org.ontosoft.client.components.form"
 	xmlns:n="urn:import:org.ontosoft.client.components.form.notification"
-	xmlns:b="urn:import:org.gwtbootstrap3.client.ui" xmlns:g="urn:import:com.google.gwt.user.client.ui">
+	xmlns:b="urn:import:org.gwtbootstrap3.client.ui" xmlns:g="urn:import:com.google.gwt.user.client.ui"
+	xmlns:select="urn:import:org.gwtbootstrap3.extras.select.client.ui">
 
 	<b:Row>
 		<b:Column size="XS_12">
@@ -29,12 +30,27 @@
 								<b:ButtonGroup visible="false" ui:field="buttons"
 									styleName="btn-group btn-group-responsive has-bottom-margin">
 									<b:Button type="INFO" ui:field="reloadbutton" icon="REFRESH"
-										dataLoadingText="" size="SMALL" />
+										dataLoadingText="" size="SMALL" title="Reload"/>
+									<b:Button size="SMALL" type="INFO" text="" icon="USER_PLUS" ui:field="permbutton" title="Set Permission"/>
 									<b:Button type="SUCCESS" ui:field="savebutton" text="Save"
 										icon="SAVE" size="SMALL" enabled="false" dataLoadingText="Saving.." />
 								</b:ButtonGroup>
 							</g:VerticalPanel>
-							
+							<b:Modal title="Set Permissions" closable="true" fade="true" ui:field="permissiondialog">
+							<b:ModalBody>
+								<b:FormGroup>
+									<select:Select ui:field="userlist" visible="false" liveSearch="true" title="Select user" visibleSize="8"/>
+									<b:HelpBlock />
+									<select:Select ui:field="permlist" visible="false" liveSearch="true" title="Select permission" visibleSize="2"/>
+									<b:HelpBlock />
+									<g:CheckBox text="Owner" ui:field="ownerrole" />
+								</b:FormGroup>
+							</b:ModalBody>
+							<b:ModalFooter>
+								<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton" text="Cancel" />				
+								<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="setpermbutton" text="Submit" />
+							</b:ModalFooter>
+							</b:Modal>
 							<c:CategoryPieChart ui:field="piechart" name="piechart" size="200" />
 						</b:Column>
 						<b:Column size="XS_7, SM_6, MD_6" ui:field="barcolumn" styleName="vcenter">

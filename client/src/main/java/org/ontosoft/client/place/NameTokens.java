@@ -11,6 +11,7 @@ public class NameTokens {
   public static final String router = "router";
   public static final String compare = "compare";
   public static final String users = "users";
+  public static final String permission = "permission";
 
   public static String getHome() {
     return home;
@@ -50,5 +51,9 @@ public class NameTokens {
   
   public static String getUsers() {
     return users;
+  }
+  
+  public static String getPermission() {
+    return permission;
   }
 }

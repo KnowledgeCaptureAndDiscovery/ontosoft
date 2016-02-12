@@ -1,5 +1,7 @@
 package org.ontosoft.client.application.publish;
 
+import java.util.List;
+
 import org.gwtbootstrap3.client.ui.AnchorListItem;
 import org.gwtbootstrap3.client.ui.Breadcrumbs;
 import org.gwtbootstrap3.client.ui.Button;
@@ -16,8 +18,13 @@ import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
 import org.ontosoft.client.components.form.notification.PluginNotifications;
 import org.ontosoft.client.place.NameTokens;
+import org.ontosoft.client.rest.AppNotification;
 import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
+import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -26,13 +33,21 @@ import org.ontosoft.shared.plugins.PluginResponse;
 
 import com.github.gwtd3.api.D3;
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.CheckBox;
+import org.gwtbootstrap3.client.ui.Modal;
+import org.gwtbootstrap3.extras.select.client.ui.Option;
+import org.gwtbootstrap3.extras.select.client.ui.Select;
+
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.inject.Inject;
@@ -59,7 +74,10 @@ public class PublishView extends ParameterizedViewImpl
   ButtonGroup buttons;
   
   @UiField
-  Button savebutton, reloadbutton;
+  Button savebutton, reloadbutton, permbutton;
+  
+  @UiField
+  Button setpermbutton;
   
   @UiField
   VerticalPanel loading;
@@ -70,11 +88,20 @@ public class PublishView extends ParameterizedViewImpl
   @UiField
   PluginNotifications notifications;
   
+  @UiField
+  Select userlist, permlist;
+  
+  @UiField
+  Modal permissiondialog;
+  
+  @UiField
+  CheckBox ownerrole;
+  
   Vocabulary vocabulary;
   String softwarename;
   Software software;
-
-  
+  String loggedinuser;
+ 
   interface Binder extends UiBinder<Widget, PublishView> { }
 
   @Inject
@@ -92,6 +119,13 @@ public class PublishView extends ParameterizedViewImpl
       //SoftwareREST.notifyFailure("You need to be logged in to edit software description");
       return;
     }
+    
+    if(session.getUsername() != null)
+      if(!this.loggedinuser.equals(session.getUsername())) {
+        this.loggedinuser = session.getUsername();
+        SoftwareREST.clearSwCache();
+      }
+    
     // Parse tokens
     if(params.length > 0) {
       this.softwarename = params[0];
@@ -120,6 +154,7 @@ public class PublishView extends ParameterizedViewImpl
     buttons.setVisible(false);
     barchart.setVisible(false);
     breadcrumbs.clear();  
+    permbutton.setVisible(false);
   }
   
   private void initVocabulary() {
@@ -138,6 +173,15 @@ public class PublishView extends ParameterizedViewImpl
     initSoftware(softwarename, false);
   }
   
+  private void setPermButtonVisibility() {
+    UserSession session = SessionStorage.getSession();
+      
+    if ((session != null && session.getRoles().contains("admin")) || 
+      this.software.getPermission().ownernameExists(this.loggedinuser)) {
+      permbutton.setVisible(true);
+    }	  
+  }
+  
   private void initSoftware(String softwarename, final boolean reload) {    
     if(!reload)
       loading.setVisible(true);
@@ -154,6 +198,8 @@ public class PublishView extends ParameterizedViewImpl
         
         software = sw;
         initialDraw();
+        
+        setPermButtonVisibility();
         
         notifications.showNotificationsForSoftware(software.getId());
         
@@ -220,6 +266,8 @@ public class PublishView extends ParameterizedViewImpl
     easeIn(piechart);
     piechart.setVisible(true);
     buttons.setVisible(true);
+    
+    setPermButtonVisibility();
     
     piechart.updateDimensions();
   }
@@ -408,4 +456,205 @@ public class PublishView extends ParameterizedViewImpl
     D3.select(w.getElement()).transition().duration(400).style("opacity", 1);
   }
   
+  @UiHandler("permbutton")
+  void onPermButtonClick(ClickEvent event) {
+    permissiondialog.show();
+    
+    userlist.setVisible(true);
+    permlist.setVisible(true);
+    
+    if (userlist.getItemCount() == 1)
+      setUserList();
+    if (permlist.getItemCount() == 1)
+      setPermissionList();
+  }
+  
+  @UiHandler("userlist")
+  void onUserChangedEvent(ChangeEvent event) {
+    permlist.setEnabled(true);
+    permlist.refresh();
+    setpermbutton.setEnabled(true);
+    String newuser = userlist.getSelectedValue();
+    selectPermissionForUser(newuser);
+  }
+  
+  private void selectAccessLevel(String accesslevel) {
+    for (int i = 1; i < permlist.getItemCount(); i++) {
+      if (permlist.getValue(i).equals(accesslevel)) {
+        permlist.setValue(accesslevel);
+        break;
+      }
+    }
+  }
+  
+  private void selectPermissionForUser(final String username) {	  
+	permlist.setEnabled(true);
+	ownerrole.setEnabled(true);
+	setpermbutton.setEnabled(true);
+	ownerrole.setValue(false);
+	
+    UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> roles) {
+        if (roles.contains("admin")) {
+          permlist.setEnabled(false);
+          setpermbutton.setEnabled(false);
+          ownerrole.setEnabled(false);
+          ownerrole.setValue(true);
+          selectAccessLevel("Write");
+          permlist.refresh();
+        } else if (software.getPermission().ownernameExists(username)) {
+          ownerrole.setValue(true);
+          selectAccessLevel("Write");
+        } else {
+          SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), 
+            username, new Callback<AccessMode, Throwable>() {
+              @Override
+              public void onFailure(Throwable reason) {
+                AppNotification.notifyFailure(reason.getMessage());
+              }
+
+              @Override
+              public void onSuccess(AccessMode accessmode) {
+                selectAccessLevel(accessmode.getMode());
+              }
+          });		  
+        }	        	
+      }
+    }); 
+    permlist.refresh();
+  }
+  
+  private void setUserList() {
+    UserREST.getUsers(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        for(String name : list) {
+          Option opt = new Option();
+          opt.setText(name);
+          opt.setValue(name);
+          userlist.add(opt);
+        }
+        userlist.refresh();
+      }
+    });
+  }
+  
+  private void setPermissionList() {
+    SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        AppNotification.notifyFailure(reason.getMessage());
+      }
+
+      @Override
+      public void onSuccess(List<String> list) {
+        for(String name : list) {
+          Option opt = new Option();
+          opt.setText(name);
+          opt.setValue(name);
+          permlist.add(opt);
+        }
+        permlist.refresh();
+      }
+    });	  
+  }
+  
+  @UiHandler("setpermbutton")
+  void onSetPermissionButtonClick(ClickEvent event) {
+    submitPermissionForm();
+    event.stopPropagation();
+  }
+  
+  @UiHandler("ownerrole")
+  public void onSetOwnerClicked(ValueChangeEvent<Boolean> ev) {
+	  boolean state = ev.getValue();
+	  if (state) {
+		selectAccessLevel("Write");
+        permlist.setEnabled(false);
+	  } else {
+        permlist.setEnabled(true);
+	  }
+	  permlist.refresh();
+  }
+  
+  private void submitPermissionForm() {
+    final String username = userlist.getSelectedValue();
+    final String permtype = permlist.getSelectedValue();
+    UserSession session = SessionStorage.getSession();
+
+    if ((session != null && session.getRoles().contains("admin")) || 
+      software.getPermission().ownernameExists(this.loggedinuser)) {
+      if (ownerrole.getValue() == true) {
+        SoftwareREST.addSoftwareOwner(software.getName(), username, 
+          new Callback<Boolean, Throwable>() {
+          @Override
+          public void onFailure(Throwable reason) {
+            permissiondialog.hide();
+            AppNotification.notifyFailure(reason.getMessage());
+          }
+                  
+          @Override
+          public void onSuccess(Boolean success) {
+            permissiondialog.hide();
+            AppNotification.notifySuccess("Owner Added!", 2000);
+          }
+        });
+      } else {
+        Authorization authorization = new Authorization();
+        authorization.setId("");
+        authorization.setAgentId("");
+        authorization.setAccessToObjId(software.getId());
+        authorization.setAgentName(username);
+        AccessMode mode = new AccessMode();
+        mode.setMode(permtype);
+        authorization.setAccessMode(mode);
+
+        SoftwareREST.setSoftwarePermissionForUser(software.getName(), authorization, 
+          new Callback<Boolean, Throwable>() {
+            @Override
+            public void onFailure(Throwable reason) {
+              permissiondialog.hide();
+              AppNotification.notifyFailure(reason.getMessage());
+            }
+            
+            @Override
+            public void onSuccess(Boolean success) {
+              SoftwareREST.removeSoftwareOwner(software.getName(), username, 
+                new Callback<Boolean, Throwable>() {
+               @Override
+               public void onFailure(Throwable reason) {
+                 permissiondialog.hide();
+                 AppNotification.notifyFailure(reason.getMessage());
+               }
+                
+               @Override
+               public void onSuccess(Boolean success) {
+                 permissiondialog.hide();
+                 AppNotification.notifySuccess("Permission updated!", 2000);
+               }
+             });
+           }
+        });  
+      }
+    } else {
+      AppNotification.notifyFailure("Not Allowed!");
+    }
+  }
+  
+  @UiHandler("cancelbutton")
+  void onCancelButtonClick(ClickEvent event) {
+    permissiondialog.hide();
+    event.stopPropagation();
+  }
 }

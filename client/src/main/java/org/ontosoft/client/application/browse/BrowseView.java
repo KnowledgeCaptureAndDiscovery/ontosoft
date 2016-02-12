@@ -71,7 +71,7 @@ public class BrowseView extends ParameterizedViewImpl
   String softwarename;
   String softwarerdf;
   String softwarehtml;
-  
+
   Vocabulary vocabulary;
   
   public interface SoftwareCodec extends JsonEncoderDecoder<Software> {}
@@ -114,6 +114,7 @@ public class BrowseView extends ParameterizedViewImpl
   
   private void initSoftware(String softwarename) {
     loading.setVisible(true);
+    
     SoftwareREST.getSoftware(softwarename, new Callback<Software, Throwable>() {
       @Override
       public void onSuccess(Software sw) {

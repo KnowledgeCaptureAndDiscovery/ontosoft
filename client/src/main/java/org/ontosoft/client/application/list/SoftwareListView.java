@@ -28,7 +28,9 @@ import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
+import org.ontosoft.shared.utils.PermUtils;
 
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -160,15 +162,17 @@ public class SoftwareListView extends ParameterizedViewImpl
   }
   
   public void redrawControls() {
-    table.removeStyleName("admin-table");
-    table.removeStyleName("registered-user-table");
+    table.removeStyleName("edit-col");
+    table.removeStyleName("delete-col");
+	
     bigpublishbutton.getParent().setVisible(false);
-    if(this.isadmin)
-      table.addStyleName("admin-table");
-    if(this.isreguser)
-      table.addStyleName("registered-user-table");
-    if(this.isadmin || this.isreguser)
+    
+    if(this.isadmin || this.isreguser) {
       bigpublishbutton.getParent().setVisible(true);
+      table.addStyleName("edit-col");
+      table.addStyleName("delete-col");
+      table.redraw();
+    }
   }
   
   private void initTable() {
@@ -265,27 +269,6 @@ public class SoftwareListView extends ParameterizedViewImpl
     sortHandler.setComparator(namecol, this.swcompare);
     table.getColumnSortList().push(namecol);
     
-    // Edit Button Column
-    final Column<SoftwareSummary, String> editcol = 
-        new Column<SoftwareSummary, String>(
-            new ButtonCell(IconType.EDIT, ButtonType.INFO, 
-                ButtonSize.EXTRA_SMALL)) {
-        @Override
-        public String getValue(SoftwareSummary details) {
-          return "Edit";
-        }
-    };
-    editcol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
-      @Override
-      public void update(int index, SoftwareSummary summary, String value) {
-        String swname = summary.getName();
-        History.newItem(NameTokens.publish + "/" + swname);
-      }
-    });
-    //table.setColumnWidth(editcol, "0px");
-    editcol.setCellStyleNames("registered-user-cell");
-    table.addColumn(editcol);
-    
     // Delete Button Column
 
     Column<SoftwareSummary, String> deletecolumn = 
@@ -295,15 +278,48 @@ public class SoftwareListView extends ParameterizedViewImpl
       public String getValue(SoftwareSummary details) {
         return "Delete";
       }
+
+      @Override
+      public void render(Cell.Context context, SoftwareSummary summary, SafeHtmlBuilder sb) {
+        UserSession session = SessionStorage.getSession();
+        if (isadmin || 
+          (isreguser && PermUtils.hasOwnerAccess(summary.getPermission(), session.getUsername()))) {
+          super.render(context, summary, sb);
+        }
+      }
     };
+    
     deletecolumn.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
       @Override
       public void update(int index, SoftwareSummary summary, String value) {
         deleteSoftware(summary);
       }
     });
-    deletecolumn.setCellStyleNames("admin-cell");
+
+    deletecolumn.setCellStyleNames("delete-cell");
     table.addColumn(deletecolumn);
+
+    // Edit Button Column
+    final Column<SoftwareSummary, String> editcol = 
+        new Column<SoftwareSummary, String>(
+            new ButtonCell(IconType.EDIT, ButtonType.INFO, 
+                ButtonSize.EXTRA_SMALL)) {
+        @Override
+        public String getValue(SoftwareSummary details) {
+          return "Edit";
+        }      
+    };
+    
+    editcol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
+      @Override
+      public void update(int index, SoftwareSummary summary, String value) {
+        String swname = summary.getName();
+        History.newItem(NameTokens.publish + "/" + swname);
+      }
+    });
+    //table.setColumnWidth(editcol, "0px");
+    editcol.setCellStyleNames("edit-cell");
+    table.addColumn(editcol);
     
     // Checkbox, software selection column (to select software to compare)
     Column<SoftwareSummary, Boolean> checkboxcolumn = 

@@ -94,4 +94,9 @@ public class NumericEntityInput implements IEntityInput {
 
   @Override
   public void layout() { }
+  
+  @Override
+  public void disable() {
+    input.setEnabled(false);
+  }
 }

@@ -91,4 +91,9 @@ public class EntityInput implements IEntityInput {
 
   @Override
   public void layout() { }
+  
+  @Override
+  public void disable() {
+    input.setEnabled(false);
+  }
 }

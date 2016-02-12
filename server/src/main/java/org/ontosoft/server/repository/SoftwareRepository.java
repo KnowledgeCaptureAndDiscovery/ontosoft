@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import javax.ws.rs.core.SecurityContext;
 
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.ontosoft.server.repository.adapters.EntityRegistrar;
@@ -14,12 +15,16 @@ import org.ontosoft.server.repository.adapters.IEntityAdapter;
 import org.ontosoft.server.repository.plugins.CodeAnalysisPlugin;
 import org.ontosoft.server.repository.plugins.GithubPlugin;
 import org.ontosoft.server.users.User;
+import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.server.util.Config;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
+import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -31,6 +36,8 @@ import org.ontosoft.shared.classes.vocabulary.UIConfig;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginRegistrar;
 import org.ontosoft.shared.search.EnumerationFacet;
+import org.ontosoft.shared.utils.PermUtils;
+import org.ontosoft.shared.classes.users.UserCredentials;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
@@ -47,6 +54,7 @@ public class SoftwareRepository {
   KBAPI ontkb, catkb, enumkb;
   OntFactory fac;
   ProvenanceRepository prov;
+  PermissionRepository perm_repo;
   
   String tdbdir;
   String dbdir;
@@ -61,6 +69,8 @@ public class SoftwareRepository {
   Vocabulary vocabulary;
   Map<String, List<MetadataEnumeration>> enumerations;
 
+  SecurityContext securityContext;
+  
   ObjectMapper mapper = new ObjectMapper();
   
   static SoftwareRepository singleton = null;
@@ -76,12 +86,21 @@ public class SoftwareRepository {
     initializeKB();
     registerPlugins();
     this.prov = new ProvenanceRepository();
+    this.perm_repo = new PermissionRepository();
   }
   
   public String LIBURI() {
     if(liburi == null)
       liburi = server.replaceAll("\\/$", "") + "/software/";
     return liburi;
+  }
+  
+  private String USERURI() {
+    return server.replaceAll("\\/$", "") + "/users/"; 
+  }
+  
+  private String USERNS() {
+    return USERURI();
   }
   
   public String LIBNS() {
@@ -412,6 +431,8 @@ public class SoftwareRepository {
     if(swid != null)  {
       Provenance prov = this.prov.getAddProvenance(sw, user);
       this.prov.addProvenance(prov);
+      Permission perm = this.perm_repo.createSoftwarePermisson(sw.getId(), user);
+      this.perm_repo.commitPermission(perm, sw.getId());
     }
     return swid;
   }
@@ -425,6 +446,15 @@ public class SoftwareRepository {
   }
   
   private String updateOrAddSoftware(Software sw, User user, boolean update) throws Exception {
+    boolean isModerator = false;
+    
+    if (update) {
+      String accesslevel = PermUtils.getAccessLevelForUser(sw, user.getName(), sw.getId());
+      if (user.getRoles().contains("admin") || accesslevel.equals("Write")) {
+        isModerator = true;
+      }
+    }
+
     KBAPI swkb = fac.getKB(sw.getId(), OntSpec.PLAIN, true);
     String swtype = sw.getType();
     if(swtype == null)
@@ -441,57 +471,62 @@ public class SoftwareRepository {
       swkb.setLabel(swobj, sw.getLabel());
     
     for(String propid : sw.getValue().keySet()) {
-      KBObject swprop = this.ontkb.getProperty(propid);
-      if (swprop != null) {
-        List<Entity> entities = sw.getValue().get(propid);
-        MetadataProperty prop = vocabulary.getProperty(swprop.getID());
-        
-        // Remove existing property values if any
-        if (update) {
-          for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
-            swkb.removeTriple(t);
-        }
-        
-        for(Entity entity: entities) {
-          MetadataType type = vocabulary.getType(entity.getType());
-          
-          // Treat software entities specially 
-          if(vocabulary.isA(type, vocabulary.getType(topclass))) {
-            if(!this.hasSoftware(entity.getId())) {
-              Software subsw = new Software();
-              subsw.setId(entity.getId());
-              subsw.setLabel((String)entity.getValue());
-              subsw.setType(entity.getType());
-              String swid = this.addSoftware(subsw, user);
-              entity.setId(swid);
-            }
-
-            KBObject swval = swkb.getResource(entity.getId());
-            swkb.addPropertyValue(swobj, swprop, swval);
-            continue;
+      if (!update      || 
+           isModerator || 
+           PermUtils.getAccessLevelForUser(sw, user.getName(), propid).equals("Write")) {
+        KBObject swprop = this.ontkb.getProperty(propid);
+        if (swprop != null) {
+          List<Entity> entities = sw.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(swprop.getID());
+	        
+          // Remove existing property values if any
+          if (update) {
+            for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
+              swkb.removeTriple(t);
           }
-          
-          // Get entity adapter for class
-          IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
-          if(adapter != null) {
-            if(entity.getId() == null) {
-              entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
+	      
+          for(Entity entity: entities) {
+            MetadataType type = vocabulary.getType(entity.getType());
+	          
+            // Treat software entities specially 
+            if(vocabulary.isA(type, vocabulary.getType(topclass))) {
+              if(!this.hasSoftware(entity.getId())) {
+                Software subsw = new Software();
+                subsw.setId(entity.getId());
+                subsw.setLabel((String)entity.getValue());
+                subsw.setType(entity.getType());
+                String swid = this.addSoftware(subsw, user);
+                entity.setId(swid);
+              }
+	
+              KBObject swval = swkb.getResource(entity.getId());
+              swkb.addPropertyValue(swobj, swprop, swval);
+              continue;
             }
-            if(adapter.saveEntity(entity)) {
-              KBObject entityobj = swkb.getIndividual(entity.getId());
-              if(entityobj == null)
-                entityobj = ontkb.getIndividual(entity.getId());
-              if(entityobj == null)
-                entityobj = enumkb.getIndividual(entity.getId());
-              if(entityobj != null)
-                swkb.addPropertyValue(swobj, swprop, entityobj);
+	          
+            // Get entity adapter for class
+            IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
+            if(adapter != null) {
+              if(entity.getId() == null) {
+                entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
+              }
+              if(adapter.saveEntity(entity)) {
+                KBObject entityobj = swkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = ontkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = enumkb.getIndividual(entity.getId());
+                if(entityobj != null)
+                  swkb.addPropertyValue(swobj, swprop, entityobj);
+              }
+            } else {
+              System.out.println("No adapter registered for type: "+entity.getType());
             }
-          } else {
-            System.out.println("No adapter registered for type: "+entity.getType());
           }
         }
       }
     }
+    
     if(swkb.save() && enumkb.save()) {
       if(!update) {
         MetadataEnumeration menum = new MetadataEnumeration();
@@ -516,15 +551,16 @@ public class SoftwareRepository {
    * @throws Exception
    */
   public boolean updateSoftware(Software newsw, String swid, User user) 
-      throws Exception {
+      throws Exception {  
     Software cursw = this.getSoftware(swid);
+    
     Provenance prov = this.prov.getUpdateProvenance(cursw, newsw, user);
     String nswid = this.updateOrAddSoftware(newsw, user, true);
     if(nswid != null) {
-      this.prov.addProvenance(prov);
-      return true;
+       this.prov.addProvenance(prov);
+       return true;
     }
-    return true;
+    return false;
   }
   
   // TODO: Change this call. Make it more efficient than
@@ -595,6 +631,7 @@ public class SoftwareRepository {
       summary.setName(sw.getName());
       summary.setLabel(allkb.getLabel(sw));
       summary.setType(topclass);
+      summary.setPermission(this.perm_repo.getSoftwarePermission(sw.getID()));
       
       if(desc != null && desc.getValue() != null) {
         String description = desc.getValue().toString();
@@ -670,6 +707,7 @@ public class SoftwareRepository {
       }
       
       sw.setProvenance(this.prov.getSoftwareProvenance(swid));
+      sw.setPermission(this.perm_repo.getSoftwarePermission(swid));
       return sw;
     }
     return null;
@@ -679,6 +717,162 @@ public class SoftwareRepository {
     return this.prov.getSoftwareProvenance(swid);
   }
 
+  public Permission getSoftwarePermission(String swid) {
+    try {
+      return this.perm_repo.getSoftwarePermission(swid);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+  
+  public String getSoftwarePermissionGraph(String swid) {
+    try {
+      return this.perm_repo.getSoftwarePermissionGraph(swid);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+  
+  public AccessMode getSoftwareAccessLevelForUser(String swid, String username) {
+    UserCredentials user = UserDatabase.get().getUser(username);
+    AccessMode mode = new AccessMode();
+    mode.setMode("Read");
+    if (user.getRoles().contains("admin"))
+      mode.setMode("Write");
+    else {
+      try {
+        Software software = this.getSoftware(swid);
+        mode.setMode(PermUtils.getAccessLevelForUser(software, username, swid));
+      } catch (Exception e) {
+        mode.setMode("Read");
+      }
+    }
+    return mode;
+  }
+
+  public AccessMode getPropertyAccessLevelForUser(String swid, String propid, String username) {
+    UserCredentials user = UserDatabase.get().getUser(username);
+    AccessMode mode = new AccessMode();
+    mode.setMode("Read");
+    if (user.getRoles().contains("admin"))
+      mode.setMode("Write");
+    else {
+      try {
+        Software software = this.getSoftware(swid);
+        mode.setMode(PermUtils.getAccessLevelForUser(software, username, propid));
+      } catch (Exception e) {
+        mode.setMode("Read");
+      }
+    }
+    return mode;
+  }
+  
+  public List<String> getPermissionTypes()
+  {
+    return this.perm_repo.getPermissionTypes();
+  }
+  
+  public Boolean setSoftwarePermissionForUser(User loggedinuser, Authorization authorization) {	  
+    String swid = authorization.getAccessToObjId();
+    String username = authorization.getAgentName();
+    String accessmodeid = authorization.getAccessMode().getId();
+
+    boolean updated = false;
+
+    try {
+      Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        String permns = perm.getId() + "#";
+
+        Map<String, Authorization> auths = perm.getAuthorizations();
+        for (Authorization authobj : auths.values()) {
+          if (authobj.getAgentName().equals(username)) {
+            AccessMode mode = new AccessMode();
+            mode.setId(accessmodeid);
+            authobj.setAccessMode(mode);
+            updated = true;
+          }
+        }
+        if (!updated) {
+          authorization.setId(permns + "Auth-" + GUID.get());
+          UserCredentials user = UserDatabase.get().getUser(username);
+          authorization.setAgentId(this.getUserId(user));
+          perm.addAuth(authorization);
+        }
+
+        this.perm_repo.commitPermission(perm, swid);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+
+  public Boolean setPropertyPermissionForUser(User loggedinuser, String swid, Authorization authorization) {
+    String username = authorization.getAgentName();
+    String accessmodeid = authorization.getAccessMode().getId();
+
+    boolean updated = false;
+
+    try {
+      Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        String permns = perm.getId() + "#";
+
+        Map<String, Authorization> auths = perm.getAuthorizations();
+        for (Authorization authobj : auths.values()) {
+          if (authobj.getAgentName().equals(username) && 
+            authobj.getAccessToObjId().equals(authorization.getAccessToObjId())) {
+            AccessMode mode = new AccessMode();
+            mode.setId(accessmodeid);
+            authobj.setAccessMode(mode);
+            updated = true;
+          }
+        }
+        if (!updated) {
+          authorization.setId(permns + "Auth-" + GUID.get());
+          UserCredentials user = UserDatabase.get().getUser(username);
+          authorization.setAgentId(this.getUserId(user));
+          perm.addAuth(authorization);
+        }
+
+        this.perm_repo.commitPermission(perm, swid);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+  
+  public boolean addSoftwareOwner(User loggedinuser, String swid, String ownername) {
+    try {
+	  Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        UserCredentials user = UserDatabase.get().getUser(ownername);
+        perm.addOwnerid(this.getUserId(user));
+        this.perm_repo.commitPermission(perm, swid);
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+
+  public boolean removeSoftwareOwner(User loggedinuser, String swid, String ownername) {
+    try {
+	  Permission perm = getSoftwarePermission(swid);
+      if (loggedinuser.getRoles().contains("admin") || 
+        PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
+        UserCredentials user = UserDatabase.get().getUser(ownername);
+        if (perm.removeOwnerid(this.getUserId(user))) {
+          this.perm_repo.commitPermission(perm, swid);
+        }
+        return true;
+      }
+    } catch (Exception e) {}
+    return false;
+  }
+  
   public String getProvenanceGraph(String swid) throws Exception {
     return this.prov.getSoftwareProvenanceGraph(swid);
   }
@@ -698,7 +892,6 @@ public class SoftwareRepository {
     return null;
   }
 
-  
   public String serializeXML(String swid) throws Exception {
     KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
     return swkb.toAbbrevRdf(true);
@@ -709,14 +902,19 @@ public class SoftwareRepository {
     return swkb.toJson(swid);
   }
   
-  public boolean deleteSoftware(String swid) throws Exception {
-    KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
-    //KBObject swobj = swkb.getIndividual(swid);
-    if (swkb.delete()) { // && (swobj != null)) {
-      deleteEnumerationFromVocabulary(swid);
-      this.prov.deleteSoftwareProvenance(swid);
-      return true;
-    }
+  public boolean deleteSoftware(String swid, User loggedinuser) throws Exception {
+	Permission perm = getSoftwarePermission(swid);
+	if (loggedinuser.getRoles().contains("admin") || PermUtils.hasOwnerAccess(perm,  loggedinuser.getName()))
+	{
+	    KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
+	    //KBObject swobj = swkb.getIndividual(swid);
+	    if (swkb.delete()) { // && (swobj != null)) {
+	      deleteEnumerationFromVocabulary(swid);
+	      this.prov.deleteSoftwareProvenance(swid);
+	      this.perm_repo.deleteSoftwarePermission(swid);
+	      return true;
+	    }		
+	}
     return false;
   }
   
@@ -750,5 +948,9 @@ public class SoftwareRepository {
     if(enumlist != null && !enumlist.contains(menum)) {
       enumlist.add(menum);
     }
+  }
+  
+  private String getUserId(UserCredentials user) {
+	return this.USERNS() + user.getName().replaceAll("[^a-zA-Z0-9_]", "_");    
   }
 }

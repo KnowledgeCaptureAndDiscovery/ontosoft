@@ -213,4 +213,9 @@ public class TextEntityInput extends Container implements IEntityInput {
   public void layout() {
     this.updateEditorDimensions();
   }
+  
+  @Override
+  public void disable() {
+    myinput.setEnabled(false);
+  }
 }

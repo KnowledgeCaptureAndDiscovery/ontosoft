@@ -24,6 +24,9 @@ import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.permission.Permission;
+import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Authorization;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -251,14 +254,14 @@ public class SoftwareResource implements SoftwareService {
   @DELETE
   @Path("software/{name}")
   @Produces("text/html")
-  @RolesAllowed("admin")
+  @RolesAllowed("user")
   @Override
   public void delete(@PathParam("name") String name) {
     try {
       String swid = name;
       if(!name.startsWith("http:"))
         swid = repo.LIBNS() + name;
-      if (!this.repo.deleteSoftware(swid))
+      if (!this.repo.deleteSoftware(swid, (User) securityContext.getUserPrincipal()))
         throw new RuntimeException("Could not delete " + name);
     } catch (Exception e) {
       //e.printStackTrace();
@@ -306,6 +309,128 @@ public class SoftwareResource implements SoftwareService {
     return null;
   }
 
+  @GET
+  @Path("permission") 
+  @Produces("application/json")
+  @Override
+  public List<String> getPermissionTypes()
+  {
+    return this.repo.getPermissionTypes();
+  }
+  
+  @POST
+  @Path("software/{name}/permission")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @RolesAllowed("user")
+  @Override 
+  public Boolean setSoftwarePermissionForUser(@PathParam("name") String name, 
+    @JsonProperty("authorization") Authorization authorization) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+
+    if (!swid.equals(authorization.getAccessToObjId()))
+      return false;
+
+    return this.repo.setSoftwarePermissionForUser((User) securityContext.getUserPrincipal(), authorization);
+  }
+  
+  @GET
+  @Path("software/{name}/permission")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @RolesAllowed("user")
+  @Override 
+  public Permission getSoftwarePermissions(@PathParam("name") String name) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+    return this.repo.getSoftwarePermission(swid);
+  }
+  
+  @GET
+  @Path("software/{name}/permission")
+  @Produces("application/rdf+xml")
+  public String getSoftwarePermissionsGraph(@PathParam("name") String name) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+    return this.repo.getSoftwarePermissionGraph(swid);
+  }
+  
+  @GET
+  @Path("software/{name}/permission/{username}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public AccessMode getSoftwareAccessLevelForUser(@PathParam("name") String swname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.getSoftwareAccessLevelForUser(swid, username);
+  }
+  
+  @GET
+  @Path("software/{name}/property/{propname}/permission/{username}") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public AccessMode getPropertyAccessLevelForUser(@PathParam("name") String swname,
+    @PathParam("propname") String propname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+	  
+    String propid = propname;
+    if(!propname.startsWith("http:"))
+      propid = KBConstants.ONTNS() + propname;
+	  
+    return this.repo.getPropertyAccessLevelForUser(swid, propid, username);
+  }
+  
+  @POST
+  @Path("software/{name}/property/permission")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean setPropertyPermissionForUser(@PathParam("name") String name, 
+    @JsonProperty("authorization") Authorization authorization) {
+    String swid = name;
+    if(!name.startsWith("http:"))
+      swid = repo.LIBNS() + name;
+
+    return this.repo.setPropertyPermissionForUser((User) securityContext.getUserPrincipal(), 
+      swid, authorization);
+  }
+
+  @POST
+  @Path("software/{name}/owner/permission/{username}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean addSoftwareOwner(@PathParam("name") String swname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.addSoftwareOwner((User) securityContext.getUserPrincipal(), 
+      swid, username);
+  }
+  
+  @DELETE
+  @Path("software/{name}/owner/permission/{username}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Boolean removeSoftwareOwner(@PathParam("name") String swname, 
+    @PathParam("username") String username) {
+    String swid = swname;
+    if(!swname.startsWith("http:"))
+      swid = repo.LIBNS() + swname;
+
+    return this.repo.removeSoftwareOwner((User) securityContext.getUserPrincipal(), 
+      swid, username);	  
+  }
   /**
    * Exports
    */

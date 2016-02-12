@@ -23,6 +23,10 @@
   background-image: linear-gradient(#5D7BA0,#5D7BA0),linear-gradient(#d2d2d2,#d2d2d2) !important;
 }
 
+.form-group-disable {
+  opacity: 0.7;
+}
+
 .form-group.has-error .material-input:focus, 
 .form-group.has-error .form-control:focus, 
 .form-group.has-error .form-control.focus {
@@ -286,20 +290,20 @@ h1 small {
 	padding: 2px 4px !important;
 }
 
-.admin-cell {
+.delete-cell {
 	display: none !important;
 	width: 0px !important;
 }
-.admin-table .admin-cell {
+.delete-col .delete-cell {
 	display: table-cell !important;
 	padding-left: 0px !important;
 	width: 64px !important;
 }
-.registered-user-cell {
+.edit-cell {
 	display: none !important;
 	width: 0px !important;	
 }
-.registered-user-table .registered-user-cell {
+.edit-col .edit-cell {
 	display: table-cell !important;
 	padding-left: 4px !important;
 	padding-right: 4px !important;
@@ -404,9 +408,6 @@ h1 small {
 /**
  Buttons & form elements
  */
-.btn.disabled, .btn[disabled] {
-  background-color: #AAAAAA !important;
-}
 .btn-info, .panel-info > .panel-heading {
   background-color: #5D7BA0 !important;
   color: rgba(255,255,255,.84);
@@ -428,6 +429,9 @@ fieldset.bordered-fieldset {
   border: 1px dashed #F0F0F0;
 }
 /* Labels */
+.form-group .input-label {
+  display: inline;
+}
 .form-group .control-label,
 .browse-label {
 	color: #5D7BA0 !important;

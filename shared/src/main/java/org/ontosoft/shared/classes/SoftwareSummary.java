@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.provenance.Activity;
 import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
@@ -22,6 +23,8 @@ public class SoftwareSummary {
   String updateUser;
   long updateTime;
 
+  Permission permission;
+  
   public SoftwareSummary() { }
   
   public SoftwareSummary(Software sw) {
@@ -31,6 +34,7 @@ public class SoftwareSummary {
     this.setLabel(sw.getLabel());
     
     setProvenanceDetails(sw.getProvenance());
+    this.setPermission(sw.getPermission());
   }
   
   public String getId() {
@@ -130,4 +134,12 @@ public class SoftwareSummary {
       }
     }
   }
+  
+  public void setPermission(Permission permission) {
+    this.permission = permission;
+  }
+  
+  public Permission getPermission() {
+    return this.permission;
+  } 
 }

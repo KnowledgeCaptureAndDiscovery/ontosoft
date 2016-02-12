@@ -74,7 +74,7 @@ public class UserResource implements UserService {
   
   @GET
   @Produces("application/json")
-  @RolesAllowed("admin")
+  @RolesAllowed("user")
   public List<String> getUsers() {
     return UserDatabase.get().getUsers();
   }
@@ -150,6 +150,17 @@ public class UserResource implements UserService {
         return UserDatabase.get().updateUser(username, user);
       }
     }
+    return null;
+  }
+
+  @GET
+  @Path("user/{username}/roles")
+  @Produces("application/json")
+  @RolesAllowed("user")
+  public List<String> getUserRoles(@PathParam("username") String username) {
+    UserCredentials user = UserDatabase.get().getUser(username);
+    if (user != null)
+      return user.getRoles();
     return null;
   }
   

@@ -153,4 +153,12 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
       input.layout();
     }    
   }
+  
+  @Override
+  public void disable() {
+    for(String propid: inputs.keySet()) {
+      IEntityInput input = inputs.get(propid);
+      input.disable();
+    }
+  }
 }

@@ -1,11 +1,13 @@
 package org.ontosoft.shared.classes.entities;
 
 import org.ontosoft.shared.classes.provenance.Provenance;
+import org.ontosoft.shared.classes.permission.Permission;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class Software extends ComplexEntity {  
   Provenance provenance;
+  Permission permission;
   
   @JsonIgnore
   boolean dirty;
@@ -25,4 +27,12 @@ public class Software extends ComplexEntity {
   public void setProvenance(Provenance provenance) {
     this.provenance = provenance;
   }
+  
+  public Permission getPermission() {
+    return permission;
+  }
+
+  public void setPermission(Permission permission) {
+    this.permission = permission;
+  } 
 }
