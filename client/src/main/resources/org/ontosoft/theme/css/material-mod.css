@@ -155,6 +155,11 @@ pre.wordbreak
     padding-left:10px !important;*/
 }
 
+.permissionlabel {
+  margin-top: 6px;
+  font-weight: bold;
+}
+
 .help-block {	
 	font-size: 0.8em;
 }

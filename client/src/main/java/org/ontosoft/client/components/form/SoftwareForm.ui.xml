@@ -24,9 +24,25 @@
 			<b:Modal title="Set Permissions" closable="true" fade="true" ui:field="permissiondialog">
 		<b:ModalBody>
 			<b:FormGroup>
-				<select:Select ui:field="userlist" visible="false" liveSearch="true" title="Select user" visibleSize="8"/>
-				<b:HelpBlock />
-				<select:Select ui:field="permlist" visible="false" liveSearch="true" title="Select permission" visibleSize="2"/>
+			<b:Row>
+			    <b:Column size="XS_2" addStyleNames="permissionlabel">
+			        <b:Label text="User">
+			        </b:Label>
+				</b:Column>
+				<b:Column size="XS_10">
+					<select:Select ui:field="userlist" visible="false" liveSearch="true" title="Select" visibleSize="8"/>
+					<b:HelpBlock />
+				</b:Column>
+			</b:Row>
+			<b:Row>
+				<b:Column size="XS_2" addStyleNames="permissionlabel">
+					<b:Label text="Permission"></b:Label>
+				</b:Column>
+				<b:Column size="XS_10">
+					<select:Select ui:field="permlist" visible="false" liveSearch="true" title="Select" visibleSize="2"/>
+					<b:HelpBlock />
+				</b:Column>
+			</b:Row>	
 			</b:FormGroup>
 		</b:ModalBody>
 		<b:ModalFooter>
