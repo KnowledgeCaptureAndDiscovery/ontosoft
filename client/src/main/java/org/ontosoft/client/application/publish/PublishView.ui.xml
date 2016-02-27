@@ -39,7 +39,7 @@
 										icon="SAVE" size="SMALL" enabled="false" dataLoadingText="Saving.." />
 								</b:ButtonGroup>
 							</g:VerticalPanel>
-							<b:Modal title="Set Permissions" closable="true" fade="true" ui:field="permissiondialog">
+							<b:Modal closable="true" fade="true" ui:field="permissiondialog">
 							<b:ModalBody>
 								<b:FormGroup>
 									<b:Row>
@@ -75,7 +75,7 @@
 											<b:Panel type="INFO">
 												<b:PanelHeader styleName="panel-heading tight-header">
 													<g:HorizontalPanel verticalAlignment="MIDDLE" width="100%">
-														<b:Heading size="H6" text="All Permissions" />
+														<b:Heading size="H6" text="Browse Permissions" />
 													</g:HorizontalPanel>
 												</b:PanelHeader>
 												<b:PanelBody styleName="panel-body tight-body">

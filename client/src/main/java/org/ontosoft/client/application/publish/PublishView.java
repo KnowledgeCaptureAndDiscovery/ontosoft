@@ -345,6 +345,8 @@ public class PublishView extends ParameterizedViewImpl
         setPermButtonVisibility();
         
         notifications.showNotificationsForSoftware(software.getId());
+        String swlabel = software.getLabel();
+        permissiondialog.setTitle("Set Permissions for " + swlabel.substring(0, 1).toUpperCase() + swlabel.substring(1));
       }
       @Override
       public void onFailure(Throwable reason) {
