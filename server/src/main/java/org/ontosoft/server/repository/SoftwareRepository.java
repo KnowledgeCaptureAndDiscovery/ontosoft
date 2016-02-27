@@ -787,7 +787,8 @@ public class SoftwareRepository {
 
         Map<String, Authorization> auths = perm.getAuthorizations();
         for (Authorization authobj : auths.values()) {
-          if (authobj.getAgentName().equals(username)) {
+          if (authobj.getAgentName().equals(username) &&
+            authobj.getAccessToObjId().equals(authorization.getAccessToObjId())) {
             AccessMode mode = new AccessMode();
             mode.setId(accessmodeid);
             authobj.setAccessMode(mode);

@@ -1,15 +1,21 @@
 package org.ontosoft.client.components.form;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Form;
+import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TabListItem;
 import org.gwtbootstrap3.client.ui.TabPane;
+import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
 import org.ontosoft.client.authentication.SessionStorage;
@@ -30,6 +36,7 @@ import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Agent;
 import org.ontosoft.shared.classes.permission.Authorization;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
@@ -39,19 +46,28 @@ import org.ontosoft.shared.classes.vocabulary.MetadataType;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.utils.PermUtils;
 
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
 
 public class SoftwareForm extends Composite 
 implements HasSoftwareHandlers, HasPluginHandlers {
@@ -75,6 +91,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   @UiField
   Modal permissiondialog;
   
+  @UiField(provided = true)
+  CellTable<Authorization> table = new CellTable<Authorization>(40);
+
+  @UiField
+  SimplePager pager;
+  
   Vocabulary vocabulary;
   Software software;
   String propidselected;
@@ -84,11 +106,71 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   interface Binder extends UiBinder<Widget, SoftwareForm> { };
   private static Binder uiBinder = 
       GWT.create(Binder.class);
+  private ListDataProvider<Authorization> listProvider = 
+	      new ListDataProvider<Authorization>();
+
+  private Comparator<Authorization> metacompare;
   
   public SoftwareForm() {
     initWidget(uiBinder.createAndBindUi(this));
     propeditors = new HashMap<String, PropertyFormGroup>();
     handlerManager = new HandlerManager(this);
+    initTable();
+  }
+
+  private void initTable() {
+    ListHandler<Authorization> sortHandler =
+      new ListHandler<Authorization>(listProvider.getList());	  
+    table.addColumnSortHandler(sortHandler);
+    table.setEmptyTableWidget(new Label("No Permissions found.."));
+ 
+    this.metacompare = new Comparator<Authorization>() {
+      @Override
+      public int compare(Authorization auth1, Authorization auth2) {
+        if(auth1.getAgentName() != null && auth2.getAgentName() != null)
+          return auth1.getAgentName().compareToIgnoreCase(auth2.getAgentName());
+        return 0;
+      }
+    };
+      
+    // Name Column
+    TextColumn<Authorization> namecol = 
+      new TextColumn<Authorization>() {
+      @Override
+      public String getValue(Authorization menum) {
+        return menum.getAgentName();
+      }
+    };
+    table.addColumn(namecol, "Username");
+    namecol.setSortable(true);
+    sortHandler.setComparator(namecol, this.metacompare);
+    table.getColumnSortList().push(namecol);    
+
+    TextColumn<Authorization> permcolumn = 
+      new TextColumn<Authorization>() {
+      @Override
+      public String getValue(Authorization auth) {
+        return "";
+      }
+	      
+      @Override
+      public void render(Cell.Context context, Authorization auth, SafeHtmlBuilder sb) {
+        if(auth.getAccessMode().getMode().equals("Write")) {
+          sb.appendHtmlConstant("<i class=\"fa fa-check\"></i>");
+        } else {
+          sb.appendHtmlConstant("<i class=\"fa fa-times\"></i>");
+        }
+      }
+    };
+    
+    permcolumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+    table.addColumn(permcolumn, "Write");
+          
+    table.setWidth("100%", true);
+    table.setColumnWidth(permcolumn, 10.0, Unit.PCT);
+      
+    listProvider.addDataDisplay(table);
+    pager.setDisplay(table);
   }
   
   @Override
@@ -300,6 +382,54 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     
     if (userlist.getItemCount() == 1)
       setUserList();
+    
+    initAgents();
+    
+    String newuser = userlist.getSelectedValue();
+    if (newuser != null && !newuser.equals(""))
+      selectPermissionForUser(newuser);
+  }
+  
+  private void initAgents() {
+    ArrayList<Authorization> authorizations = new ArrayList<Authorization>(this.software.getPermission().getAuthorizations().values());
+    ArrayList<Authorization> authlist = new ArrayList<Authorization>();
+    HashSet<String> permusers = new HashSet<String>();
+
+    String propid = KBConstants.ONTNS() + this.propidselected;
+	
+    for (Iterator<Authorization> iter = authorizations.listIterator(); iter.hasNext(); ) {
+      Authorization auth = iter.next();
+      if (!permusers.contains(auth.getAgentName()) &&
+        auth.getAccessMode().getMode().equals("Write") &&
+        (auth.getAccessToObjId().equals(propid) || auth.getAccessToObjId().equals(software.getId()))) {
+        authlist.add(auth);
+        permusers.add(auth.getAgentName());
+	  }
+	}
+	
+    for (Agent owner:software.getPermission().getOwners()) {
+      if (!permusers.contains(owner.getName())) {
+        permusers.add(owner.getName());
+			
+        Authorization auth = new Authorization();
+        auth.setId("");
+        auth.setAgentId("");
+        auth.setAccessToObjId(propid);
+        auth.setAgentName(owner.getName());
+        AccessMode mode = new AccessMode();
+        mode.setMode("Write");
+        auth.setAccessMode(mode);
+        
+        authlist.add(auth);
+      }
+    }
+	
+    Collections.sort(authlist, metacompare);
+    listProvider.getList().clear();
+    listProvider.getList().addAll(authlist);
+    listProvider.flush();
+
+    Window.scrollTo(0, 0);        
   }
   
   private void setUserList() {
@@ -420,7 +550,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
       
       if (software.getPermission().ownernameExists(loggedinuser) ||
         session.getRoles().contains("admin")) {
-        Authorization authorization = new Authorization();
+        final Authorization authorization = new Authorization();
         authorization.setId("");
         authorization.setAgentId("");
         
@@ -445,6 +575,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
           public void onSuccess(Boolean success) {
             permissiondialog.hide();
             AppNotification.notifySuccess("Permission updated!", 2000);
+            software.getPermission().addOrUpdateAuth(authorization);
           }
         });
       } else {
