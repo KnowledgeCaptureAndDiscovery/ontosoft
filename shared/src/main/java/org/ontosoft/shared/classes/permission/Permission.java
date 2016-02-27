@@ -97,4 +97,19 @@ public class Permission {
     }
     return exists;
   }
+  
+  public void addOrUpdateAuth(Authorization authorization) {
+    boolean modeupdated = false;
+    for(Authorization auth:getAuthorizations().values()) {
+      if(auth.getAgentName().equals(authorization.getAgentName()) &&
+         auth.getAccessToObjId().equals(authorization.getAccessToObjId())) {
+         auth.setAccessMode(authorization.getAccessMode());
+         modeupdated = true;
+      }
+    }
+      
+    if (!modeupdated) {
+      addAuth(authorization);
+    }
+  }
 }

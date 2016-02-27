@@ -1,5 +1,10 @@
 package org.ontosoft.client.application.publish;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import org.gwtbootstrap3.client.ui.AnchorListItem;
@@ -8,6 +13,7 @@ import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.ButtonGroup;
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
+import org.gwtbootstrap3.client.ui.Label;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.chart.CategoryBarChart;
@@ -23,8 +29,8 @@ import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.permission.AccessMode;
+import org.ontosoft.shared.classes.permission.Agent;
 import org.ontosoft.shared.classes.permission.Authorization;
-import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -32,24 +38,32 @@ import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
 
 import com.github.gwtd3.api.D3;
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
+import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.cellview.client.ColumnSortEvent.ListHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+
 import org.gwtbootstrap3.client.ui.Modal;
+import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
-
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
 import com.google.inject.Inject;
 
 public class PublishView extends ParameterizedViewImpl 
@@ -97,17 +111,29 @@ public class PublishView extends ParameterizedViewImpl
   @UiField
   CheckBox ownerrole;
   
+  @UiField(provided = true)
+  CellTable<Authorization> table = new CellTable<Authorization>(40);
+
+  @UiField
+  SimplePager pager;
+  
   Vocabulary vocabulary;
   String softwarename;
   Software software;
   String loggedinuser;
- 
+
+  private ListDataProvider<Authorization> listProvider = 
+	      new ListDataProvider<Authorization>();
+
+  private Comparator<Authorization> metacompare;
+  
   interface Binder extends UiBinder<Widget, PublishView> { }
 
   @Inject
   public PublishView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
     initVocabulary();
+    initTable();
   }
   
   // If some parameters are passed in, initialize the software and interface
@@ -141,6 +167,123 @@ public class PublishView extends ParameterizedViewImpl
     else {
       software = null; 
     }
+  }
+  
+  private void initTable() {
+    ListHandler<Authorization> sortHandler =
+      new ListHandler<Authorization>(listProvider.getList());	  
+    table.addColumnSortHandler(sortHandler);
+    table.setEmptyTableWidget(new Label("No Permissions found.."));
+ 
+    this.metacompare = new Comparator<Authorization>() {
+      @Override
+      public int compare(Authorization auth1, Authorization auth2) {
+        if(auth1.getAgentName() != null && auth2.getAgentName() != null)
+          return auth1.getAgentName().compareToIgnoreCase(auth2.getAgentName());
+        return 0;
+      }
+    };
+      
+    // Name Column
+    TextColumn<Authorization> namecol = 
+      new TextColumn<Authorization>() {
+        @Override
+        public String getValue(Authorization menum) {
+          return menum.getAgentName();
+      }
+    };
+    table.addColumn(namecol, "Username");
+    namecol.setSortable(true);
+    sortHandler.setComparator(namecol, this.metacompare);
+    table.getColumnSortList().push(namecol);    
+
+    TextColumn<Authorization> permcolumn = 
+      new TextColumn<Authorization>() {
+      @Override
+      public String getValue(Authorization auth) {
+        return "";
+      }
+    	      
+      @Override
+      public void render(Cell.Context context, Authorization auth, SafeHtmlBuilder sb) {
+        if(auth.getAccessMode().getMode().equals("Write")) {
+          sb.appendHtmlConstant("<i class=\"fa fa-check\"></i>");
+        } else {
+          sb.appendHtmlConstant("<i class=\"fa fa-times\"></i>");
+        }
+      }
+    };
+    
+    permcolumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+    table.addColumn(permcolumn, "Write");
+
+    TextColumn<Authorization> isownercolumn = 
+      new TextColumn<Authorization>() {
+      @Override
+      public String getValue(Authorization auth) {
+        return "";
+      }
+	      
+      @Override
+      public void render(Cell.Context context, Authorization auth, SafeHtmlBuilder sb) {
+        if(software.getPermission().ownernameExists(auth.getAgentName())) {
+          sb.appendHtmlConstant("<i class=\"fa fa-check fa-1\"></i>");
+        } else {
+          sb.appendHtmlConstant("<i class=\"fa fa-times fa-1\"></i>");
+        }
+      }
+    };
+    	    
+    isownercolumn.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+    table.addColumn(isownercolumn, "Owner");
+    
+    table.setWidth("100%", true);
+    table.setColumnWidth(permcolumn, 10.0, Unit.PCT);
+    table.setColumnWidth(isownercolumn, 10.0, Unit.PCT);
+      
+    listProvider.addDataDisplay(table);
+    pager.setDisplay(table);
+  }
+  
+  private void initAgents() {
+    ArrayList<Authorization> authorizations = new ArrayList<Authorization>(this.software.getPermission().getAuthorizations().values());
+    ArrayList<Authorization> authlist = new ArrayList<Authorization>();
+    HashSet<String> permusers = new HashSet<String>();
+	
+    for (Iterator<Authorization> iter = authorizations.listIterator(); iter.hasNext(); ) {
+      Authorization auth = iter.next();
+      if (!permusers.contains(auth.getAgentName()) && 
+        auth.getAccessMode().getMode().equals("Write") &&
+        auth.getAccessToObjId().equals(this.software.getId())) {
+        authlist.add(auth);
+        permusers.add(auth.getAgentName());
+      }
+    }
+	
+    for (Agent owner:software.getPermission().getOwners()) {
+      if (!permusers.contains(owner.getName())) {
+        permusers.add(owner.getName());
+			
+        Authorization auth = new Authorization();
+        auth.setId("");
+        auth.setAgentId("");
+        auth.setAccessToObjId(software.getId());
+        auth.setAgentName(owner.getName());
+        AccessMode mode = new AccessMode();
+        mode.setMode("Write");
+        auth.setAccessMode(mode);
+
+        authlist.add(auth);
+      }
+    }
+	
+    Collections.sort(authlist, metacompare);
+    listProvider.getList().clear();
+    listProvider.getList().addAll(authlist);
+    listProvider.flush();
+
+    initMaterial();
+    Window.scrollTo(0, 0);        
   }
   
   private void clear() {
@@ -202,9 +345,8 @@ public class PublishView extends ParameterizedViewImpl
         setPermButtonVisibility();
         
         notifications.showNotificationsForSoftware(software.getId());
-        
-        initMaterial();
-        Window.scrollTo(0, 0);
+        String swlabel = software.getLabel();
+        permissiondialog.setTitle("Set Permissions for " + swlabel.substring(0, 1).toUpperCase() + swlabel.substring(1));
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -467,6 +609,11 @@ public class PublishView extends ParameterizedViewImpl
       setUserList();
     if (permlist.getItemCount() == 1)
       setPermissionList();
+    
+    initAgents();
+    initMaterial();
+    
+    Window.scrollTo(0, 0);
   }
   
   @UiHandler("userlist")
@@ -511,6 +658,8 @@ public class PublishView extends ParameterizedViewImpl
         } else if (software.getPermission().ownernameExists(username)) {
           ownerrole.setValue(true);
           selectAccessLevel("Write");
+          permlist.setEnabled(false);
+          permlist.refresh();
         } else {
           SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), 
             username, new Callback<AccessMode, Throwable>() {
@@ -608,10 +757,11 @@ public class PublishView extends ParameterizedViewImpl
           public void onSuccess(Boolean success) {
             permissiondialog.hide();
             AppNotification.notifySuccess("Owner Added!", 2000);
+            software.getPermission().addOwnerid(username);
           }
         });
       } else {
-        Authorization authorization = new Authorization();
+        final Authorization authorization = new Authorization();
         authorization.setId("");
         authorization.setAgentId("");
         authorization.setAccessToObjId(software.getId());
@@ -630,6 +780,8 @@ public class PublishView extends ParameterizedViewImpl
             
             @Override
             public void onSuccess(Boolean success) {
+              software.getPermission().addOrUpdateAuth(authorization);
+              
               SoftwareREST.removeSoftwareOwner(software.getName(), username, 
                 new Callback<Boolean, Throwable>() {
                @Override
@@ -642,6 +794,7 @@ public class PublishView extends ParameterizedViewImpl
                public void onSuccess(Boolean success) {
                  permissiondialog.hide();
                  AppNotification.notifySuccess("Permission updated!", 2000);
+                 software.getPermission().removeOwnerid(username);
                }
              });
            }
