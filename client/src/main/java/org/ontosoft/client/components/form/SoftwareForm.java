@@ -42,8 +42,8 @@ import org.ontosoft.shared.utils.PermUtils;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -323,12 +323,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
 
   private void selectAccessLevel(String accesslevel) {
-    for (int i = 1; i < permlist.getItemCount(); i++) {
-      if (permlist.getValue(i).equals(accesslevel)) {
-        permlist.setValue(accesslevel);
-        break;
-      }
-    }
+    permlist.setValue(accesslevel);
   }
   
   private void selectPermissionForUser(final String username) {	 
@@ -395,12 +390,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
   
   @UiHandler("userlist")
-  void onUserChangedEvent(ChangeEvent event) {
+  void onUserChangedEvent(ValueChangeEvent<String> event) {
     permlist.setEnabled(true);
     permlist.refresh();
     setpermbutton.setEnabled(true);
     
-    String newuser = userlist.getSelectedValue();
+    String newuser = userlist.getValue();
     selectPermissionForUser(newuser);
   }
   
@@ -411,8 +406,8 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
   
   private void submitPermissionForm() {
-    final String username = userlist.getSelectedValue();
-    final String permtype = permlist.getSelectedValue();
+    final String username = userlist.getValue();
+    final String permtype = permlist.getValue();
     
     UserSession session = SessionStorage.getSession();
     if (session != null) {

@@ -24,7 +24,6 @@ import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Authorization;
-import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -33,8 +32,6 @@ import org.ontosoft.shared.plugins.PluginResponse;
 
 import com.github.gwtd3.api.D3;
 import com.google.gwt.core.client.Callback;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -470,28 +467,23 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   @UiHandler("userlist")
-  void onUserChangedEvent(ChangeEvent event) {
+  void onUserChangedEvent(ValueChangeEvent<String> event) {
     permlist.setEnabled(true);
     permlist.refresh();
     setpermbutton.setEnabled(true);
-    String newuser = userlist.getSelectedValue();
+    String newuser = userlist.getValue();
     selectPermissionForUser(newuser);
   }
   
   private void selectAccessLevel(String accesslevel) {
-    for (int i = 1; i < permlist.getItemCount(); i++) {
-      if (permlist.getValue(i).equals(accesslevel)) {
-        permlist.setValue(accesslevel);
-        break;
-      }
-    }
+    permlist.setValue(accesslevel);
   }
   
   private void selectPermissionForUser(final String username) {	  
-	permlist.setEnabled(true);
-	ownerrole.setEnabled(true);
-	setpermbutton.setEnabled(true);
-	ownerrole.setValue(false);
+  	permlist.setEnabled(true);
+  	ownerrole.setEnabled(true);
+  	setpermbutton.setEnabled(true);
+  	ownerrole.setValue(false);
 	
     UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
       @Override
@@ -589,8 +581,8 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void submitPermissionForm() {
-    final String username = userlist.getSelectedValue();
-    final String permtype = permlist.getSelectedValue();
+    final String username = userlist.getValue();
+    final String permtype = permlist.getValue();
     UserSession session = SessionStorage.getSession();
 
     if ((session != null && session.getRoles().contains("admin")) || 

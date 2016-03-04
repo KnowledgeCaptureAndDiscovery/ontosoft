@@ -586,6 +586,9 @@ fieldset.bordered-fieldset {
  	width: 88px !important;
  	opacity: 0.8;
 }
+button.btn.dropdown-toggle {
+	padding-left: 12px;
+}
 
 /************
  *

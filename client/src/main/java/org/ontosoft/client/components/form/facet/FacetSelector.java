@@ -1,6 +1,7 @@
 package org.ontosoft.client.components.form.facet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -16,8 +17,8 @@ import org.gwtbootstrap3.client.ui.constants.IconSize;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.PanelType;
 import org.gwtbootstrap3.client.ui.constants.Toggle;
+import org.gwtbootstrap3.extras.select.client.ui.MultipleSelect;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
-import org.gwtbootstrap3.extras.select.client.ui.Select;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionHandler;
 import org.ontosoft.client.components.form.facet.events.HasFacetHandlers;
@@ -32,10 +33,10 @@ import org.ontosoft.shared.search.EnumerationFacet;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -52,7 +53,7 @@ public class FacetSelector extends Panel
   List<MetadataEnumeration> enumerations;
   String target;
   String parentid;
-  Select selectbox;
+  MultipleSelect selectbox;
   Anchor anchor;
   
   public FacetSelector(Vocabulary vocabulary, String facetId,
@@ -109,14 +110,14 @@ public class FacetSelector extends Panel
     panel.setVerticalAlignment(HasVerticalAlignment.ALIGN_MIDDLE);
     body.add(panel);
     
-    selectbox = new Select();
-    selectbox.setMultiple(true);
-    selectbox.setSelectedTextFormat("count>2");
-    selectbox.setVisibleSize("8");
+    selectbox = new MultipleSelect();
+    selectbox.setCountSelectedTextFormat(2);
+    selectbox.setFixedMenuSize(8);
     selectbox.setLiveSearch(true);
     selectbox.setTitle("Select one or more");
-    selectbox.addChangeHandler(new ChangeHandler() {
-      public void onChange(ChangeEvent event) {
+    selectbox.addValueChangeHandler(new ValueChangeHandler<List<String>>() {
+      @Override
+      public void onValueChange(ValueChangeEvent<List<String>> event) {
         handleEnumerationText();
       }
     });
@@ -131,7 +132,7 @@ public class FacetSelector extends Panel
     btn.addClickHandler(new ClickHandler() {
       @Override
       public void onClick(ClickEvent event) {
-        selectbox.setValue("");
+        selectbox.setValue(Arrays.asList(""));
         Scheduler.get().scheduleDeferred(new Scheduler.ScheduledCommand() {
           public void execute() {
             handleEnumerationText();
@@ -178,7 +179,7 @@ public class FacetSelector extends Panel
   }
   
   private void handleEnumerationText() {
-    List<String> enumerationIds = selectbox.getAllSelectedValues();
+    List<String> enumerationIds = selectbox.getValue();
     EnumerationFacet facet = new EnumerationFacet();
     facet.setFacetId(facetId);
     facet.setEnumerationIds(enumerationIds);
