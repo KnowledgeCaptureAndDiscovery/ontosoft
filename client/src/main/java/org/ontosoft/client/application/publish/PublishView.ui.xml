@@ -9,7 +9,6 @@
 	xmlns:select="urn:import:org.gwtbootstrap3.extras.select.client.ui"
 	xmlns:b.gwt="urn:import:org.gwtbootstrap3.client.ui.gwt"
 	xmlns:cv="urn:import:com.google.gwt.user.cellview.client">
-
 	<b:Row>
 		<b:Column size="XS_12">
 			<g:VerticalPanel width="100%" horizontalAlignment="CENTER"
@@ -47,7 +46,7 @@
 											<b:Heading size="H5" text="User"></b:Heading>
 										</b:Column>
 										<b:Column size="XS_10">
-											<select:Select ui:field="userlist" title="Select" visible="false" liveSearch="true" visibleSize="8"/>
+											<select:Select ui:field="userlist" title="Select" visible="false" liveSearch="true" fixedMenuSize="8"/>
 											<b:HelpBlock />
 										</b:Column>
 									</b:Row>
@@ -56,7 +55,7 @@
 											<b:Heading size="H5" text="Permission"></b:Heading>
 										</b:Column>
 										<b:Column size="XS_10">
-											<select:Select ui:field="permlist" title="Select" visible="false" liveSearch="true" visibleSize="2"/>
+											<select:Select ui:field="permlist" title="Select" visible="false" liveSearch="true" fixedMenuSize="2"/>
 											<b:HelpBlock />
 										</b:Column>
 									</b:Row>
