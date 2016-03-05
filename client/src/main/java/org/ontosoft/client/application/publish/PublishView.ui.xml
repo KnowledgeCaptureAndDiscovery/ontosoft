@@ -6,8 +6,9 @@
 	xmlns:n="urn:import:org.ontosoft.client.components.form.notification"
 	xmlns:b="urn:import:org.gwtbootstrap3.client.ui" 
 	xmlns:g="urn:import:com.google.gwt.user.client.ui"
-	xmlns:select="urn:import:org.gwtbootstrap3.extras.select.client.ui">
-
+	xmlns:select="urn:import:org.gwtbootstrap3.extras.select.client.ui"
+	xmlns:b.gwt="urn:import:org.gwtbootstrap3.client.ui.gwt"
+	xmlns:cv="urn:import:com.google.gwt.user.cellview.client">
 	<b:Row>
 		<b:Column size="XS_12">
 			<g:VerticalPanel width="100%" horizontalAlignment="CENTER"
@@ -37,17 +38,54 @@
 										icon="SAVE" size="SMALL" enabled="false" dataLoadingText="Saving.." />
 								</b:ButtonGroup>
 							</g:VerticalPanel>
-							<b:Modal title="Set Permissions" closable="true" fade="true" ui:field="permissiondialog">
+							<b:Modal closable="true" fade="true" ui:field="permissiondialog">
 							<b:ModalBody>
 								<b:FormGroup>
-									<select:Select ui:field="userlist" visible="false" liveSearch="true" 
-										title="Select user" fixedMenuSize="8"/>
-									<b:HelpBlock />
-									<select:Select ui:field="permlist" visible="false" liveSearch="true" 
-										title="Select permission" fixedMenuSize="2"/>
-									<b:HelpBlock />
-									<g:CheckBox text="Owner" ui:field="ownerrole" />
+									<b:Row>
+										<b:Column size="XS_2" addStyleNames="permissionlabel">
+											<b:Heading size="H5" text="User"></b:Heading>
+										</b:Column>
+										<b:Column size="XS_10">
+											<select:Select ui:field="userlist" title="Select" visible="false" liveSearch="true" fixedMenuSize="8"/>
+											<b:HelpBlock />
+										</b:Column>
+									</b:Row>
+									<b:Row>
+										<b:Column size="XS_2" addStyleNames="permissionlabel">
+											<b:Heading size="H5" text="Permission"></b:Heading>
+										</b:Column>
+										<b:Column size="XS_10">
+											<select:Select ui:field="permlist" title="Select" visible="false" liveSearch="true" fixedMenuSize="2"/>
+											<b:HelpBlock />
+										</b:Column>
+									</b:Row>
+									<b:Row>
+										<b:Column size="XS_12" offset="SM_2">
+											<g:CheckBox text="Owner" ui:field="ownerrole" />
+										</b:Column>
+									</b:Row>
 								</b:FormGroup>
+									<b:Row>
+										<b:Column size="XS_12">
+											<g:FlowPanel>
+												<b:PageHeader ui:field="title" subText="" />
+											</g:FlowPanel>
+									
+											<b:Panel type="INFO">
+												<b:PanelHeader styleName="panel-heading tight-header">
+													<g:HorizontalPanel verticalAlignment="MIDDLE" width="100%">
+														<b:Heading size="H6" text="Browse Permissions" />
+													</g:HorizontalPanel>
+												</b:PanelHeader>
+												<b:PanelBody styleName="panel-body tight-body">
+													<b.gwt:CellTable condensed="false" striped="true" hover="true" width="100%" ui:field="table" />
+													<g:VerticalPanel width="100%" horizontalAlignment="CENTER">
+														<cv:SimplePager ui:field="pager" location="CENTER" />
+													</g:VerticalPanel>
+												</b:PanelBody>
+											</b:Panel>
+										</b:Column>
+									</b:Row>
 							</b:ModalBody>
 							<b:ModalFooter>
 								<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton" text="Cancel" />				
