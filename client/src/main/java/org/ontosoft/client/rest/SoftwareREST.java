@@ -48,6 +48,8 @@ public class SoftwareREST {
     enum_callbacks =
       new HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>>();
   
+  private static Boolean permFeatureEnabled = null; 
+  
   public static SoftwareService getSoftwareService() {
     if(softwareService == null) {
       Defaults.setServiceRoot(Config.getServerURL());
@@ -60,6 +62,7 @@ public class SoftwareREST {
   
   public static void clearSwCache() {
     softwareCache.clear();
+    permFeatureEnabled = null;
   }
   
   public static void getVocabulary(final Callback<Vocabulary, Throwable> callback,
@@ -425,5 +428,24 @@ public class SoftwareREST {
         callback.onFailure(exception);
       }
     }).call(getSoftwareService()).removeSoftwareOwner(swname, username);
+  }
+  
+  public static void getPermissionFeatureEnabled(final Callback<Boolean, Throwable> callback) {
+    if(permFeatureEnabled != null) {
+      callback.onSuccess(permFeatureEnabled);
+    }
+    
+    REST.withCallback(new MethodCallback<Boolean>() {
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+
+	  @Override
+	  public void onSuccess(Method method, Boolean response) {
+	    permFeatureEnabled = response;
+        callback.onSuccess(response);
+	  }
+    }).call(getSoftwareService()).getPermissionFeatureEnabled();
   }
 }
