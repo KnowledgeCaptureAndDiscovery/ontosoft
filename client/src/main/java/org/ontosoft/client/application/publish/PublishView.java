@@ -316,12 +316,23 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void setPermButtonVisibility() {
-    UserSession session = SessionStorage.getSession();
-      
-    if ((session != null && session.getRoles().contains("admin")) || 
-      this.software.getPermission().ownernameExists(this.loggedinuser)) {
-      permbutton.setVisible(true);
-    }	  
+    SoftwareREST.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        permbutton.setVisible(false);
+      }
+
+      @Override
+      public void onSuccess(Boolean permEnabled) {
+        UserSession session = SessionStorage.getSession();
+    	      
+    	if(permEnabled && 
+          ((session != null && session.getRoles().contains("admin")) || 
+    	  software.getPermission().ownernameExists(loggedinuser))) {
+    	  permbutton.setVisible(true);
+        }
+      }
+    });	  
   }
   
   private void initSoftware(String softwarename, final boolean reload) {    

@@ -81,7 +81,8 @@ public class Config {
     config.addProperty("storage.tdb", storageDir + File.separator + "TDB");
     config.addProperty("storage.db", storageDir + File.separator + "DB");
     config.addProperty("server", server);
-
+    config.addProperty("perm_feature_enabled", "true");
+    
     try {
         config.save("file://" + configFile);
     } catch (Exception e) {

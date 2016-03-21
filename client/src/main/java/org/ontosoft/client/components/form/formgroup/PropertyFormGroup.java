@@ -67,8 +67,9 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   private ButtonGroup pluginButtonGroup;
   private boolean proplocked;
   private boolean isModerator;
+  private boolean permFeatureEnabled;
   
-  public PropertyFormGroup(MetadataProperty property, SoftwareForm formview) {
+  public PropertyFormGroup(final MetadataProperty property, SoftwareForm formview) {
     super();
     handlerManager = new HandlerManager(this);
 
@@ -80,12 +81,28 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     this.entities = new ArrayList<Entity>();
     this.inputs = new ArrayList<IEntityInput>();
     this.pluginbuttons = new HashMap<String, Button>();
+    this.permFeatureEnabled = true;
     
+    SoftwareREST.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
+      @Override
+      public void onFailure(Throwable reason) {
+        permFeatureEnabled = false;
+        initializeProperties();
+      }
+
+      @Override
+      public void onSuccess(Boolean enabled) {
+    	permFeatureEnabled = enabled;
+    	initializeProperties();
+      }
+    });
+  }
+  
+  private void initializeProperties() {
     updatePropertyPermissions();
-    
     List<Entity> propEntities = software.getPropertyValues(property.getId());
-    this.setValue(propEntities);
-    this.addPluginButtons();
+    setValue(propEntities);
+    addPluginButtons();
   }
   
   private void updatePropertyPermissions() {  
@@ -168,7 +185,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         }
       });
       
-      if (this.proplocked) {
+      if (this.permFeatureEnabled && this.proplocked) {
         btn.setEnabled(false);
       }
 
@@ -180,36 +197,37 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
      * Else if property is locked, show locked icon.
      * Else if user is software editor, give complete edit access and add no controls.
      * Else if user is only property editor, give edit access to the specific property and add no controls.
-     */    
-    if (this.isModerator) {
-      final Button permbtn = new Button();
-      permbtn.addStyleName("btn-flat");
-      permbtn.setTabIndex(-2);
-      permbtn.setIcon(IconType.USER_PLUS);
-      permbtn.setSize(ButtonSize.EXTRA_SMALL);
-      permbtn.setColor("#5D7BA0");
-      permbtn.getElement().setAttribute("data-id", property.getName());
-      permbtn.getElement().setAttribute("title", "Set Permission");
-      permbtn.addClickHandler(new ClickHandler() {
-        @Override
-        public void onClick(ClickEvent event) {
-          Object source = event.getSource();
-          if (source instanceof Button) { 
-            form.initPermDialog(((Button) source).getElement().getAttribute("data-id"));
+     */  
+    if (this.permFeatureEnabled) {
+      if (this.isModerator) {
+        final Button permbtn = new Button();
+        permbtn.addStyleName("btn-flat");
+        permbtn.setTabIndex(-2);
+        permbtn.setIcon(IconType.USER_PLUS);
+        permbtn.setSize(ButtonSize.EXTRA_SMALL);
+        permbtn.setColor("#5D7BA0");
+        permbtn.getElement().setAttribute("data-id", property.getName());
+        permbtn.getElement().setAttribute("title", "Set Permission");
+        permbtn.addClickHandler(new ClickHandler() {
+          @Override
+          public void onClick(ClickEvent event) {
+            Object source = event.getSource();
+            if (source instanceof Button) { 
+              form.initPermDialog(((Button) source).getElement().getAttribute("data-id"));
+            }
           }
-        }
-      });
-      igbtn.add(permbtn);	
-    } else if (this.proplocked) {
-      final Button lockbtn = new Button();
-      lockbtn.addStyleName("btn-flat");
-      lockbtn.setIcon(IconType.LOCK);
-      lockbtn.setSize(ButtonSize.EXTRA_SMALL);
-      lockbtn.setEnabled(false);
-      igbtn.add(lockbtn);	
-      thisfg.addStyleName("form-group-disable");
-    }
-    
+        });
+        igbtn.add(permbtn);	
+      } else if (this.proplocked) {
+        final Button lockbtn = new Button();
+        lockbtn.addStyleName("btn-flat");
+        lockbtn.setIcon(IconType.LOCK);
+        lockbtn.setSize(ButtonSize.EXTRA_SMALL);
+        lockbtn.setEnabled(false);
+        igbtn.add(lockbtn);	
+        thisfg.addStyleName("form-group-disable");
+      }
+    }  
     labelpanel.add(flabel);
     labelpanel.add(igbtn);
     this.add(labelpanel);    
@@ -225,7 +243,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
 
     this.add(infoblock);
 
-    if (this.proplocked) {
+    if (this.permFeatureEnabled && this.proplocked) {
       for(IEntityInput ip : inputs) {
         ip.disable();
       }
@@ -301,7 +319,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         }
       });
       
-      if (this.proplocked) {
+      if (this.permFeatureEnabled && this.proplocked) {
         btn.setEnabled(false);
       }
       
@@ -363,8 +381,9 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     // Check all inputs in the property for validation
     boolean allok = true;
     for(IEntityInput myip: inputs)
-      if(!myip.validate(true))
+      if(!myip.validate(true)) {
         allok = false;
+      }
     return allok;
   }
   

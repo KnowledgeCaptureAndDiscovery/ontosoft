@@ -431,6 +431,15 @@ public class SoftwareResource implements SoftwareService {
     return this.repo.removeSoftwareOwner((User) securityContext.getUserPrincipal(), 
       swid, username);	  
   }
+  
+  @GET
+  @Path("software/permission/default") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public Boolean getPermissionFeatureEnabled() {
+    return this.repo.getPermissionFeatureEnabled();
+  }
+  
   /**
    * Exports
    */

@@ -178,4 +178,10 @@ public interface SoftwareService extends DirectRestService {
   @Consumes("application/json")
   public Boolean removeSoftwareOwner(@PathParam("name") String swname, 
     @PathParam("username") String username);
+  
+  @GET
+  @Path("software/permission/default") 
+  @Produces("application/json")  
+  @Consumes("application/json")
+  public Boolean getPermissionFeatureEnabled();
 }

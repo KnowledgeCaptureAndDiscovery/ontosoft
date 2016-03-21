@@ -447,6 +447,7 @@ public class SoftwareRepository {
   
   private String updateOrAddSoftware(Software sw, User user, boolean update) throws Exception {
     boolean isModerator = false;
+    Boolean permFetureEnabled = getPermissionFeatureEnabled();
     
     if (update) {
       String accesslevel = PermUtils.getAccessLevelForUser(sw, user.getName(), sw.getId());
@@ -471,9 +472,10 @@ public class SoftwareRepository {
       swkb.setLabel(swobj, sw.getLabel());
     
     for(String propid : sw.getValue().keySet()) {
-      if (!update      || 
-           isModerator || 
-           PermUtils.getAccessLevelForUser(sw, user.getName(), propid).equals("Write")) {
+      if (!permFetureEnabled ||
+          !update            || 
+          isModerator        || 
+          PermUtils.getAccessLevelForUser(sw, user.getName(), propid).equals("Write")) {
         KBObject swprop = this.ontkb.getProperty(propid);
         if (swprop != null) {
           List<Entity> entities = sw.getValue().get(propid);
@@ -876,6 +878,15 @@ public class SoftwareRepository {
   
   public String getProvenanceGraph(String swid) throws Exception {
     return this.prov.getSoftwareProvenanceGraph(swid);
+  }
+  
+  public Boolean getPermissionFeatureEnabled() {
+    PropertyListConfiguration props = Config.get().getProperties();
+    String isenabled = props.getString("perm_feature_enabled");
+    if(isenabled.equals("true")) {
+      return true;
+    }
+    return false;
   }
   
   public boolean hasSoftware(String swid) throws Exception {
