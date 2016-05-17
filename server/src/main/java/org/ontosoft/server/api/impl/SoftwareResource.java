@@ -66,7 +66,7 @@ public class SoftwareResource implements SoftwareService {
     try {
       return this.repo.getAllSoftware();
     } catch (Exception e) {
-      //e.printStackTrace();
+      e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }

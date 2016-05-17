@@ -14,6 +14,7 @@ import org.gwtbootstrap3.client.ui.ButtonGroup;
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
 import org.gwtbootstrap3.client.ui.Label;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.chart.CategoryBarChart;
@@ -60,6 +61,7 @@ import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
+
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
@@ -116,6 +118,8 @@ public class PublishView extends ParameterizedViewImpl
   @UiField
   SimplePager pager;
   
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+
   Vocabulary vocabulary;
   String softwarename;
   Software software;
@@ -141,14 +145,14 @@ public class PublishView extends ParameterizedViewImpl
     UserSession session = SessionStorage.getSession();
     if(session == null) {
       loading.setVisible(false);
-      //SoftwareREST.notifyFailure("You need to be logged in to edit software description");
+      //this.api.notifyFailure("You need to be logged in to edit software description");
       return;
     }
     
     if(session.getUsername() != null)
       if(!this.loggedinuser.equals(session.getUsername())) {
         this.loggedinuser = session.getUsername();
-        SoftwareREST.clearSwCache();
+        this.api.clearSwCache();
       }
     
     // Parse tokens
@@ -300,7 +304,7 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void initVocabulary() {
-    SoftwareREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
+    this.api.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary vocab) {
         vocabulary = vocab;
@@ -316,7 +320,7 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void setPermButtonVisibility() {
-    SoftwareREST.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
+    this.api.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
         permbutton.setVisible(false);
@@ -341,7 +345,7 @@ public class PublishView extends ParameterizedViewImpl
     else
       reloadbutton.setIconSpin(true);
     
-    SoftwareREST.getSoftware(softwarename, 
+    this.api.getSoftware(softwarename, 
         new Callback<Software, Throwable>() {
       @Override
       public void onSuccess(Software sw) {
@@ -452,7 +456,7 @@ public class PublishView extends ParameterizedViewImpl
     final Software tmpsw = softwareform.getSoftware();
     tmpsw.setName(softwarename);
     //savebutton.state().loading();
-    SoftwareREST.updateSoftware(tmpsw, new Callback<Software, Throwable>() {
+    this.api.updateSoftware(tmpsw, new Callback<Software, Throwable>() {
       @Override
       public void onSuccess(Software sw) {
         software = sw;
@@ -666,7 +670,7 @@ public class PublishView extends ParameterizedViewImpl
           permlist.setEnabled(false);
           permlist.refresh();
         } else {
-          SoftwareREST.getSoftwareAccessLevelForUser(software.getName(), 
+          api.getSoftwareAccessLevelForUser(software.getName(), 
             username, new Callback<AccessMode, Throwable>() {
               @Override
               public void onFailure(Throwable reason) {
@@ -705,7 +709,7 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void setPermissionList() {
-    SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+    this.api.getPermissionTypes(new Callback<List<String>, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
         AppNotification.notifyFailure(reason.getMessage());
@@ -750,7 +754,7 @@ public class PublishView extends ParameterizedViewImpl
     if ((session != null && session.getRoles().contains("admin")) || 
       software.getPermission().ownernameExists(this.loggedinuser)) {
       if (ownerrole.getValue() == true) {
-        SoftwareREST.addSoftwareOwner(software.getName(), username, 
+        this.api.addSoftwareOwner(software.getName(), username, 
           new Callback<Boolean, Throwable>() {
           @Override
           public void onFailure(Throwable reason) {
@@ -775,7 +779,7 @@ public class PublishView extends ParameterizedViewImpl
         mode.setMode(permtype);
         authorization.setAccessMode(mode);
 
-        SoftwareREST.setSoftwarePermissionForUser(software.getName(), authorization, 
+        this.api.setSoftwarePermissionForUser(software.getName(), authorization, 
           new Callback<Boolean, Throwable>() {
             @Override
             public void onFailure(Throwable reason) {
@@ -787,7 +791,7 @@ public class PublishView extends ParameterizedViewImpl
             public void onSuccess(Boolean success) {
               software.getPermission().addOrUpdateAuth(authorization);
               
-              SoftwareREST.removeSoftwareOwner(software.getName(), username, 
+              api.removeSoftwareOwner(software.getName(), username, 
                 new Callback<Boolean, Throwable>() {
                @Override
                public void onFailure(Throwable reason) {

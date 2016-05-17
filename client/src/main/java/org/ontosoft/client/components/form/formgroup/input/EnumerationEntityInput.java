@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.gwtbootstrap3.client.ui.SuggestBox;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.client.rest.SoftwareREST;
@@ -34,6 +35,7 @@ public class EnumerationEntityInput implements IEntityInput {
   SuggestBox myinput;
   MetadataProperty property;
   HashMap<String, Entity> enumerations;
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
   
   public EnumerationEntityInput() {
     enumerations = new HashMap<String, Entity>();
@@ -53,7 +55,7 @@ public class EnumerationEntityInput implements IEntityInput {
     // Create suggestions
     final MultiWordSuggestOracle oracle = new MultiWordSuggestOracle();
     final MetadataType type = vocabulary.getType(prop.getRange());
-    SoftwareREST.getEnumerationsForType(type.getId(), 
+    this.api.getEnumerationsForType(type.getId(), 
         new Callback<List<MetadataEnumeration>, Throwable>() {
           @Override
           public void onSuccess(List<MetadataEnumeration> enumlist) {

@@ -16,6 +16,7 @@ import org.gwtbootstrap3.client.ui.constants.ButtonSize;
 import org.gwtbootstrap3.client.ui.constants.ButtonType;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.SoftwareForm;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
@@ -83,7 +84,9 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     this.pluginbuttons = new HashMap<String, Button>();
     this.permFeatureEnabled = true;
     
-    SoftwareREST.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
+    SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+
+    api.getPermissionFeatureEnabled(new Callback<Boolean, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
         permFeatureEnabled = false;
@@ -456,7 +459,8 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   }
   
   private void runPlugin(final String pluginname) {
-    SoftwareREST.runPlugin(pluginname, software, 
+    SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+    api.runPlugin(pluginname, software, 
         new Callback<PluginResponse, Throwable>() {
       @Override
       public void onSuccess(PluginResponse response) {

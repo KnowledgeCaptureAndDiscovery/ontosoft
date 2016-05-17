@@ -7,7 +7,19 @@ var CONFIG = {
 		header : "white", // Text color for Headers		
 		ok : "#5D7BA0", // Color indicating form items that are filled out
 		error : "#D42041" // Color indicating required form items that are not filled out 
-	}
+	},
+	EXTERNAL_SERVERS : [
+        {
+        	name: "C4P",
+        	server: "http://c4p.ontosoft.org/repository",
+        	client: "http://c4p.ontosoft.org"
+        },
+        {
+        	name: "CSDMS",
+        	server: "http://csdms.ontosoft.org/repository",
+        	client: "http://csdms.ontosoft.org"
+        }
+	]
 }
 
 CONFIG.HOME = " \

@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.gwtbootstrap3.client.shared.event.ModalShownEvent;
 import org.gwtbootstrap3.client.ui.Button;
@@ -18,6 +19,7 @@ import org.gwtbootstrap3.client.ui.constants.ButtonType;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.gwt.ButtonCell;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.facet.FacetedSearchPanel;
@@ -30,10 +32,10 @@ import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.utils.PermUtils;
 
-import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.CheckboxCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.SafeHtmlCell;
+import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -92,6 +94,10 @@ public class SoftwareListView extends ParameterizedViewImpl
   @UiField
   SimplePager pager;
   
+  SoftwareREST api;
+  Map<String, SoftwareREST> apis;
+  Map<String, String> clientUrls;
+  
   private List<SoftwareSummary> allSoftwareList;
   private HashMap<String, Boolean> filteredSoftwareIdMap =
       new HashMap<String, Boolean>();
@@ -108,13 +114,32 @@ public class SoftwareListView extends ParameterizedViewImpl
   @Inject
   public SoftwareListView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
+    initAPIs();
     initVocabulary();
     initTable();
     initList();
   }
   
+  private void initAPIs() {
+    this.api = SoftwareREST.get(Config.getServerURL());
+    
+    this.apis = new HashMap<String, SoftwareREST>();
+    this.apis.put(SoftwareREST.LOCAL, this.api);
+    this.clientUrls = new HashMap<String, String>();
+    
+    final List<Map<String, String>> xservers = Config.getExternalServers();
+    for(Map<String, String> xserver : xservers) {
+      String xname = xserver.get("name");
+      String xurl = xserver.get("server");
+      String xclient = xserver.get("client");
+      SoftwareREST xapi = SoftwareREST.get(xurl);
+      this.apis.put(xname, xapi);
+      clientUrls.put(xname, xclient);
+    }    
+  }
+  
   private void initVocabulary() {
-    SoftwareREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
+    this.api.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary vocab) {
         facets.showFacetGroups(vocab);
@@ -127,26 +152,41 @@ public class SoftwareListView extends ParameterizedViewImpl
   }
 
   public void initList() {
-    SoftwareREST.getSoftwareList(new Callback<List<SoftwareSummary>, Throwable>() {
-      @Override
-      public void onSuccess(List<SoftwareSummary> list) {        
-        Collections.sort(list, swcompare);
-        allSoftwareList = list;
-        for(SoftwareSummary sum : list)
-          filteredSoftwareIdMap.put(sum.getId(), true);
-        listProvider.getList().clear();
-        listProvider.getList().addAll(list);
-        listProvider.flush();
-
-        initMaterial();
-        loading.setVisible(false);
-        content.setVisible(true);
-        Window.scrollTo(0, 0);
-      }
-      @Override
-      public void onFailure(Throwable reason) { }
-    }, false);
+    final List<String> loaded = new ArrayList<String>();
+    
+    for(final String sname : apis.keySet()) {
+      SoftwareREST sapi = apis.get(sname);
+      allSoftwareList = new ArrayList<SoftwareSummary>();
+      sapi.getSoftwareList(new Callback<List<SoftwareSummary>, Throwable>() {
+        @Override
+        public void onSuccess(List<SoftwareSummary> list) {
+          for(SoftwareSummary sum : list) {
+            sum.setExternalRepositoryId(sname);
+            sum.setExternalRepositoryUrl(clientUrls.get(sname));
+          }
+          allSoftwareList.addAll(list);
+          Collections.sort(allSoftwareList, swcompare);
+          for(SoftwareSummary sum : list)
+            filteredSoftwareIdMap.put(sum.getId(), true);
+          
+          loaded.add(sname);
+          if(loaded.size() == apis.size()) {
+            listProvider.getList().clear();
+            listProvider.getList().addAll(allSoftwareList);
+            listProvider.flush();
+            initMaterial();
+            loading.setVisible(false);
+            content.setVisible(true);
+            Window.scrollTo(0, 0);              
+          }
+        }
+        @Override
+        public void onFailure(Throwable reason) { }
+      }, false);       
+    }   
   }
+  
+
   
   @Override
   public void initializeParameters(String[] params) {
@@ -210,10 +250,20 @@ public class SoftwareListView extends ParameterizedViewImpl
         @Override
         public SafeHtml getValue(SoftwareSummary summary) {
             SafeHtmlBuilder sb = new SafeHtmlBuilder();
+            
+            String link = "#" + NameTokens.browse + "/" + summary.getName();
+            String extralabel = "";
+            
+            if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL)) {
+              link = summary.getExternalRepositoryUrl() + link;
+              extralabel = "<div class='external-repo'>" 
+                  + summary.getExternalRepositoryId()+"</div>";
+            }
+            
             sb.appendHtmlConstant("<div class='software-list-item'>");
             sb.appendHtmlConstant("<div class='software-name'>");
-            sb.appendHtmlConstant("<a href='#" + NameTokens.browse + "/" + 
-                summary.getName() + "'>" + summary.getLabel() + "</a>");
+            sb.appendHtmlConstant(extralabel);
+            sb.appendHtmlConstant("<a href='" + link + "'>" + summary.getLabel() + "</a>");
             sb.appendHtmlConstant("</div>");
             
             if(summary.getDescription() != null)
@@ -250,27 +300,13 @@ public class SoftwareListView extends ParameterizedViewImpl
             return sb.toSafeHtml();
         }
     };
-    /*Column<SoftwareSummary, String> namecol = 
-        new Column<SoftwareSummary, String>(new ClickableTextCell(anchorRenderer)) {
-      @Override
-      public String getValue(SoftwareSummary summary) {
-        return summary.getLabel() + "\n" + summary.getDescription();
-      }
-    };
-    namecol.setFieldUpdater(new FieldUpdater<SoftwareSummary, SafeHtml>() {
-      @Override
-      public void update(int index, SoftwareSummary summary, SafeHtml value) {
-        String swname = summary.getName();
-        History.newItem(NameTokens.browse + "/" + swname);
-      }
-    });*/
+
     table.addColumn(namecol);
     namecol.setSortable(true);
     sortHandler.setComparator(namecol, this.swcompare);
     table.getColumnSortList().push(namecol);
     
     // Delete Button Column
-
     Column<SoftwareSummary, String> deletecolumn = 
         new Column<SoftwareSummary, String>(
             new ButtonCell(IconType.REMOVE, ButtonType.DANGER, ButtonSize.EXTRA_SMALL)) {
@@ -278,14 +314,19 @@ public class SoftwareListView extends ParameterizedViewImpl
       public String getValue(SoftwareSummary details) {
         return "Delete";
       }
-
+      
       @Override
-      public void render(Cell.Context context, SoftwareSummary summary, SafeHtmlBuilder sb) {
+      public String getCellStyleNames(Context context,
+          SoftwareSummary summary) {
         UserSession session = SessionStorage.getSession();
+        String style = "hidden-cell";
         if (isadmin || 
-          (isreguser && PermUtils.hasOwnerAccess(summary.getPermission(), session.getUsername()))) {
-          super.render(context, summary, sb);
+            (isreguser && 
+                PermUtils.hasOwnerAccess(summary.getPermission(), session.getUsername()))) {
+          if(summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
+            style = "delete-cell";
         }
+        return style;
       }
     };
     
@@ -295,8 +336,7 @@ public class SoftwareListView extends ParameterizedViewImpl
         deleteSoftware(summary);
       }
     });
-
-    deletecolumn.setCellStyleNames("delete-cell");
+    
     table.addColumn(deletecolumn);
 
     // Edit Button Column
@@ -307,7 +347,16 @@ public class SoftwareListView extends ParameterizedViewImpl
         @Override
         public String getValue(SoftwareSummary details) {
           return "Edit";
-        }      
+        }    
+        
+        @Override
+        public String getCellStyleNames(Context context,
+            SoftwareSummary summary) {
+          String style = "hidden-cell";
+          if(summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
+            style = "edit-cell";
+          return style;
+        }     
     };
     
     editcol.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
@@ -317,8 +366,6 @@ public class SoftwareListView extends ParameterizedViewImpl
         History.newItem(NameTokens.publish + "/" + swname);
       }
     });
-    //table.setColumnWidth(editcol, "0px");
-    editcol.setCellStyleNames("edit-cell");
     table.addColumn(editcol);
     
     // Checkbox, software selection column (to select software to compare)
@@ -362,7 +409,7 @@ public class SoftwareListView extends ParameterizedViewImpl
   
   private void deleteSoftware(final SoftwareSummary sw) {
     if (Window.confirm("Are you sure you want to delete the software ?")) {
-      SoftwareREST.deleteSoftware(sw.getName(),
+      this.api.deleteSoftware(sw.getName(),
           new Callback<Void, Throwable>() {
             @Override
             public void onSuccess(Void v) {
@@ -409,7 +456,7 @@ public class SoftwareListView extends ParameterizedViewImpl
     if(softwarelabel.validate(true)) {
       Software tmpsw = new Software();
       tmpsw.setLabel(label);
-      SoftwareREST.publishSoftware(tmpsw, new Callback<Software, Throwable>() {
+      this.api.publishSoftware(tmpsw, new Callback<Software, Throwable>() {
         public void onSuccess(Software sw) {
           // Add item to list
           SoftwareSummary newsw = new SoftwareSummary(sw);
@@ -480,18 +527,28 @@ public class SoftwareListView extends ParameterizedViewImpl
   
   @UiHandler("facets")
   void onFacetSelection(FacetSelectionEvent event) {
-    SoftwareREST.getSoftwareListFaceted(facets.getFacets(),
-        new Callback<List<SoftwareSummary>, Throwable>() {
-      @Override
-      public void onSuccess(List<SoftwareSummary> list) {
-        filteredSoftwareIdMap.clear();
-        for(SoftwareSummary flist: list)
-          filteredSoftwareIdMap.put(flist.getId(), true);
-        updateList();
-      }
-      @Override
-      public void onFailure(Throwable reason) { }
-    });    
+    final List<String> loaded = new ArrayList<String>();
+    
+    final List<SoftwareSummary> facetList = new ArrayList<SoftwareSummary>();
+    for(final String sname : apis.keySet()) {
+      SoftwareREST sapi = apis.get(sname);
+      sapi.getSoftwareListFaceted(facets.getFacets(),
+          new Callback<List<SoftwareSummary>, Throwable>() {
+        @Override
+        public void onSuccess(List<SoftwareSummary> list) {
+          facetList.addAll(list);
+          loaded.add(sname);
+          if(loaded.size() == apis.size()) {
+            filteredSoftwareIdMap.clear();
+            for(SoftwareSummary flist: facetList)
+              filteredSoftwareIdMap.put(flist.getId(), true);
+            updateList();
+          }
+        }
+        @Override
+        public void onFailure(Throwable reason) { }
+      });
+    }
   }
   
   @UiHandler("selectionswitch")

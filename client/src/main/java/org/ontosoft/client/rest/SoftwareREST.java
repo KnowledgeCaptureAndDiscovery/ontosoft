@@ -8,7 +8,8 @@ import org.fusesource.restygwt.client.Defaults;
 import org.fusesource.restygwt.client.Method;
 import org.fusesource.restygwt.client.MethodCallback;
 import org.fusesource.restygwt.client.REST;
-import org.ontosoft.client.Config;
+import org.fusesource.restygwt.client.Resource;
+import org.fusesource.restygwt.client.RestServiceProxy;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
@@ -30,42 +31,57 @@ import com.google.gwt.http.client.Response;
 import com.google.gwt.http.client.URL;
 
 public class SoftwareREST {
-  public static SoftwareService softwareService;
+  public static HashMap<String, SoftwareREST> singletons =
+      new HashMap<String, SoftwareREST>();
 
-  private static Vocabulary vocabulary;
-  private static List<SoftwareSummary> softwareList;
-  private static HashMap<String, Software> softwareCache = 
+  public static String LOCAL = "local";
+  
+  private Vocabulary vocabulary;
+  private List<SoftwareSummary> softwareList;
+  private SoftwareService service;
+  
+  private HashMap<String, Software> softwareCache = 
       new HashMap<String, Software>();
-  private static HashMap<String, List<MetadataEnumeration>> enumCache = 
+  private HashMap<String, List<MetadataEnumeration>> enumCache = 
       new HashMap<String, List<MetadataEnumeration>>();
   
-  private static ArrayList<Callback<Vocabulary, Throwable>> vocabulary_callbacks =
+  private ArrayList<Callback<Vocabulary, Throwable>> vocabulary_callbacks =
       new ArrayList<Callback<Vocabulary, Throwable>>();  
-  private static ArrayList<Callback<List<SoftwareSummary>, Throwable>> list_callbacks =
+  private ArrayList<Callback<List<SoftwareSummary>, Throwable>> list_callbacks =
       new ArrayList<Callback<List<SoftwareSummary>, Throwable>>();
+  private ArrayList<Callback<Boolean, Throwable>> perm_callbacks =
+      new ArrayList<Callback<Boolean,Throwable>>();
   
-  private static HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>> 
+  private HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>> 
     enum_callbacks =
       new HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>>();
   
-  private static Boolean permFeatureEnabled = null; 
+  private Boolean permFeatureEnabled = null; 
   
-  public static SoftwareService getSoftwareService() {
-    if(softwareService == null) {
-      Defaults.setServiceRoot(Config.getServerURL());
-      Defaults.setDateFormat(null);
-      Defaults.setDispatcher(new AuthenticatedDispatcher());
-      softwareService = GWT.create(SoftwareService.class);
-    }
-    return softwareService;
+  public static SoftwareREST get(String key) {
+    if(singletons.containsKey(key))
+      return singletons.get(key);
+    
+    SoftwareREST service = new SoftwareREST(key);
+    singletons.put(key, service);
+    return service;
   }
   
-  public static void clearSwCache() {
+  public SoftwareREST (String url) {
+    //Defaults.setServiceRoot(Config.getServerURL());
+    Defaults.setDateFormat(null);
+    Defaults.setDispatcher(new AuthenticatedDispatcher());
+    this.service = GWT.create(SoftwareService.class);
+    ((RestServiceProxy)this.service).setResource(
+        new Resource(url));
+  }
+  
+  public void clearSwCache() {
     softwareCache.clear();
     permFeatureEnabled = null;
   }
   
-  public static void getVocabulary(final Callback<Vocabulary, Throwable> callback,
+  public void getVocabulary(final Callback<Vocabulary, Throwable> callback,
       boolean reload) {
     if(vocabulary != null && !reload) {
       callback.onSuccess(vocabulary);
@@ -87,7 +103,7 @@ public class SoftwareREST {
             AppNotification.notifyFailure("Could not load vocabulary");
             callback.onFailure(exception);
           }
-        }).call(getSoftwareService()).getVocabulary();        
+        }).call(this.service).getVocabulary();        
       }
       else {
         vocabulary_callbacks.add(callback);
@@ -95,7 +111,7 @@ public class SoftwareREST {
     }
   }
   
-  public static void getSoftwareList(final Callback<List<SoftwareSummary>, Throwable> callback,
+  public void getSoftwareList(final Callback<List<SoftwareSummary>, Throwable> callback,
       boolean reload) {
     if(softwareList != null && !reload) {
       callback.onSuccess(softwareList);
@@ -117,7 +133,7 @@ public class SoftwareREST {
             AppNotification.notifyFailure("Could not load software list");
             callback.onFailure(exception);
           }
-        }).call(getSoftwareService()).list();
+        }).call(this.service).list();
       }
       else {
         list_callbacks.add(callback);
@@ -125,7 +141,7 @@ public class SoftwareREST {
     }
   }
   
-  public static void getSoftwareListFaceted(List<EnumerationFacet> facets,
+  public void getSoftwareListFaceted(List<EnumerationFacet> facets,
       final Callback<List<SoftwareSummary>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<SoftwareSummary>>() {
       @Override
@@ -136,10 +152,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).listWithFacets(facets);
+    }).call(this.service).listWithFacets(facets);
   }
   
-  public static void getSoftware(final String swname, final Callback<Software, Throwable> callback,
+  public void getSoftware(final String swname, final Callback<Software, Throwable> callback,
       final boolean reload) {
     //GWT.log(softwareCache.keySet().toString() + ": "+reload);
     if(softwareCache.containsKey(swname) && !reload) {
@@ -167,11 +183,11 @@ public class SoftwareREST {
           AppNotification.notifyFailure("Could not fetch software: "+swname);
           callback.onFailure(exception);
         }
-      }).call(getSoftwareService()).get(URL.encodeQueryString(swname));
+      }).call(this.service).get(URL.encodeQueryString(swname));
     }
   }
   
-  public static void getSoftwareRDF(final String swid, 
+  public void getSoftwareRDF(final String swid, 
       final Callback<String, Throwable> callback) {
     RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, swid);
     rb.setHeader("Accept", "application/rdf+xml");
@@ -193,7 +209,7 @@ public class SoftwareREST {
     }
   }
   
-  public static void getEnumerationsForType(final String typeid,
+  public void getEnumerationsForType(final String typeid,
       final Callback<List<MetadataEnumeration>, Throwable> callback) {
     if(enumCache.containsKey(typeid)) {
       callback.onSuccess(enumCache.get(typeid));
@@ -221,7 +237,7 @@ public class SoftwareREST {
             AppNotification.notifyFailure("Could not load enumerations for "+typeid);
             callback.onFailure(exception);
           }
-        }).call(getSoftwareService()).getEnumerationsForType(typeid);
+        }).call(this.service).getEnumerationsForType(typeid);
       }
       else {
         type_enum_callbacks.add(callback);
@@ -230,7 +246,7 @@ public class SoftwareREST {
     }
   }
   
-  public static void publishSoftware(final Software software, 
+  public void publishSoftware(final Software software, 
       final Callback<Software, Throwable> callback) {
     REST.withCallback(new MethodCallback<Software>() {
       @Override
@@ -251,10 +267,10 @@ public class SoftwareREST {
         AppNotification.notifyFailure("Could not publish");
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).publish(software);    
+    }).call(this.service).publish(software);    
   }
   
-  public static void updateSoftware(final Software software, 
+  public void updateSoftware(final Software software, 
       final Callback<Software, Throwable> callback) {
     REST.withCallback(new MethodCallback<Software>() {
       @Override
@@ -268,10 +284,10 @@ public class SoftwareREST {
         AppNotification.notifyFailure("Could not save "+software.getLabel());
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).update(software.getName(), software);    
+    }).call(this.service).update(software.getName(), software);    
   }
   
-  public static void deleteSoftware(final String swname, 
+  public void deleteSoftware(final String swname, 
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {
       @Override
@@ -288,10 +304,10 @@ public class SoftwareREST {
         AppNotification.notifyFailure("Could not delete "+swname);
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).delete(swname);    
+    }).call(this.service).delete(swname);    
   }
   
-  public static void runPlugin(final String pluginname, final Software software, 
+  public void runPlugin(final String pluginname, final Software software, 
       final Callback<PluginResponse, Throwable> callback) {
     
     REST.withCallback(new MethodCallback<PluginResponse>() {
@@ -307,10 +323,10 @@ public class SoftwareREST {
         AppNotification.notifyFailure(pluginname+" Plugin: Could not run");
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).runPlugin(pluginname, software);  
+    }).call(this.service).runPlugin(pluginname, software);  
   }
   
-  public static void getPermissionTypes (
+  public void getPermissionTypes (
     final Callback<List<String>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<String>>() {
       @Override
@@ -322,10 +338,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).getPermissionTypes();
+    }).call(this.service).getPermissionTypes();
   }
   
-  public static void setSoftwarePermissionForUser(String name, Authorization authorization,
+  public void setSoftwarePermissionForUser(String name, Authorization authorization,
     final Callback<Boolean, Throwable> callback) {
     REST.withCallback(new MethodCallback<Boolean>() {
       @Override
@@ -337,10 +353,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).setSoftwarePermissionForUser(name, authorization);
+    }).call(this.service).setSoftwarePermissionForUser(name, authorization);
   }
 
-  public static void getSoftwarePermissions(String name,
+  public void getSoftwarePermissions(String name,
     final Callback<Permission, Throwable> callback) {
     REST.withCallback(new MethodCallback<Permission>() {
       @Override
@@ -352,10 +368,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).getSoftwarePermissions(name);
+    }).call(this.service).getSoftwarePermissions(name);
   }
   
-  public static void getSoftwareAccessLevelForUser(String swname, String username,
+  public void getSoftwareAccessLevelForUser(String swname, String username,
     final Callback<AccessMode, Throwable> callback) {
       REST.withCallback(new MethodCallback<AccessMode>() {
       @Override
@@ -367,10 +383,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).getSoftwareAccessLevelForUser(swname, username);
+    }).call(this.service).getSoftwareAccessLevelForUser(swname, username);
   }
   
-  public static void getPropertyAccessLevelForUser(String swname, String propid, String username,
+  public void getPropertyAccessLevelForUser(String swname, String propid, String username,
     final Callback<AccessMode, Throwable> callback) {
     REST.withCallback(new MethodCallback<AccessMode>() {
       @Override
@@ -382,10 +398,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).getPropertyAccessLevelForUser(swname, propid, username);
+    }).call(this.service).getPropertyAccessLevelForUser(swname, propid, username);
   }
   
-  public static void setPropertyPermissionForUser(String name, Authorization authorization,
+  public void setPropertyPermissionForUser(String name, Authorization authorization,
     final Callback<Boolean, Throwable> callback) {
     REST.withCallback(new MethodCallback<Boolean>() {
       @Override
@@ -397,10 +413,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).setPropertyPermissionForUser(name, authorization);
+    }).call(this.service).setPropertyPermissionForUser(name, authorization);
   }
   
-  public static void addSoftwareOwner(String swname, String username,
+  public void addSoftwareOwner(String swname, String username,
     final Callback<Boolean, Throwable> callback) {
     REST.withCallback(new MethodCallback<Boolean>() {
       @Override
@@ -412,10 +428,10 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).addSoftwareOwner(swname, username);
+    }).call(this.service).addSoftwareOwner(swname, username);
   }
 
-  public static void removeSoftwareOwner(String swname, String username,
+  public void removeSoftwareOwner(String swname, String username,
     final Callback<Boolean, Throwable> callback) {
     REST.withCallback(new MethodCallback<Boolean>() {
       @Override
@@ -427,25 +443,34 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(getSoftwareService()).removeSoftwareOwner(swname, username);
+    }).call(this.service).removeSoftwareOwner(swname, username);
   }
   
-  public static void getPermissionFeatureEnabled(final Callback<Boolean, Throwable> callback) {
+  public void getPermissionFeatureEnabled(final Callback<Boolean, Throwable> callback) {
     if(permFeatureEnabled != null) {
       callback.onSuccess(permFeatureEnabled);
     }
+    else {
+      if(perm_callbacks.isEmpty()) {
+        perm_callbacks.add(callback);
+        REST.withCallback(new MethodCallback<Boolean>() {
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            callback.onFailure(exception);
+          }
     
-    REST.withCallback(new MethodCallback<Boolean>() {
-      @Override
-      public void onFailure(Method method, Throwable exception) {
-        callback.onFailure(exception);
+    	  @Override
+    	  public void onSuccess(Method method, Boolean response) {
+    	    permFeatureEnabled = response;
+          for(Callback<Boolean, Throwable> cb : perm_callbacks)
+            cb.onSuccess(response);    
+          perm_callbacks.clear();
+    	  }
+        }).call(this.service).getPermissionFeatureEnabled();
       }
-
-	  @Override
-	  public void onSuccess(Method method, Boolean response) {
-	    permFeatureEnabled = response;
-        callback.onSuccess(response);
-	  }
-    }).call(getSoftwareService()).getPermissionFeatureEnabled();
+      else {
+        perm_callbacks.add(callback);
+      }
+    }
   }
 }

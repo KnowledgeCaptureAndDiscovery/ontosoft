@@ -294,10 +294,8 @@ h1 small {
 .button-cell .btn {
 	padding: 2px 4px !important;
 }
-
-.delete-cell {
+.hidden-cell div {
 	display: none !important;
-	width: 0px !important;
 }
 .delete-col .delete-cell {
 	display: table-cell !important;
@@ -321,6 +319,18 @@ h1 small {
 .selection-table .selection-cell {
 	display: table-cell !important;
 	width: 32px !important;
+}
+
+.external-repo {
+	background-color: #5D7BA0;
+	color: #EEF;
+	opacity: 0.85;
+	border-radius: 5px;
+	font-size: x-small;
+	padding: 3px 4px;
+	margin-right: 5px;
+	display: inline;
+	vertical-align: middle;
 }
 
 .fixed-layout-table {

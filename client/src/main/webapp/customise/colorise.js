@@ -174,6 +174,11 @@ var STYLES =
 "	background-color: rgba(__OK_RGB__,0.05) !important;" + 
 "	border: 1px solid rgba(__OK_RGB__,0.08) !important;" + 
 "}" + 
+".external-repo {" +
+"  background-color: __BASE__ !important;" + 
+"  color: rgba(__BASE_TEXT_RGB__,.84);" +
+"  opacity: 0.85;" +
+"}" +
 "#required .form-group.has-error .control-label," + 
 ".browse-label.error-label {" + 
 "	background-color: rgba(__ERROR_RGB__,0.05) !important;" + 

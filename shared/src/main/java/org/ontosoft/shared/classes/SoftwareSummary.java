@@ -10,12 +10,17 @@ import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
 import org.ontosoft.shared.classes.provenance.Provenance;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class SoftwareSummary {
   String id;
   String name;
   String type;
   String label;
   String description;
+  
+  @JsonIgnore String externalRepositoryId;
+  @JsonIgnore String externalRepositoryUrl;
   
   List<String> authors;
   String user;
@@ -141,5 +146,22 @@ public class SoftwareSummary {
   
   public Permission getPermission() {
     return this.permission;
+  }
+
+  @JsonIgnore
+  public String getExternalRepositoryId() {
+    return externalRepositoryId;
+  }
+  @JsonIgnore
+  public void setExternalRepositoryId(String externalRepositoryId) {
+    this.externalRepositoryId = externalRepositoryId;
+  }
+  @JsonIgnore
+  public String getExternalRepositoryUrl() {
+    return externalRepositoryUrl;
+  }
+  @JsonIgnore
+  public void setExternalRepositoryUrl(String externalRepositoryUrl) {
+    this.externalRepositoryUrl = externalRepositoryUrl;
   } 
 }

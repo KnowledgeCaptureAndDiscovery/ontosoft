@@ -9,6 +9,7 @@ import org.gwtbootstrap3.client.ui.Heading;
 import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.components.browse.EntityBrowser;
 import org.ontosoft.client.components.chart.CategoryPieChart;
@@ -45,6 +46,8 @@ public class CompareView extends ParameterizedViewImpl
   @UiField
   VerticalPanel loading;
   
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+
   Vocabulary vocabulary;
   List<Software> softwares;
   boolean swloaded;
@@ -75,7 +78,7 @@ public class CompareView extends ParameterizedViewImpl
   }
   
   private void initVocabulary() {
-    SoftwareREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
+    this.api.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary vocab) {
         vocabulary = vocab;
@@ -94,7 +97,7 @@ public class CompareView extends ParameterizedViewImpl
     matrixpanel.setVisible(false);
     for(int i=0; i<swnames.length; i++) {
       String swname = swnames[i];
-      SoftwareREST.getSoftware(swname, new Callback<Software, Throwable>() {
+      this.api.getSoftware(swname, new Callback<Software, Throwable>() {
         @Override
         public void onSuccess(Software sw) {
           softwares.add(sw);
