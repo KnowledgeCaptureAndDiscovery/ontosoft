@@ -198,7 +198,8 @@ public class SoftwareListView extends ParameterizedViewImpl
       if (session.getRoles().contains("admin"))
         this.isadmin = true;
     }
-    redrawControls();
+    this.updateList();
+    this.redrawControls();
   }
   
   public void redrawControls() {
@@ -314,7 +315,6 @@ public class SoftwareListView extends ParameterizedViewImpl
       public String getValue(SoftwareSummary details) {
         return "Delete";
       }
-      
       @Override
       public String getCellStyleNames(Context context,
           SoftwareSummary summary) {
@@ -329,32 +329,34 @@ public class SoftwareListView extends ParameterizedViewImpl
         return style;
       }
     };
-    
     deletecolumn.setFieldUpdater(new FieldUpdater<SoftwareSummary, String>() {
       @Override
       public void update(int index, SoftwareSummary summary, String value) {
         deleteSoftware(summary);
       }
     });
-    
     table.addColumn(deletecolumn);
 
     // Edit Button Column
     final Column<SoftwareSummary, String> editcol = 
         new Column<SoftwareSummary, String>(
-            new ButtonCell(IconType.EDIT, ButtonType.INFO, 
-                ButtonSize.EXTRA_SMALL)) {
+            new ButtonCell(IconType.EDIT, ButtonType.INFO, ButtonSize.EXTRA_SMALL)) {
         @Override
         public String getValue(SoftwareSummary details) {
           return "Edit";
-        }    
-        
+        }
         @Override
         public String getCellStyleNames(Context context,
             SoftwareSummary summary) {
+          UserSession session = SessionStorage.getSession();
           String style = "hidden-cell";
-          if(summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
-            style = "edit-cell";
+          if (isadmin ||
+              (isreguser && 
+                  (PermUtils.getAccessLevelForUser(
+                  summary.getPermission(), session.getUsername(), summary.getId()) 
+                  .equals("Write"))))
+            if(summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
+              style = "edit-cell";
           return style;
         }     
     };
