@@ -185,7 +185,6 @@ public class SoftwareListView extends ParameterizedViewImpl
       }, false);       
     }   
   }
-  
 
   
   @Override

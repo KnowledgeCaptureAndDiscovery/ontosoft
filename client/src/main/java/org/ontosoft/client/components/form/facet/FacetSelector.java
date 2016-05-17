@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -174,6 +175,7 @@ public class FacetSelector extends Panel
   public void fetchEnumerations() {
     final List<String> loaded = new ArrayList<String>();
     this.enumerations = new ArrayList<MetadataEnumeration>();
+    final HashSet<MetadataEnumeration> uniques = new HashSet<MetadataEnumeration>();
     for(final String sname : this.apis.keySet()) {
       SoftwareREST sapi = this.apis.get(sname);
       sapi.getEnumerationsForType(type.getId(), 
@@ -181,8 +183,9 @@ public class FacetSelector extends Panel
             @Override
             public void onSuccess(List<MetadataEnumeration> enumlist) {
               loaded.add(sname);
-              enumerations.addAll(enumlist);
+              uniques.addAll(enumlist);
               if(loaded.size() == apis.keySet().size()) {
+                enumerations.addAll(uniques);
                 Collections.sort(enumerations, new Comparator<MetadataEnumeration>() {
                   @Override
                   public int compare(MetadataEnumeration enum1, 
