@@ -3,7 +3,9 @@ package org.ontosoft.client.application.compare;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.gwtbootstrap3.client.ui.Heading;
 import org.gwtbootstrap3.client.ui.PageHeader;
@@ -46,7 +48,8 @@ public class CompareView extends ParameterizedViewImpl
   @UiField
   VerticalPanel loading;
   
-  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+  SoftwareREST api;
+  Map<String, SoftwareREST> apis;
 
   Vocabulary vocabulary;
   List<Software> softwares;
@@ -58,8 +61,24 @@ public class CompareView extends ParameterizedViewImpl
   @Inject
   public CompareView(Binder binder) {
     initWidget(binder.createAndBindUi(this));
+    initAPIs();
     initVocabulary();
     softwares = new ArrayList<Software>();
+  }
+  
+  private void initAPIs() {
+    this.api = SoftwareREST.get(Config.getServerURL());
+    
+    this.apis = new HashMap<String, SoftwareREST>();
+    this.apis.put(SoftwareREST.LOCAL, this.api);
+    
+    final List<Map<String, String>> xservers = Config.getExternalServers();
+    for(Map<String, String> xserver : xservers) {
+      String xname = xserver.get("name");
+      String xurl = xserver.get("server");
+      SoftwareREST xapi = SoftwareREST.get(xurl);
+      this.apis.put(xname, xapi);
+    }    
   }
 
   @Override
@@ -97,7 +116,13 @@ public class CompareView extends ParameterizedViewImpl
     matrixpanel.setVisible(false);
     for(int i=0; i<swnames.length; i++) {
       String swname = swnames[i];
-      this.api.getSoftware(swname, new Callback<Software, Throwable>() {
+      String[] nsname = swname.split(":");
+      SoftwareREST api = this.api;
+      if(nsname.length > 1) {
+        api = this.apis.get(nsname[0]);
+        swname = nsname[1];
+      }
+      api.getSoftware(swname, new Callback<Software, Throwable>() {
         @Override
         public void onSuccess(Software sw) {
           softwares.add(sw);

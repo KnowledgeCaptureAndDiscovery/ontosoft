@@ -584,6 +584,8 @@ public class SoftwareListView extends ParameterizedViewImpl
       int i=0;
       for(SoftwareSummary summary : selections) {
         if(i > 0) idtext += ",";
+        if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
+          idtext += summary.getExternalRepositoryId()+":";
         idtext += summary.getName();
         i++;
       }
