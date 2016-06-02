@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -72,6 +73,8 @@ public class SoftwareRepository {
   SecurityContext securityContext;
   
   ObjectMapper mapper = new ObjectMapper();
+  
+  private String allusers = "*";
   
   static SoftwareRepository singleton = null;
 
@@ -739,16 +742,25 @@ public class SoftwareRepository {
     UserCredentials user = UserDatabase.get().getUser(username);
     AccessMode mode = new AccessMode();
     mode.setMode("Read");
-    if (user.getRoles().contains("admin"))
-      mode.setMode("Write");
-    else {
-      try {
-        Software software = this.getSoftware(swid);
-        mode.setMode(PermUtils.getAccessLevelForUser(software, username, swid));
-      } catch (Exception e) {
-        mode.setMode("Read");
-      }
+    Software software = null;
+    try {
+      software = this.getSoftware(swid);
+    } catch (Exception e) {
+      mode.setMode("Read");
     }
+    
+    if (user != null && user.getRoles().contains("admin")) {
+        mode.setMode("Write");
+    } else if (software.getPermission().authExists(username, swid)) {
+    	String level = PermUtils.getAccessLevelForUser(software, username, swid);
+    	mode.setMode(level);
+    } else if (software.getPermission().authExists("*", swid)) {
+    	String level = PermUtils.getAccessLevelForUser(software, "*", swid);
+    	mode.setMode(level);
+    } else {
+    	mode.setMode("Read");
+    }
+    
     return mode;
   }
 
@@ -756,21 +768,29 @@ public class SoftwareRepository {
     UserCredentials user = UserDatabase.get().getUser(username);
     AccessMode mode = new AccessMode();
     mode.setMode("Read");
-    if (user.getRoles().contains("admin"))
-      mode.setMode("Write");
-    else {
-      try {
-        Software software = this.getSoftware(swid);
-        mode.setMode(PermUtils.getAccessLevelForUser(software, username, propid));
-      } catch (Exception e) {
-        mode.setMode("Read");
-      }
+    Software software = null;
+    try {
+      software = this.getSoftware(swid);
+    } catch (Exception e) {
+      mode.setMode("Read");
     }
+    
+    if (user != null && user.getRoles().contains("admin")) {
+      mode.setMode("Write");
+    } else if (software.getPermission().authExists(username, propid)) {
+      String level = PermUtils.getAccessLevelForUser(software, username, propid);
+      mode.setMode(level);
+    } else if (software.getPermission().authExists("*", propid)) {
+      String level = PermUtils.getAccessLevelForUser(software, "*", propid);
+      mode.setMode(level);
+    } else {
+      mode.setMode("Read");
+    }
+
     return mode;
   }
   
-  public List<String> getPermissionTypes()
-  {
+  public List<String> getPermissionTypes() {
     return this.perm_repo.getPermissionTypes();
   }
   
@@ -786,6 +806,9 @@ public class SoftwareRepository {
       if (loggedinuser.getRoles().contains("admin") || 
         PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
         String permns = perm.getId() + "#";
+        if (username.equals(allusers)) {
+          perm.removeAuthsHavingTarget(authorization.getAccessToObjId());
+        }
 
         Map<String, Authorization> auths = perm.getAuthorizations();
         for (Authorization authobj : auths.values()) {
@@ -799,8 +822,13 @@ public class SoftwareRepository {
         }
         if (!updated) {
           authorization.setId(permns + "Auth-" + GUID.get());
-          UserCredentials user = UserDatabase.get().getUser(username);
-          authorization.setAgentId(this.getUserId(user));
+          if (username.equals(allusers)) {
+            authorization.setAgentId(allusers);    
+          } else {
+            UserCredentials user = UserDatabase.get().getUser(username);
+            authorization.setAgentId(this.getUserId(user));        	  
+          }
+
           perm.addAuth(authorization);
         }
 
@@ -822,7 +850,10 @@ public class SoftwareRepository {
       if (loggedinuser.getRoles().contains("admin") || 
         PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
         String permns = perm.getId() + "#";
-
+        if (username.equals(allusers)) {
+          perm.removeAuthsHavingTarget(authorization.getAccessToObjId());
+        }
+        
         Map<String, Authorization> auths = perm.getAuthorizations();
         for (Authorization authobj : auths.values()) {
           if (authobj.getAgentName().equals(username) && 
@@ -833,10 +864,15 @@ public class SoftwareRepository {
             updated = true;
           }
         }
+        
         if (!updated) {
           authorization.setId(permns + "Auth-" + GUID.get());
-          UserCredentials user = UserDatabase.get().getUser(username);
-          authorization.setAgentId(this.getUserId(user));
+          if (username.equals(allusers)) {
+            authorization.setAgentId(allusers);    
+          } else {
+            UserCredentials user = UserDatabase.get().getUser(username);
+            authorization.setAgentId(this.getUserId(user));        	  
+          }
           perm.addAuth(authorization);
         }
 
@@ -852,8 +888,14 @@ public class SoftwareRepository {
 	  Permission perm = getSoftwarePermission(swid);
       if (loggedinuser.getRoles().contains("admin") || 
         PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
-        UserCredentials user = UserDatabase.get().getUser(ownername);
-        perm.addOwnerid(this.getUserId(user));
+        if (ownername.equals(allusers)) {
+          perm.removeAllOwners();
+          perm.addOwnerid(allusers);
+        } else {
+          UserCredentials user = UserDatabase.get().getUser(ownername);
+          perm.addOwnerid(this.getUserId(user));          
+        }
+        
         this.perm_repo.commitPermission(perm, swid);
         return true;
       }
@@ -866,10 +908,17 @@ public class SoftwareRepository {
 	  Permission perm = getSoftwarePermission(swid);
       if (loggedinuser.getRoles().contains("admin") || 
         PermUtils.hasOwnerAccess(perm, loggedinuser.getName())) {
-        UserCredentials user = UserDatabase.get().getUser(ownername);
-        if (perm.removeOwnerid(this.getUserId(user))) {
-          this.perm_repo.commitPermission(perm, swid);
+        if (ownername.equals(allusers)) {
+          if (perm.removeOwnerid(allusers)) {
+            this.perm_repo.commitPermission(perm, swid);
+          } 
+        } else {
+          UserCredentials user = UserDatabase.get().getUser(ownername);
+          if (perm.removeOwnerid(this.getUserId(user))) {
+            this.perm_repo.commitPermission(perm, swid);
+          }        
         }
+
         return true;
       }
     } catch (Exception e) {}

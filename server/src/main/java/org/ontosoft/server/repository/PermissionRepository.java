@@ -117,7 +117,8 @@ public class PermissionRepository {
     KBObject modeprop = this.permontkb.getProperty(ontns + "mode");
     KBObject agentprop = this.permontkb.getProperty(ontns + "agent");
     KBObject accesstoprop = this.permontkb.getProperty(ontns + "accessTo");
-
+    KBObject typeprop = this.permontkb.getProperty(rdfns + "type");
+    
     for(KBTriple t : permkb.genericTripleQuery(swobj, ownerprop, null)) {
       permkb.removeTriple(t);
     }
@@ -131,6 +132,16 @@ public class PermissionRepository {
       permkb.addTriple(swobj, ownerprop, ownerobj);   
     }
 
+    for(KBTriple t : permkb.genericTripleQuery(null, typeprop, authcls)) {
+      KBObject authobj = t.getSubject();
+      if (!perm.getAuthorizations().containsKey(authobj.getID())) {
+    	permkb.removeTriple(t);
+        for(KBTriple kt : permkb.genericTripleQuery(authobj, null, null)) {
+          permkb.removeTriple(kt);
+        }
+      }
+    }
+    
     for(Authorization auth : perm.getAuthorizations().values()) {
       KBObject modeobj = readcls;
       if (auth.getAccessMode().getId().equals(auth.getAccessMode().WMODEURI()))
@@ -147,10 +158,11 @@ public class PermissionRepository {
       if(modeobj != null && agentobj != null && accesstoobj != null) {
         KBObject authobj = permkb.getIndividual(auth.getId());
         if(authobj == null)
-          authobj = permkb.createObjectOfClass(auth.getId(), authcls);
-
+          authobj = permkb.createObjectOfClass(auth.getId(), authcls); 
+        
         for(KBTriple t : permkb.genericTripleQuery(authobj, modeprop, null))
           permkb.removeTriple(t);
+        
         permkb.addTriple(authobj, modeprop, modeobj);
         permkb.setPropertyValue(authobj, agentprop, agentobj);
         permkb.setPropertyValue(authobj, accesstoprop, accesstoobj);

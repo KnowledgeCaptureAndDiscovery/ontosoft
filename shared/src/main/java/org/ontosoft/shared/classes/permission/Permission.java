@@ -1,6 +1,7 @@
 package org.ontosoft.shared.classes.permission;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -44,6 +45,10 @@ public class Permission {
       index++;
 	}
     return removed;
+  }
+  
+  public void removeAllOwners() {
+    owners.clear();
   }
   
   public List<Agent> getOwners() {
@@ -111,5 +116,25 @@ public class Permission {
     if (!modeupdated) {
       addAuth(authorization);
     }
+  }
+  
+  public void removeAuthsHavingTarget(String accessToObjId) {
+    for(Iterator<Map.Entry<String, Authorization>> it = getAuthorizations().entrySet().iterator(); it.hasNext();) {
+      Map.Entry<String, Authorization> entry = it.next();
+      if(entry.getValue().getAccessToObjId().equals(accessToObjId)) {
+        it.remove();
+      }
+    }	  
+  }
+  
+  public boolean authExists(String username, String accessToObjId) {
+    boolean exists = false;
+    for(Authorization auth:getAuthorizations().values()) {
+      if(auth.getAgentName().equals(username) &&
+        auth.getAccessToObjId().equals(accessToObjId)) {
+        exists = true;
+      }
+    }
+	return exists;
   }
 }
