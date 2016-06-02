@@ -41,7 +41,6 @@ import org.ontosoft.shared.utils.PermUtils;
 import org.ontosoft.shared.classes.users.UserCredentials;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hp.hpl.jena.datatypes.xsd.XSDDateTime;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
@@ -657,7 +656,7 @@ public class SoftwareRepository {
       if(agent != null)
         summary.setUser(agent.getName());
       if(time != null && time.getValue() != null) {
-        Date timestamp = ((XSDDateTime)time.getValue()).asCalendar().getTime();
+        Date timestamp = (Date)time.getValue();
         summary.setTime(timestamp.getTime());
       }
       list.add(summary);
@@ -932,7 +931,7 @@ public class SoftwareRepository {
   public Boolean getPermissionFeatureEnabled() {
     PropertyListConfiguration props = Config.get().getProperties();
     String isenabled = props.getString("perm_feature_enabled");
-    if(isenabled.equals("true")) {
+    if(isenabled != null && isenabled.equals("true")) {
       return true;
     }
     return false;

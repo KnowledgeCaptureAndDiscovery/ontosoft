@@ -19,6 +19,7 @@ import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.HasSoftwareHandlers;
@@ -101,6 +102,8 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   @UiField 
   PageHeader title;
   
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+
   Vocabulary vocabulary;
   Software software;
   String propidselected;
@@ -507,7 +510,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
             setpermbutton.setEnabled(false);
             permlist.refresh();
           } else {
-            SoftwareREST.getPropertyAccessLevelForUser(software.getName(), propidselected, 
+            api.getPropertyAccessLevelForUser(software.getName(), propidselected, 
               username, new Callback<AccessMode, Throwable>() {
               @Override
               public void onFailure(Throwable reason) {
@@ -527,7 +530,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
   
   private void setPermissionList() {
-    SoftwareREST.getPermissionTypes(new Callback<List<String>, Throwable>() {
+    this.api.getPermissionTypes(new Callback<List<String>, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
         AppNotification.notifyFailure(reason.getMessage());
@@ -586,7 +589,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         mode.setMode(permtype);
         authorization.setAccessMode(mode);
 
-        SoftwareREST.setPropertyPermissionForUser(software.getName(), authorization, 
+        this.api.setPropertyPermissionForUser(software.getName(), authorization, 
           new Callback<Boolean, Throwable>() {
           @Override
           public void onFailure(Throwable reason) {

@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.gwtbootstrap3.client.ui.Anchor;
 import org.gwtbootstrap3.client.ui.Button;
@@ -19,6 +22,7 @@ import org.gwtbootstrap3.client.ui.constants.PanelType;
 import org.gwtbootstrap3.client.ui.constants.Toggle;
 import org.gwtbootstrap3.extras.select.client.ui.MultipleSelect;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionHandler;
 import org.ontosoft.client.components.form.facet.events.HasFacetHandlers;
@@ -55,7 +59,10 @@ public class FacetSelector extends Panel
   String parentid;
   MultipleSelect selectbox;
   Anchor anchor;
-  
+
+  SoftwareREST api;
+  Map<String, SoftwareREST> apis;
+
   public FacetSelector(Vocabulary vocabulary, String facetId,
       List<MetadataProperty> props, 
       MetadataType type, String parentid) {
@@ -72,6 +79,8 @@ public class FacetSelector extends Panel
     this.add(getMainPanel());    
     
     handlerManager = new HandlerManager(this);
+    
+    this.initAPIs();
   }
   
   private PanelHeader getPanelHeader() {
@@ -148,34 +157,59 @@ public class FacetSelector extends Panel
     return body;
   }
   
+  private void initAPIs() {
+    this.api = SoftwareREST.get(Config.getServerURL());
+    
+    this.apis = new HashMap<String, SoftwareREST>();
+    this.apis.put(SoftwareREST.LOCAL, this.api);
+    
+    final List<Map<String, String>> xservers = Config.getExternalServers();
+    for(Map<String, String> xserver : xservers) {
+      String xname = xserver.get("name");
+      String xurl = xserver.get("server");
+      SoftwareREST xapi = SoftwareREST.get(xurl);
+      this.apis.put(xname, xapi);
+    }    
+  }
+  
   public void fetchEnumerations() {
-    SoftwareREST.getEnumerationsForType(type.getId(), 
-        new Callback<List<MetadataEnumeration>, Throwable>() {
-          @Override
-          public void onSuccess(List<MetadataEnumeration> enumlist) {
-            enumerations = enumlist;
-            Collections.sort(enumerations, new Comparator<MetadataEnumeration>() {
-              @Override
-              public int compare(MetadataEnumeration enum1, 
-                  MetadataEnumeration enum2) {
-                if(enum1.getLabel() != null && enum2.getLabel() != null)
-                  return enum1.getLabel().compareToIgnoreCase(enum2.getLabel());
-                return 0;
+    final List<String> loaded = new ArrayList<String>();
+    this.enumerations = new ArrayList<MetadataEnumeration>();
+    final HashSet<MetadataEnumeration> uniques = new HashSet<MetadataEnumeration>();
+    for(final String sname : this.apis.keySet()) {
+      SoftwareREST sapi = this.apis.get(sname);
+      sapi.getEnumerationsForType(type.getId(), 
+          new Callback<List<MetadataEnumeration>, Throwable>() {
+            @Override
+            public void onSuccess(List<MetadataEnumeration> enumlist) {
+              loaded.add(sname);
+              uniques.addAll(enumlist);
+              if(loaded.size() == apis.keySet().size()) {
+                enumerations.addAll(uniques);
+                Collections.sort(enumerations, new Comparator<MetadataEnumeration>() {
+                  @Override
+                  public int compare(MetadataEnumeration enum1, 
+                      MetadataEnumeration enum2) {
+                    if(enum1.getLabel() != null && enum2.getLabel() != null)
+                      return enum1.getLabel().compareToIgnoreCase(enum2.getLabel());
+                    return 0;
+                  }
+                });
+                for(MetadataEnumeration menum : enumerations) {
+                  Option opt = new Option();
+                  opt.setText(menum.getLabel());
+                  opt.setValue(menum.getId());
+                  selectbox.add(opt);
+                }
+                selectbox.refresh();
               }
-            });
-            for(MetadataEnumeration menum : enumerations) {
-              Option opt = new Option();
-              opt.setText(menum.getLabel());
-              opt.setValue(menum.getId());
-              selectbox.add(opt);
             }
-            selectbox.refresh();
-          }
-          public void onFailure(Throwable reason) {
-            GWT.log("WARNING !! could not load enumerations for "+type.getId(), reason);
-          }
-      }
-    );    
+            public void onFailure(Throwable reason) {
+              GWT.log("WARNING !! could not load enumerations for "+type.getId(), reason);
+            }
+        }
+      );
+    }
   }
   
   private void handleEnumerationText() {

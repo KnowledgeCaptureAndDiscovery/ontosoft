@@ -40,6 +40,8 @@ public class CommunityView extends ParameterizedViewImpl
   @UiField
   PageHeader title;
   
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+  
   private ListDataProvider<MetadataEnumeration> listProvider = 
       new ListDataProvider<MetadataEnumeration>();
   
@@ -62,7 +64,7 @@ public class CommunityView extends ParameterizedViewImpl
   }
   
   private void initVocabulary() {
-    SoftwareREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
+    this.api.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary vocab) {
         vocabulary = vocab;
@@ -108,7 +110,7 @@ public class CommunityView extends ParameterizedViewImpl
   }
     
   private void initAgents() {
-    SoftwareREST.getEnumerationsForType(KBConstants.PROVNS() + "Agent", 
+    this.api.getEnumerationsForType(KBConstants.PROVNS() + "Agent", 
         new Callback<List<MetadataEnumeration>, Throwable>() {
       @Override
       public void onSuccess(List<MetadataEnumeration> list) {

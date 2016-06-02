@@ -14,6 +14,7 @@ import org.gwtbootstrap3.client.ui.Row;
 import org.gwtbootstrap3.client.ui.constants.DeviceSize;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
 import org.gwtbootstrap3.client.ui.constants.PanelType;
+import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.browse.EntityBrowser;
@@ -67,6 +68,8 @@ public class BrowseView extends ParameterizedViewImpl
   @UiField
   CategoryPieChart piechart;
   
+  SoftwareREST api = SoftwareREST.get(Config.getServerURL());
+
   Software software;
   String softwarename;
   String softwarerdf;
@@ -98,7 +101,7 @@ public class BrowseView extends ParameterizedViewImpl
   }
   
   private void initVocabulary() {
-    SoftwareREST.getVocabulary(new Callback<Vocabulary, Throwable>() {
+    this.api.getVocabulary(new Callback<Vocabulary, Throwable>() {
       @Override
       public void onSuccess(Vocabulary vocab) {
         vocabulary = vocab;
@@ -115,7 +118,7 @@ public class BrowseView extends ParameterizedViewImpl
   private void initSoftware(String softwarename) {
     loading.setVisible(true);
     
-    SoftwareREST.getSoftware(softwarename, new Callback<Software, Throwable>() {
+    this.api.getSoftware(softwarename, new Callback<Software, Throwable>() {
       @Override
       public void onSuccess(Software sw) {
         software = sw;
@@ -132,7 +135,7 @@ public class BrowseView extends ParameterizedViewImpl
   }
   
   private void initSoftwareRDF() {
-    SoftwareREST.getSoftwareRDF(software.getId(), new Callback<String, Throwable>() {
+    this.api.getSoftwareRDF(software.getId(), new Callback<String, Throwable>() {
       @Override
       public void onSuccess(String rdf) {
         softwarerdf = rdf;
