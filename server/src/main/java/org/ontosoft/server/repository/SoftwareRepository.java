@@ -82,8 +82,8 @@ public class SoftwareRepository {
   
   public SoftwareRepository() {
     setConfiguration();
+    registerPlugins();    
     initializeKB();
-    registerPlugins();
     this.prov = new ProvenanceRepository();
     this.perm_repo = new PermissionRepository();
   }
