@@ -74,11 +74,13 @@ public class MeasurementEntityInput extends HorizontalPanel implements IEntityIn
   
   private Entity getValue(Double value) {
     entity.setValue(value);
+    entity.setUnits(unitsbox.getValue());    
     return entity;
   }
   
   private Entity getValue(String units) {
-    this.entity.setUnits(units);
+    entity.setValue(valuebox.getValue());
+    entity.setUnits(units);
     return entity;
   }
 
