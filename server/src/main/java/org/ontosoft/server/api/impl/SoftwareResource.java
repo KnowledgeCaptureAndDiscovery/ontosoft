@@ -1,5 +1,7 @@
 package org.ontosoft.server.api.impl;
 
+import io.swagger.annotations.Api;
+
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ import org.ontosoft.shared.search.EnumerationFacet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Path("")
+@Api(value="")
 @DeclareRoles({"user", "admin", "importer"})
 public class SoftwareResource implements SoftwareService {
 

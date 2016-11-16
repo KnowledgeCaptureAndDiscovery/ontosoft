@@ -21,6 +21,7 @@
 		<jersey.version>2.21</jersey.version>
 		<javax.rs-api.version>2.0.1</javax.rs-api.version>
 		<jackson.version>2.4.6</jackson.version>
+		<swagger.version>1.5.9</swagger.version>		
 		<commons-configuration.version>1.10</commons-configuration.version>
 		<wings-ontapi.version>4.0-SNAPSHOT</wings-ontapi.version>
 		<jbcrypt.version>0.3m</jbcrypt.version>
@@ -107,6 +108,12 @@
 			<version>${jbcrypt.version}</version>
 		</dependency>
 		
+		<!-- Swagger (OpenAPI) -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-jersey2-jaxrs</artifactId>
+			<version>${swagger.version}</version>
+		</dependency>		
 	</dependencies>
     
 	<build>

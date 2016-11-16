@@ -1,5 +1,7 @@
 package org.ontosoft.server.api.impl;
 
+import io.swagger.annotations.Api;
+
 import java.util.List;
 
 import javax.annotation.security.DeclareRoles;
@@ -26,6 +28,7 @@ import org.ontosoft.shared.classes.users.UserSession;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Path("")
+@Api(value="")
 @DeclareRoles({"user", "admin", "importer"})
 public class UserResource implements UserService {
   @Context
@@ -73,6 +76,7 @@ public class UserResource implements UserService {
    */
   
   @GET
+  @Path("users")
   @Produces("application/json")
   @RolesAllowed("user")
   public List<String> getUsers() {
@@ -154,7 +158,7 @@ public class UserResource implements UserService {
   }
 
   @GET
-  @Path("user/{username}/roles")
+  @Path("users/{username}/roles")
   @Produces("application/json")
   @RolesAllowed("user")
   public List<String> getUserRoles(@PathParam("username") String username) {

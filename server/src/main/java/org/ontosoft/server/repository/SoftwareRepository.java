@@ -450,7 +450,9 @@ public class SoftwareRepository {
     
     if (update) {
       String accesslevel = PermUtils.getAccessLevelForUser(sw, user.getName(), sw.getId());
-      if (user.getRoles().contains("admin") || accesslevel.equals("Write")) {
+      if (user.getRoles().contains("admin") || 
+          PermUtils.hasOwnerAccess(sw.getPermission(), user.getName())
+          || accesslevel.equals("Write")) {
         isModerator = true;
       }
     }

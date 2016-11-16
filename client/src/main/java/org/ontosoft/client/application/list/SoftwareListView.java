@@ -461,6 +461,7 @@ public class SoftwareListView extends ParameterizedViewImpl
         public void onSuccess(Software sw) {
           // Add item to list
           SoftwareSummary newsw = new SoftwareSummary(sw);
+          newsw.setExternalRepositoryId(SoftwareREST.LOCAL);
           addToList(newsw);
           updateList();
           
