@@ -15,6 +15,7 @@ import org.gwtbootstrap3.client.ui.Label;
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.TabListItem;
 import org.gwtbootstrap3.client.ui.TabPane;
+import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
@@ -98,6 +99,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   @UiField
   SimplePager pager;
   
+  @UiField 
+  PageHeader title;
+  
   SoftwareREST api = SoftwareREST.get(Config.getServerURL());
 
   Vocabulary vocabulary;
@@ -113,6 +117,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 	      new ListDataProvider<Authorization>();
 
   private Comparator<Authorization> metacompare;
+  private String allusers = "All Users(*)";
   
   public SoftwareForm() {
     initWidget(uiBinder.createAndBindUi(this));
@@ -388,6 +393,8 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     
     initAgents();
     
+    setBrowsePermissionHeader();
+    
     String newuser = userlist.getValue();
     if (newuser != null && !newuser.equals(""))
       selectPermissionForUser(newuser);
@@ -399,17 +406,19 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     HashSet<String> permusers = new HashSet<String>();
 
     String propid = KBConstants.ONTNS() + this.propidselected;
-	
+
+    
     for (Iterator<Authorization> iter = authorizations.listIterator(); iter.hasNext(); ) {
       Authorization auth = iter.next();
-      if (!permusers.contains(auth.getAgentName()) &&
+      if (!permusers.contains(auth.getAgentName()) && 
         auth.getAccessMode().getMode().equals("Write") &&
-        (auth.getAccessToObjId().equals(propid) || auth.getAccessToObjId().equals(software.getId()))) {
-        authlist.add(auth);
-        permusers.add(auth.getAgentName());
-	  }
-	}
-	
+        (auth.getAccessToObjId().equals(propid) || auth.getAccessToObjId().equals(this.software.getId())) &&
+        !auth.getAgentName().equals("*")) {
+          authlist.add(auth);
+          permusers.add(auth.getAgentName());
+      }
+    }
+    
     for (Agent owner:software.getPermission().getOwners()) {
       if (!permusers.contains(owner.getName())) {
         permusers.add(owner.getName());
@@ -426,13 +435,25 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         authlist.add(auth);
       }
     }
-	
+    
     Collections.sort(authlist, metacompare);
     listProvider.getList().clear();
     listProvider.getList().addAll(authlist);
     listProvider.flush();
 
     Window.scrollTo(0, 0);        
+  }
+  
+  private void setBrowsePermissionHeader() {
+    String perm_header = "Default Permission: ";
+    String propid = KBConstants.ONTNS() + this.propidselected;
+    String mode = PermUtils.getAccessLevelForUser(this.software, "*", propid);
+    if (mode.equals("Write"))
+      perm_header += "Write";
+    else
+      perm_header += "Read";
+		    
+    title.setSubText(perm_header);
   }
   
   private void setUserList() {
@@ -444,8 +465,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 
       @Override
       public void onSuccess(List<String> list) {
+      	Option opt = new Option();
+      	opt.setText(allusers);
+      	userlist.add(opt);
+      	
         for(String name : list) {
-          Option opt = new Option();
+          opt = new Option();
           opt.setText(name);
           opt.setValue(name);
           userlist.add(opt);
@@ -459,9 +484,11 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     permlist.setValue(accesslevel);
   }
   
-  private void selectPermissionForUser(final String username) {	 
+  private void selectPermissionForUser(String name) {	 
 	permlist.setEnabled(true);
 	setpermbutton.setEnabled(true);
+	
+	final String username = name.equals(allusers) ? "*" :name;
 	
 	if (software.getPermission().ownernameExists(username) ||
       PermUtils.getAccessLevelForUser(software.getPermission(), username, software.getId()).equals("Write")) {
@@ -477,7 +504,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 
         @Override
         public void onSuccess(List<String> roles) {
-          if (roles.contains("admin")) {
+          if (roles != null && roles.contains("admin")) {
             selectAccessLevel("Write");  
             permlist.setEnabled(false);
             setpermbutton.setEnabled(false);
@@ -539,8 +566,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
   
   private void submitPermissionForm() {
-    final String username = userlist.getValue();
+    String name = userlist.getValue();
     final String permtype = permlist.getValue();
+    final String username = name.equals(allusers) ? "*" :name;
     
     UserSession session = SessionStorage.getSession();
     if (session != null) {
@@ -571,6 +599,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 	    		        
           @Override
           public void onSuccess(Boolean success) {
+            if (username.equals("*")) {
+              software.getPermission().removeAuthsHavingTarget(authorization.getAccessToObjId());
+            }
             permissiondialog.hide();
             AppNotification.notifySuccess("Permission updated!", 2000);
             software.getPermission().addOrUpdateAuth(authorization);

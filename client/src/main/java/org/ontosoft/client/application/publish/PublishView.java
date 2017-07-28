@@ -14,7 +14,9 @@ import org.gwtbootstrap3.client.ui.ButtonGroup;
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
 import org.gwtbootstrap3.client.ui.Label;
+import org.gwtbootstrap3.client.ui.PageHeader;
 import org.ontosoft.client.Config;
+
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.chart.CategoryBarChart;
@@ -37,6 +39,7 @@ import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
+import org.ontosoft.shared.utils.PermUtils;
 
 import com.github.gwtd3.api.D3;
 import com.google.gwt.cell.client.Cell;
@@ -59,6 +62,7 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 
 import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.gwt.CellTable;
+
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
 
@@ -118,6 +122,9 @@ public class PublishView extends ParameterizedViewImpl
   @UiField
   SimplePager pager;
   
+  @UiField
+  PageHeader title;
+  
   SoftwareREST api = SoftwareREST.get(Config.getServerURL());
 
   Vocabulary vocabulary;
@@ -125,6 +132,8 @@ public class PublishView extends ParameterizedViewImpl
   Software software;
   String loggedinuser;
 
+  private String allusers = "All Users(*)";
+  
   private ListDataProvider<Authorization> listProvider = 
 	      new ListDataProvider<Authorization>();
 
@@ -193,7 +202,7 @@ public class PublishView extends ParameterizedViewImpl
         @Override
         public String getValue(Authorization menum) {
           return menum.getAgentName();
-      }
+        }
     };
     table.addColumn(namecol, "Username");
     namecol.setSortable(true);
@@ -257,7 +266,8 @@ public class PublishView extends ParameterizedViewImpl
       Authorization auth = iter.next();
       if (!permusers.contains(auth.getAgentName()) && 
         auth.getAccessMode().getMode().equals("Write") &&
-        auth.getAccessToObjId().equals(this.software.getId())) {
+        auth.getAccessToObjId().equals(this.software.getId()) &&
+        !auth.getAgentName().equals("*")) {
         authlist.add(auth);
         permusers.add(auth.getAgentName());
       }
@@ -368,6 +378,17 @@ public class PublishView extends ParameterizedViewImpl
         loading.setVisible(false);
       }
     }, reload);
+  }
+  
+  private void setBrowsePermissionHeader() {
+    String perm_header = "Default Permission: ";
+    String mode = PermUtils.getAccessLevelForUser(this.software, "*", this.software.getId());
+    if (mode.equals("Write"))
+      perm_header += "Write";
+    else
+      perm_header += "Read";
+    
+    title.setSubText(perm_header);
   }
   
   private void initialDraw() {
@@ -627,6 +648,8 @@ public class PublishView extends ParameterizedViewImpl
     initAgents();
     initMaterial();
     
+    setBrowsePermissionHeader();
+    
     Window.scrollTo(0, 0);
   }
   
@@ -637,18 +660,24 @@ public class PublishView extends ParameterizedViewImpl
     setpermbutton.setEnabled(true);
     String newuser = userlist.getValue();
     selectPermissionForUser(newuser);
+    if(newuser.equals(allusers))
+    	ownerrole.setEnabled(false);
+    else
+    	ownerrole.setEnabled(true);
   }
   
   private void selectAccessLevel(String accesslevel) {
     permlist.setValue(accesslevel);
   }
   
-  private void selectPermissionForUser(final String username) {	  
+  private void selectPermissionForUser(String name) {	  
   	permlist.setEnabled(true);
   	ownerrole.setEnabled(true);
   	setpermbutton.setEnabled(true);
   	ownerrole.setValue(false);
-	
+  	
+  	final String username = name.equals(allusers) ? "*" :name;
+  	
     UserREST.getUserRoles(username, new Callback<List<String>, Throwable>() {
       @Override
       public void onFailure(Throwable reason) {
@@ -657,7 +686,7 @@ public class PublishView extends ParameterizedViewImpl
 
       @Override
       public void onSuccess(List<String> roles) {
-        if (roles.contains("admin")) {
+        if (roles!= null && roles.contains("admin")) {
           permlist.setEnabled(false);
           setpermbutton.setEnabled(false);
           ownerrole.setEnabled(false);
@@ -697,8 +726,12 @@ public class PublishView extends ParameterizedViewImpl
 
       @Override
       public void onSuccess(List<String> list) {
+    	Option opt = new Option();
+    	opt.setText(allusers);
+    	userlist.add(opt);
+    	
         for(String name : list) {
-          Option opt = new Option();
+          opt = new Option();
           opt.setText(name);
           opt.setValue(name);
           userlist.add(opt);
@@ -747,7 +780,8 @@ public class PublishView extends ParameterizedViewImpl
   }
   
   private void submitPermissionForm() {
-    final String username = userlist.getValue();
+    String name = userlist.getValue();
+    final String username = name.equals(allusers) ? "*" :name;
     final String permtype = permlist.getValue();
     UserSession session = SessionStorage.getSession();
 
@@ -766,6 +800,9 @@ public class PublishView extends ParameterizedViewImpl
           public void onSuccess(Boolean success) {
             permissiondialog.hide();
             AppNotification.notifySuccess("Owner Added!", 2000);
+            if (username.equals("*")) {
+              software.getPermission().removeAllOwners();
+            }
             software.getPermission().addOwnerid(username);
           }
         });
@@ -789,6 +826,9 @@ public class PublishView extends ParameterizedViewImpl
             
             @Override
             public void onSuccess(Boolean success) {
+              if (username.equals("*")) {
+                software.getPermission().removeAuthsHavingTarget(authorization.getAccessToObjId());
+              }
               software.getPermission().addOrUpdateAuth(authorization);
               
               api.removeSoftwareOwner(software.getName(), username, 
