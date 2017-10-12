@@ -1,9 +1,10 @@
 # OntoSoft
-Software repository portal built on semantic technologies
+OntoSoft is a distributed semantic registry for scientific software. Software metadata is organized using the [OntoSoft ontology](http://ontosoft-earthcube.github.io/ontosoft/ontosoft%20ontology/v1.0.1/doc/) along six dimensions that matter to scientists: identify software, understand and assess software, execute software, get support for the software, do research with the software, and update the software. 
 
-The OntoSoft portal provides access to the OntoSoft system (http://www.ontosoft.org/) by allowing you to browse, and add models to the repository.
+OntoSoft is a distributed registry where each site is owned and maintained by a community of interest, with a distributed semantic query
+capability that allows users to search across all sites. The registry has metadata crowdsourcing capabilities, supported through access control so that software authors can allow others to expand on specific metadata properties.
 
-Demo here:
+A live instance of the portal may be found here:
 http://www.ontosoft.org/portal/
 
 Installation
