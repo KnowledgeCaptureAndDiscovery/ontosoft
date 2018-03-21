@@ -176,7 +176,12 @@ public class BrowseView extends ParameterizedViewImpl
       return;
 
     initializePieChart();
-    softwareTitle.setText(sw.getLabel());
+    
+    Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
+    if (swName != null)
+    	softwareTitle.setText(swName.getValue().toString());
+    else
+    	softwareTitle.setText(sw.getName());
     
     List<Entity> authorlist = sw.getPropertyValues(KBConstants.ONTNS()+"hasCreator");
     String authors = authorlist.toString();

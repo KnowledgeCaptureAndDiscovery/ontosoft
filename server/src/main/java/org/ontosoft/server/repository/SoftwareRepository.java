@@ -612,11 +612,16 @@ public class SoftwareRepository {
                    + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
                    + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
                    + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n"
                    + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))";
     String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
         + " (GROUP_CONCAT(?creator) as ?creators)"
         + " (SAMPLE(?agent) as ?user)"
         + " (SAMPLE(?time) as ?posttime)"
+        + " (SAMPLE(?name) as ?swname)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
     
@@ -628,6 +633,7 @@ public class SoftwareRepository {
       KBObject creator = soln.get(2).getObject();
       KBObject agent = soln.get(3).getObject();
       KBObject time = soln.get(4).getObject();
+      KBObject name = soln.get(5).getObject();
       
       if(sw == null)
         continue;
@@ -638,6 +644,10 @@ public class SoftwareRepository {
       summary.setLabel(allkb.getLabel(sw));
       summary.setType(topclass);
       summary.setPermission(this.perm_repo.getSoftwarePermission(sw.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
       
       if(desc != null && desc.getValue() != null) {
         String description = desc.getValue().toString();
@@ -711,6 +721,10 @@ public class SoftwareRepository {
         }
         sw.addPropertyValues(prop.getId(), entities);
       }
+      
+      Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
+      if (swName != null)
+    	  sw.setSoftwareName(swName.getValue().toString());
       
       sw.setProvenance(this.prov.getSoftwareProvenance(swid));
       sw.setPermission(this.perm_repo.getSoftwarePermission(swid));
