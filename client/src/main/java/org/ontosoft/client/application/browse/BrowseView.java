@@ -181,7 +181,7 @@ public class BrowseView extends ParameterizedViewImpl
     if (swName != null)
     	softwareTitle.setText(swName.getValue().toString());
     else
-    	softwareTitle.setText(sw.getName());
+    	softwareTitle.setText(sw.getLabel());
     
     List<Entity> authorlist = sw.getPropertyValues(KBConstants.ONTNS()+"hasCreator");
     String authors = authorlist.toString();
