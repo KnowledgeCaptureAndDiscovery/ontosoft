@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import org.fusesource.restygwt.client.DirectRestService;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Authorization;
@@ -62,6 +63,13 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}/provenance")
   @Produces("application/rdf+xml")
   public String getProvenanceGraph(@PathParam("name") String name);
+  
+  /* versions */
+  @POST
+  @Path("software/{name}/version")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Software publishVersion(@PathParam("name") String name, @JsonProperty("software-version") SoftwareVersion version);
   
   @GET
   @Path("vocabulary")

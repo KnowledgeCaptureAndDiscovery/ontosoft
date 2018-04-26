@@ -3,14 +3,17 @@ package org.ontosoft.client.application.browse;
 import java.util.List;
 
 import org.fusesource.restygwt.client.JsonEncoderDecoder;
+import org.gwtbootstrap3.client.shared.event.ModalShownEvent;
 import org.gwtbootstrap3.client.ui.Button;
 import org.gwtbootstrap3.client.ui.Column;
 import org.gwtbootstrap3.client.ui.Heading;
+import org.gwtbootstrap3.client.ui.Modal;
 import org.gwtbootstrap3.client.ui.PageHeader;
 import org.gwtbootstrap3.client.ui.Panel;
 import org.gwtbootstrap3.client.ui.PanelBody;
 import org.gwtbootstrap3.client.ui.PanelHeader;
 import org.gwtbootstrap3.client.ui.Row;
+import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.DeviceSize;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
 import org.gwtbootstrap3.client.ui.constants.PanelType;
@@ -22,8 +25,10 @@ import org.ontosoft.client.components.chart.CategoryBarChart;
 import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataCategory;
@@ -38,6 +43,8 @@ import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
@@ -61,6 +68,15 @@ public class BrowseView extends ParameterizedViewImpl
 
   @UiField
   VerticalPanel loading;
+  
+  @UiField
+  Button publishbutton, cancelbutton, bigpublishbutton;
+  
+  @UiField
+  Modal publishdialog;
+  
+  @UiField
+  TextBox softwarelabel;
   
   @UiField
   Button htmlbutton, rdfbutton, jsonbutton, editbutton;
@@ -300,6 +316,8 @@ public class BrowseView extends ParameterizedViewImpl
     
     initMaterial();
     Window.scrollTo(0, 0);
+    
+    bigpublishbutton.getParent().setVisible(true);
   }
   
   
@@ -390,6 +408,60 @@ public class BrowseView extends ParameterizedViewImpl
   private void easeIn(Widget w) {
     D3.select(w.getElement()).style("opacity", 0);
     D3.select(w.getElement()).transition().duration(400).style("opacity", 1);
+  }
+  
+  @UiHandler("publishdialog")
+  void onShowWindow(ModalShownEvent event) {
+    softwarelabel.setFocus(true);
+  }
+  
+  @UiHandler("bigpublishbutton")
+  void onOpenPublishButtonClick(ClickEvent event) {
+    publishdialog.show();
+  }
+  
+  @UiHandler("publishbutton")
+  void onPublishButtonClick(ClickEvent event) {
+    submitPublishForm();
+    event.stopPropagation();
+  }
+  
+  @UiHandler("softwarelabel")
+  void onSoftwareEnter(KeyPressEvent event) {
+    if(event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ENTER) {
+      submitPublishForm();
+    }
+  }
+  
+  @UiHandler("cancelbutton")
+  void onCancelPublish(ClickEvent event) {
+    softwarelabel.setValue(null);
+  }
+  
+  private void submitPublishForm() {
+    String label = softwarelabel.getValue();
+    if(softwarelabel.validate(true)) {
+      SoftwareVersion tmpsw = new SoftwareVersion();
+      tmpsw.setLabel(label);
+      this.api.publishSoftwareVersion(softwarename, tmpsw, new Callback<Software, Throwable>() {
+        public void onSuccess(Software sw) {
+          // Add item to list
+          SoftwareSummary newsw = new SoftwareSummary(sw);
+          newsw.setExternalRepositoryId(SoftwareREST.LOCAL);
+          // TODO: do the same to versions
+          //addToList(newsw);
+          //updateList();
+          
+          // Go to the new item
+          History.newItem(NameTokens.publish + "/" + sw.getName());
+          
+          publishdialog.hide();
+          softwarelabel.setValue(null);
+        }
+        @Override
+        public void onFailure(Throwable exception) { }
+      });
+    } 
   }
 
 }

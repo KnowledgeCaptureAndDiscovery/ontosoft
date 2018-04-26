@@ -8,6 +8,21 @@
 
 	<b:Row>
 		<b:Column size="XS_12">
+			<b:Modal title="Publish Software Version" closable="true" fade="true" ui:field="publishdialog">
+				<b:ModalBody>
+					<b:FormGroup>
+						<b:TextBox ui:field="softwarelabel" placeholder="Type the Software version identification"
+							autoComplete="false" allowBlank="false" />
+						<b:HelpBlock />
+					</b:FormGroup>
+				</b:ModalBody>
+				<b:ModalFooter>
+					<b:Button type="INFO" dataDismiss="MODAL" ui:field="cancelbutton"
+						text="Cancel" />				
+					<b:Button type="SUCCESS" dataDismiss="MODAL" ui:field="publishbutton"
+						text="Submit" />
+				</b:ModalFooter>
+			</b:Modal>
 			<g:VerticalPanel width="100%" horizontalAlignment="CENTER"
 				ui:field="loading" visible="true">
 				<b:Heading text="Loading" size="H2" />
@@ -20,6 +35,11 @@
 				<b:PageHeader ui:field="softwareTitle" />				
 			</g:FlowPanel>
 			<g:FlowPanel>
+				<b:ButtonGroup pull="LEFT" styleName="btn-group btn-group-responsive has-bottom-margin" 
+				visible="true">
+					<b:Button ui:field="bigpublishbutton" type="INFO" icon="CLOUD_UPLOAD"
+						text="Publish your software version" />
+				</b:ButtonGroup>
 				<b:ButtonGroup pull="LEFT" styleName="btn-group btn-group-responsive has-bottom-margin">
 					<b:Tooltip title="Produce an HTML document that you can save and use in
 						your website" showDelayMs="500">

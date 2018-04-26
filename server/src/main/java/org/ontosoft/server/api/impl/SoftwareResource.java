@@ -25,6 +25,7 @@ import org.ontosoft.server.users.User;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.permission.AccessMode;
@@ -230,6 +231,29 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception in add: " + e.getMessage());
     }
   }
+  
+  @POST
+  @Path("software/{name}/version")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @RolesAllowed("user")
+  @Override
+	public Software publishVersion(@PathParam("name") String name, @JsonProperty("software") SoftwareVersion version) {
+	  try {
+	      String swid = this.repo.addSoftwareVersion(version,
+	          (User) securityContext.getUserPrincipal());
+	      if(swid != null) {
+	        version.setId(swid);
+	        return this.repo.getSoftwareVersion(swid);
+	        //response.sendRedirect(swid);
+	        //return software;
+	      }
+	      return null;
+	    } catch (Exception e) {
+	      e.printStackTrace();
+	      throw new RuntimeException("Exception in add: " + e.getMessage());
+	    }
+	}
 
   @PUT
   @Path("software/{name}")

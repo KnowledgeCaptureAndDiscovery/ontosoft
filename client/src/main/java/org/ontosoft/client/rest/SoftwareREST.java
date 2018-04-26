@@ -14,6 +14,7 @@ import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -268,6 +269,31 @@ public class SoftwareREST {
         callback.onFailure(exception);
       }
     }).call(this.service).publish(software);    
+  }
+  
+  public void publishSoftwareVersion(final String software, 
+	  final SoftwareVersion version, 
+      final Callback<Software, Throwable> callback) {
+    REST.withCallback(new MethodCallback<SoftwareVersion>() {
+      @Override
+      public void onSuccess(Method method, SoftwareVersion sw) {
+        if(sw != null) {
+          softwareCache.put(sw.getName(), sw);
+          softwareList.add(new SoftwareSummary(sw));
+          AppNotification.notifySuccess(version.getLabel() + " published. Now enter some details !", 1500);
+          callback.onSuccess(sw);
+        }
+        else {
+          AppNotification.notifyFailure("Could not publish");
+          callback.onFailure(new Throwable("Returned null"));
+        }
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not publish");
+        callback.onFailure(exception);
+      }
+    }).call(this.service).publishVersion(software, version);    
   }
   
   public void updateSoftware(final Software software, 
