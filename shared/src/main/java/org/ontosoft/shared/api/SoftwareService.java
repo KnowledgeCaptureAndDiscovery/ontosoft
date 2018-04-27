@@ -61,7 +61,7 @@ public interface SoftwareService extends DirectRestService {
   @GET
   @Path("software/{name}/version/{version}")
   @Produces("application/json")
-  public Software getVersion(@PathParam("name") String name, @PathParam("version") String version);
+  public SoftwareVersion getVersion(@PathParam("name") String name, @PathParam("version") String version);
 
   @GET
   @Path("software/{name}")

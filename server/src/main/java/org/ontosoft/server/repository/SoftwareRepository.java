@@ -122,7 +122,8 @@ public class SoftwareRepository {
   private void setConfiguration() {
     PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
-    onturi = KBConstants.ONTURI();
+    //onturi = KBConstants.ONTURI();
+    onturi = "http://localhost/software-v2.owl";
     caturi = KBConstants.CATURI();
     liburi = this.LIBURI();
     enumuri = this.ENUMURI();
@@ -873,6 +874,7 @@ public class SoftwareRepository {
     String ons = KBConstants.ONTNS();
     String pns = KBConstants.PROVNS();
     String swquery = "\t ?x a <" + ons +"SoftwareVersion> .\n"
+    			   + "\t ?swobj <" + ons + "hasSoftwareVersion> ?x .\n"
                    + "\t OPTIONAL {\n"
                    + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
                    + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
@@ -893,28 +895,36 @@ public class SoftwareRepository {
         + " (SAMPLE(?agent) as ?user)"
         + " (SAMPLE(?time) as ?posttime)"
         + " (SAMPLE(?name) as ?swname)"
+        + " (SAMPLE(?swobj) as ?software)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
         
     ArrayList<SoftwareVersionSummary> list = new ArrayList<SoftwareVersionSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
-      KBObject sw = soln.get(0).getObject();
+      KBObject version = soln.get(0).getObject();
       KBObject desc = soln.get(1).getObject();
       KBObject creator = soln.get(2).getObject();
       KBObject agent = soln.get(3).getObject();
       KBObject time = soln.get(4).getObject();
       KBObject name = soln.get(5).getObject();
+      KBObject sw = soln.get(6).getObject();
       
-      if(sw == null)
+      if(version == null)
         continue;
       
+      SoftwareSummary swsummary = new SoftwareSummary();
+      swsummary.setId(sw.getID());
+      swsummary.setName(sw.getName());
+      swsummary.setType(topclass);
+      
       SoftwareVersionSummary summary = new SoftwareVersionSummary();
-      summary.setId(sw.getID());
-      summary.setName(sw.getName());
-      summary.setLabel(allkb.getLabel(sw));
-      summary.setType(topclass);
-      summary.setPermission(this.perm_repo.getSoftwarePermission(sw.getID()));
+      summary.setSoftwareSummary(swsummary);
+      summary.setId(version.getID());
+      summary.setName(version.getName());
+      summary.setLabel(allkb.getLabel(version));
+      summary.setType(topclassversion);
+      summary.setPermission(this.perm_repo.getSoftwarePermission(version.getID()));
       
       if(name != null && name.getValue() != null) {
     	  summary.setSoftwareName(name.getValueAsString());

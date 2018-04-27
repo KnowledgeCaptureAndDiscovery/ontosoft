@@ -1,4 +1,4 @@
-package org.ontosoft.client.application.versions;
+package org.ontosoft.client.application.version.list;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -241,7 +241,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
         public SafeHtml getValue(SoftwareVersionSummary summary) {
             SafeHtmlBuilder sb = new SafeHtmlBuilder();
             
-            String link = "#" + NameTokens.browse + "/" + summary.getName();
+            String link = "#" + NameTokens.version + "/" + summary.getSoftwareSummary().getName() + ":" + summary.getName();
             String extralabel = "";
             
             if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL)) {

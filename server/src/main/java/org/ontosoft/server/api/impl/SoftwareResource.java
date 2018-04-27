@@ -123,7 +123,7 @@ public class SoftwareResource implements SoftwareService {
   @Path("software/{name}/version/{version}")
   @Produces("application/json")
   @Override
-  public Software getVersion(@PathParam("name") String name, @PathParam("version") String version) {
+  public SoftwareVersion getVersion(@PathParam("name") String name, @PathParam("version") String version) {
     try {
       String vid = version;
       String swid = name;

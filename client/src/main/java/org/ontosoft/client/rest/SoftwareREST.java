@@ -45,6 +45,8 @@ public class SoftwareREST {
   
   private HashMap<String, Software> softwareCache = 
       new HashMap<String, Software>();
+  private HashMap<String, SoftwareVersion> softwareVersionCache = 
+	      new HashMap<String, SoftwareVersion>();
   private HashMap<String, List<MetadataEnumeration>> enumCache = 
       new HashMap<String, List<MetadataEnumeration>>();
   
@@ -233,6 +235,38 @@ public class SoftwareREST {
           callback.onFailure(exception);
         }
       }).call(this.service).get(URL.encodeQueryString(swname));
+    }
+  }
+  
+  public void getSoftwareVersion(final String swname, final String vname, final Callback<SoftwareVersion, Throwable> callback,
+      final boolean reload) {
+    //GWT.log(softwareCache.keySet().toString() + ": "+reload);
+    if(softwareVersionCache.containsKey(vname) && !reload) {
+      callback.onSuccess(softwareVersionCache.get(vname));
+    }    
+    else {
+      REST.withCallback(new MethodCallback<SoftwareVersion>() {
+        @Override
+        public void onSuccess(Method method, SoftwareVersion sw) {
+          //GWT.log("caching "+sw.getName());
+          if(sw != null) {
+            softwareVersionCache.put(sw.getName(), sw);
+            if(reload)
+              AppNotification.notifySuccess(sw.getLabel() + " reloaded", 1000);
+            callback.onSuccess(sw);
+          }
+          else {
+            AppNotification.notifyFailure("Could not find "+vname);
+            callback.onFailure(new Throwable("Software details could not be found"));
+          }
+        }
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          GWT.log("Could nto fetch software: "+vname, exception);
+          AppNotification.notifyFailure("Could not fetch software: "+vname);
+          callback.onFailure(exception);
+        }
+      }).call(this.service).getVersion(URL.encodeQueryString(swname), URL.encodeQueryString(vname));
     }
   }
   

@@ -3,6 +3,8 @@ package org.ontosoft.client.application;
 import java.util.Arrays;
 
 import org.ontosoft.client.application.browse.BrowseView;
+import org.ontosoft.client.application.version.browse.VersionBrowseView;
+import org.ontosoft.client.application.version.list.SoftwareVersionListView;
 import org.ontosoft.client.application.compare.CompareView;
 import org.ontosoft.client.application.list.SoftwareListView;
 import org.ontosoft.client.application.publish.PublishView;
@@ -36,7 +38,8 @@ public class ApplicationPresenter extends
   @Inject
   public ApplicationPresenter(EventBus eventBus, final MyView view, MyProxy proxy,
       final PlaceManager placemanager, final PublishView publishview,
-      final BrowseView browseview, final SoftwareListView listview, 
+      final BrowseView browseview, final VersionBrowseView versionbrowseview, final SoftwareListView listview,
+      final SoftwareVersionListView versionlistview,
       final CompareView compareview, final UserView userview) {
     super(eventBus, view, proxy, RevealType.Root);
     
@@ -54,6 +57,10 @@ public class ApplicationPresenter extends
           sectionview = publishview;
         else if(nametoken.equals(NameTokens.browse))
           sectionview = browseview;
+        else if(nametoken.equals(NameTokens.version))
+    	  sectionview = versionbrowseview;
+        else if(nametoken.equals(NameTokens.versions))
+          sectionview = versionlistview;
         else if(nametoken.equals(NameTokens.list))
           sectionview = listview;        
         else if(nametoken.equals(NameTokens.compare))

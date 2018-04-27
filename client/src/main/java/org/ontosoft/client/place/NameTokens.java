@@ -4,6 +4,7 @@ public class NameTokens {
   public static final String home = "home";
   public static final String publish = "publish";
   public static final String browse = "browse";
+  public static final String version = "version";
   public static final String search = "search";
   public static final String community = "community";
   public static final String training = "training";
@@ -24,6 +25,10 @@ public class NameTokens {
 
   public static String getBrowse() {
     return browse;
+  }
+  
+  public static String getVersion() {
+    return version;
   }
 
   public static String getSearch() {
