@@ -13,6 +13,7 @@ import org.fusesource.restygwt.client.RestServiceProxy;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
@@ -39,6 +40,7 @@ public class SoftwareREST {
   
   private Vocabulary vocabulary;
   private List<SoftwareSummary> softwareList;
+  private List<SoftwareVersionSummary> softwareVersionList;
   private SoftwareService service;
   
   private HashMap<String, Software> softwareCache = 
@@ -50,6 +52,8 @@ public class SoftwareREST {
       new ArrayList<Callback<Vocabulary, Throwable>>();  
   private ArrayList<Callback<List<SoftwareSummary>, Throwable>> list_callbacks =
       new ArrayList<Callback<List<SoftwareSummary>, Throwable>>();
+  private ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>> list_version_callbacks =
+	      new ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>>();
   private ArrayList<Callback<Boolean, Throwable>> perm_callbacks =
       new ArrayList<Callback<Boolean,Throwable>>();
   
@@ -142,11 +146,55 @@ public class SoftwareREST {
     }
   }
   
+  public void getSoftwareVersionList(final Callback<List<SoftwareVersionSummary>, Throwable> callback,
+      boolean reload) {
+    if(softwareVersionList != null && !reload) {
+      callback.onSuccess(softwareVersionList);
+    }
+    else {
+      softwareVersionList = null;
+      if(list_version_callbacks.isEmpty()) {
+        list_version_callbacks.add(callback);
+        REST.withCallback(new MethodCallback<List<SoftwareVersionSummary>>() {
+          @Override
+          public void onSuccess(Method method, List<SoftwareVersionSummary> swlist) {
+            softwareVersionList = swlist;
+            for(Callback<List<SoftwareVersionSummary>, Throwable> cb : list_version_callbacks)
+              cb.onSuccess(softwareVersionList);    
+            list_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load software list");
+            callback.onFailure(exception);
+          }
+        }).call(this.service).versions();
+      }
+      else {
+        list_version_callbacks.add(callback);
+      }
+    }
+  }
+  
   public void getSoftwareListFaceted(List<EnumerationFacet> facets,
       final Callback<List<SoftwareSummary>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<SoftwareSummary>>() {
       @Override
       public void onSuccess(Method method, List<SoftwareSummary> swlist) {
+        callback.onSuccess(swlist);            
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(this.service).listWithFacets(facets);
+  }
+  
+  public void getSoftwareVersionListFaceted(List<EnumerationFacet> facets,
+      final Callback<List<SoftwareVersionSummary>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<SoftwareVersionSummary>>() {
+      @Override
+      public void onSuccess(Method method, List<SoftwareVersionSummary> swlist) {
         callback.onSuccess(swlist);            
       }
       @Override

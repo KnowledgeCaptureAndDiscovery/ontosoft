@@ -19,6 +19,7 @@ import org.ontosoft.server.users.User;
 import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.server.util.Config;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.Software;
@@ -740,6 +741,10 @@ public class SoftwareRepository {
     return this.getAllSoftwareWithFacets(null);
   }
   
+  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersion() throws Exception {
+    return this.getAllSoftwareVersionWithFacets(null);
+  }
+  
   public ArrayList<SoftwareSummary> getAllSoftwareWithFacets(
       List<EnumerationFacet> facets) throws Exception {
     /*if(facets == null || facets.size() == 0)
@@ -804,6 +809,107 @@ public class SoftwareRepository {
         continue;
       
       SoftwareSummary summary = new SoftwareSummary();
+      summary.setId(sw.getID());
+      summary.setName(sw.getName());
+      summary.setLabel(allkb.getLabel(sw));
+      summary.setType(topclass);
+      summary.setPermission(this.perm_repo.getSoftwarePermission(sw.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
+      
+      if(desc != null && desc.getValue() != null) {
+        String description = desc.getValue().toString();
+        description = Pattern.compile("\\n\\nInitial metadata was retrieved .*$", Pattern.DOTALL).
+          matcher(description).replaceAll("");
+        if(description.length() > 300)
+          description = description.substring(0, 297) + "...";
+        summary.setDescription(description);
+      }
+      if(creator != null && creator.getValue() != null) {
+        List<String> authors = new ArrayList<String>();
+        for(String creatorid : creator.getValue().toString().split("\\s")) {
+          KBObject authobj = allkb.getResource(creatorid);
+          authors.add(allkb.getLabel(authobj));
+        }
+        summary.setAuthors(authors);
+      }
+      if(agent != null)
+        summary.setUser(agent.getName());
+      if(time != null && time.getValue() != null) {
+        Date timestamp = (Date)time.getValue();
+        summary.setTime(timestamp.getTime());
+      }
+      list.add(summary);
+    }
+    return list;
+  }
+  
+  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersionWithFacets(
+      List<EnumerationFacet> facets) throws Exception {
+    /*if(facets == null || facets.size() == 0)
+      return getAllSoftware();*/
+    
+    String facetquery = "";
+    if(facets != null) {
+      for(EnumerationFacet facet : facets) {
+        int i=0;
+        int num = facet.getEnumerationIds().size();
+        if(num > 0) {
+          facetquery += "\t {\n";
+          for(String propid : facet.getPropertyIds()) {
+            for(String enumid : facet.getEnumerationIds()) {
+              if(i > 0)
+                facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              i++;
+            }
+          }
+          facetquery += "\t } .\n";
+        }
+      }
+    }
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
+    String swquery = "\t ?x a <" + ons +"SoftwareVersion> .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
+                   + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
+                   + "\t } .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasCreator> ?creator .\n"
+                   + "\t } .\n"
+                   + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
+                   + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
+                   + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n"
+                   + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))";
+    String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
+        + " (GROUP_CONCAT(?creator) as ?creators)"
+        + " (SAMPLE(?agent) as ?user)"
+        + " (SAMPLE(?time) as ?posttime)"
+        + " (SAMPLE(?name) as ?swname)"
+        + " WHERE {\n" + swquery + facetquery + "}"
+        + " GROUP BY ?x\n";
+        
+    ArrayList<SoftwareVersionSummary> list = new ArrayList<SoftwareVersionSummary>();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+    for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
+      KBObject sw = soln.get(0).getObject();
+      KBObject desc = soln.get(1).getObject();
+      KBObject creator = soln.get(2).getObject();
+      KBObject agent = soln.get(3).getObject();
+      KBObject time = soln.get(4).getObject();
+      KBObject name = soln.get(5).getObject();
+      
+      if(sw == null)
+        continue;
+      
+      SoftwareVersionSummary summary = new SoftwareVersionSummary();
       summary.setId(sw.getID());
       summary.setName(sw.getName());
       summary.setLabel(allkb.getLabel(sw));

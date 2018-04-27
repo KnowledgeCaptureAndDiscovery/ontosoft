@@ -24,6 +24,7 @@ import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.server.users.User;
 import org.ontosoft.shared.api.SoftwareService;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
@@ -69,6 +70,19 @@ public class SoftwareResource implements SoftwareService {
   public List<SoftwareSummary> list() {
     try {
       return this.repo.getAllSoftware();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
+  @Path("versions")
+  @Produces("application/json")
+  @Override
+  public List<SoftwareVersionSummary> versions() {
+    try {
+      return this.repo.getAllSoftwareVersion();
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());

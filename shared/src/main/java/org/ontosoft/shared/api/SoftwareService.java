@@ -38,6 +38,11 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   public List<SoftwareSummary> list();
   
+  @GET
+  @Path("versions")
+  @Produces("application/json")
+  public List<SoftwareVersionSummary> versions();
+  
   /*
    * Query functions
    */
