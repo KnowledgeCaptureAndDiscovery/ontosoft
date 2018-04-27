@@ -98,10 +98,6 @@ public class SoftwareRepository {
     return liburi;
   }
   
-  public String LIBURIVersion() {
-    return server.replaceAll("\\/$", "") + "/version/";
-  }
-  
   private String USERURI() {
     return server.replaceAll("\\/$", "") + "/users/"; 
   }
@@ -114,10 +110,6 @@ public class SoftwareRepository {
     return LIBURI();
   }
   
-  public String LIBNSVersion() {
-	    return LIBURIVersion();
-	  }
-  
   public String ENUMURI() {
     return LIBURI() + "enumerations";
   }
@@ -129,8 +121,7 @@ public class SoftwareRepository {
   private void setConfiguration() {
     PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
-    //onturi = KBConstants.ONTURI();
-    onturi = "http://localhost/software-v2.owl";
+    onturi = KBConstants.ONTURI();
     caturi = KBConstants.CATURI();
     liburi = this.LIBURI();
     enumuri = this.ENUMURI();
@@ -428,7 +419,7 @@ public class SoftwareRepository {
    */
   public String addSoftwareVersion(String swid, SoftwareVersion version, User user) throws Exception {
     if(version.getId() == null) 
-      version.setId(this.LIBNSVersion() + "SoftwareVersion-" + GUID.get());
+      version.setId(this.LIBNS() + swid + "/version/" + "SoftwareVersion-" + GUID.get());
     
     if(version.getType() == null)
       version.setType(topclassversion);

@@ -113,11 +113,11 @@ public class SoftwareResource implements SoftwareService {
     try {
       String vid = version;
       String swid = name;
-      if(!version.startsWith("http:"))
-        vid = repo.LIBNS() + version;
       if(!name.startsWith("http:"))
           swid = repo.LIBNS() + name;
-      return this.repo.getSoftwareVersion(vid,swid);
+      if(!name.startsWith("http:"))
+          vid = swid + "/version/" + version;
+      return this.repo.getSoftwareVersion(swid, vid);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());
