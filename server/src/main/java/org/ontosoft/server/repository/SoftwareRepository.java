@@ -542,6 +542,26 @@ public class SoftwareRepository {
               swkb.addPropertyValue(swobj, swprop, swval);
               continue;
             }
+            
+            if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
+            	String[] parts = entity.getId().split("#");
+            	if (parts.length > 1) {
+            	  String vid = this.LIBNS() + sw.getName() + "/version/" + parts[1];
+            	  entity.setId(vid);
+            	}
+            	if(!this.hasSoftware(entity.getId())) {
+	              SoftwareVersion subsw = new SoftwareVersion();
+	              subsw.setId(entity.getId());
+	              subsw.setLabel(entity.getValue().toString());
+	              subsw.setType(entity.getType());
+	              String swid = this.addSoftwareVersion(sw.getName(), subsw, user);
+	              entity.setId(swid);
+	            }
+	
+	            KBObject swval = swkb.getResource(entity.getId());
+	            swkb.addPropertyValue(swobj, swprop, swval);
+	            continue;
+	          }
 	          
             // Get entity adapter for class
             IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
