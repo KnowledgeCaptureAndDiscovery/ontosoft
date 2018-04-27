@@ -129,7 +129,8 @@ public class SoftwareRepository {
   private void setConfiguration() {
     PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
-    onturi = KBConstants.ONTURI();
+    //onturi = KBConstants.ONTURI();
+    onturi = "http://localhost/software-v2.owl";
     caturi = KBConstants.CATURI();
     liburi = this.LIBURI();
     enumuri = this.ENUMURI();
@@ -855,7 +856,7 @@ public class SoftwareRepository {
           
           MetadataType type = vocabulary.getType(prop.getRange());
           // Treat software entities specially 
-          if(vocabulary.isA(type, vocabulary.getType(topclass))) {
+          if(vocabulary.isA(type, vocabulary.getType(topclass)) || vocabulary.isA(type, vocabulary.getType(topclassversion))) {
             KBAPI tmpkb = fac.getKB(valobj.getID(), OntSpec.PLAIN);
             KBObject valswobj = tmpkb.getIndividual(valobj.getID());
             if(valswobj != null) {
