@@ -14,6 +14,7 @@ import javax.ws.rs.Produces;
 
 import org.fusesource.restygwt.client.DirectRestService;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
@@ -37,6 +38,9 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   public List<SoftwareSummary> list();
   
+  /*
+   * Query functions
+   */
   @POST
   @Path("search")
   @Produces("application/json")
@@ -48,6 +52,11 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}")
   @Produces("application/json")
   public Software get(@PathParam("name") String name);
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/json")
+  public Software getVersion(@PathParam("name") String name, @PathParam("version") String version);
 
   @GET
   @Path("software/{name}")
@@ -69,7 +78,7 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}/version")
   @Produces("application/json")
   @Consumes("application/json")
-  public Software publishVersion(@PathParam("name") String name, @JsonProperty("software-version") SoftwareVersion version);
+  public Software publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version);
   
   @GET
   @Path("vocabulary")

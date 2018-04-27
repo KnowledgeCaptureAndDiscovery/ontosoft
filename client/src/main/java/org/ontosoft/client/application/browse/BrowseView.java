@@ -443,8 +443,8 @@ public class BrowseView extends ParameterizedViewImpl
     if(softwarelabel.validate(true)) {
       SoftwareVersion tmpsw = new SoftwareVersion();
       tmpsw.setLabel(label);
-      this.api.publishSoftwareVersion(softwarename, tmpsw, new Callback<Software, Throwable>() {
-        public void onSuccess(Software sw) {
+      this.api.publishSoftwareVersion(softwarename, tmpsw, new Callback<SoftwareVersion, Throwable>() {
+        public void onSuccess(SoftwareVersion sw) {
           // Add item to list
           SoftwareSummary newsw = new SoftwareSummary(sw);
           newsw.setExternalRepositoryId(SoftwareREST.LOCAL);

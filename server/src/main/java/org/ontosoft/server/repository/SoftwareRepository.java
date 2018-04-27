@@ -98,6 +98,10 @@ public class SoftwareRepository {
     return liburi;
   }
   
+  public String LIBURIVersion() {
+    return server.replaceAll("\\/$", "") + "/version/";
+  }
+  
   private String USERURI() {
     return server.replaceAll("\\/$", "") + "/users/"; 
   }
@@ -109,6 +113,10 @@ public class SoftwareRepository {
   public String LIBNS() {
     return LIBURI();
   }
+  
+  public String LIBNSVersion() {
+	    return LIBURIVersion();
+	  }
   
   public String ENUMURI() {
     return LIBURI() + "enumerations";
@@ -413,32 +421,32 @@ public class SoftwareRepository {
   /**
    * Adding new software
    * 
-   * @param sw Software
+   * @param version Software
    * @return
    * @throws Exception
    */
-  public String addSoftwareVersion(SoftwareVersion sw, User user) throws Exception {
-    if(sw.getId() == null) 
-      sw.setId(this.LIBNS() + "SoftwareVersion-" + GUID.get());
+  public String addSoftwareVersion(String swid, SoftwareVersion version, User user) throws Exception {
+    if(version.getId() == null) 
+      version.setId(this.LIBNSVersion() + "SoftwareVersion-" + GUID.get());
     
-    if(sw.getType() == null)
-      sw.setType(topclassversion);
+    if(version.getType() == null)
+      version.setType(topclassversion);
     
     // First Look for existing software with same label
     for(MetadataEnumeration menum : enumerations.get(topclassversion)) {
-      if(menum.getLabel().equalsIgnoreCase(sw.getLabel())) {
-        sw.setId(menum.getId());
-        return sw.getId();
+      if(menum.getLabel().equalsIgnoreCase(version.getLabel())) {
+        version.setId(menum.getId());
+        return version.getId();
       }
     }
-    String swid = updateOrAddSoftwareVersion(sw, user, false);
-    if(swid != null)  {
-      Provenance prov = this.prov.getAddProvenance(sw, user);
+    String vid = updateOrAddSoftwareVersion(swid, version, user, false);
+    if(version != null)  {
+      Provenance prov = this.prov.getAddProvenance(version, user);
       this.prov.addProvenance(prov);
-      Permission perm = this.perm_repo.createSoftwarePermisson(sw.getId(), user);
-      this.perm_repo.commitPermission(perm, sw.getId());
+      Permission perm = this.perm_repo.createSoftwarePermisson(version.getId(), user);
+      this.perm_repo.commitPermission(perm, version.getId());
     }
-    return swid;
+    return vid;
   }
   
   /**
@@ -581,106 +589,117 @@ public class SoftwareRepository {
     return null;    
   }
   
-  private String updateOrAddSoftwareVersion(SoftwareVersion sw, User user, boolean update) throws Exception {
-	    boolean isModerator = false;
-	    Boolean permFetureEnabled = getPermissionFeatureEnabled();
-	    
-	    if (update) {
-	      String accesslevel = PermUtils.getAccessLevelForUser(sw, user.getName(), sw.getId());
-	      if (user.getRoles().contains("admin") || 
-	          PermUtils.hasOwnerAccess(sw.getPermission(), user.getName())
-	          || accesslevel.equals("Write")) {
-	        isModerator = true;
-	      }
-	    }
+  private String updateOrAddSoftwareVersion(String swid, SoftwareVersion version, User user, boolean update) throws Exception {
+    boolean isModerator = false;
+    Boolean permFetureEnabled = getPermissionFeatureEnabled();
+    
+    if (update) {
+      String accesslevel = PermUtils.getAccessLevelForUser(version, user.getName(), version.getId());
+      if (user.getRoles().contains("admin") || 
+          PermUtils.hasOwnerAccess(version.getPermission(), user.getName())
+          || accesslevel.equals("Write")) {
+        isModerator = true;
+      }
+    }
 
-	    KBAPI swkb = fac.getKB(sw.getId(), OntSpec.PLAIN, true);
-	    String swtype = sw.getType();
-	    if(swtype == null)
-	      swtype = topclassversion;
-	    KBObject swcls = this.ontkb.getConcept(swtype);
+    KBAPI vkb = fac.getKB(version.getId(), OntSpec.PLAIN, true);
+    String swtype = version.getType();
+    if(swtype == null)
+      swtype = topclassversion;
+    KBObject swcls = this.ontkb.getConcept(swtype);
 
-	    KBObject swobj = update ? swkb.getIndividual(sw.getId())
-	        : swkb.createObjectOfClass(sw.getId(), swcls);
-	    
-	    if(swobj == null)
-	      return null;
-	    
-	    if(sw.getLabel() != null)
-	      swkb.setLabel(swobj, sw.getLabel());
-	    
-	    for(String propid : sw.getValue().keySet()) {
-	      if (!permFetureEnabled ||
-	          !update            || 
-	          isModerator        || 
-	          PermUtils.getAccessLevelForUser(sw, user.getName(), propid).equals("Write")) {
-	        KBObject swprop = this.ontkb.getProperty(propid);
-	        if (swprop != null) {
-	          List<Entity> entities = sw.getValue().get(propid);
-	          MetadataProperty prop = vocabulary.getProperty(swprop.getID());
-		        
-	          // Remove existing property values if any
-	          if (update) {
-	            for(KBTriple t : swkb.genericTripleQuery(swobj, swprop, null))
-	              swkb.removeTriple(t);
-	          }
-		      
-	          for(Entity entity: entities) {
-	            MetadataType type = vocabulary.getType(entity.getType());
-		          
-	            // Treat software entities specially 
-	            if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
-	              if(!this.hasSoftware(entity.getId())) {
-	                SoftwareVersion subsw = new SoftwareVersion();
-	                subsw.setId(entity.getId());
-	                subsw.setLabel((String)entity.getValue());
-	                subsw.setType(entity.getType());
-	                String swid = this.addSoftwareVersion(subsw, user);
-	                entity.setId(swid);
-	              }
-		
-	              KBObject swval = swkb.getResource(entity.getId());
-	              swkb.addPropertyValue(swobj, swprop, swval);
-	              continue;
-	            }
-		          
-	            // Get entity adapter for class
-	            IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
-	            if(adapter != null) {
-	              if(entity.getId() == null) {
-	                entity.setId(GUID.randomEntityId(sw.getId(), entity.getType()));
-	              }
-	              if(adapter.saveEntity(entity)) {
-	                KBObject entityobj = swkb.getIndividual(entity.getId());
-	                if(entityobj == null)
-	                  entityobj = ontkb.getIndividual(entity.getId());
-	                if(entityobj == null)
-	                  entityobj = enumkb.getIndividual(entity.getId());
-	                if(entityobj != null)
-	                  swkb.addPropertyValue(swobj, swprop, entityobj);
-	              }
-	            } else {
-	              System.out.println("No adapter registered for type: "+entity.getType());
-	            }
-	          }
-	        }
-	      }
-	    }
-	    
-	    if(swkb.save() && enumkb.save()) {
-	      if(!update) {
-	        MetadataEnumeration menum = new MetadataEnumeration();
-	        menum.setId(sw.getId());
-	        menum.setLabel(sw.getLabel());
-	        menum.setType(sw.getType());
-	        menum.setName(sw.getName());
-	        addEnumerationToVocabulary(menum);
-	        //vocabulary.setNeedsReload(true);
-	      }
-	      return sw.getId();
-	    }
-	    return null;    
-	  }
+    KBObject vobj = update ? vkb.getIndividual(version.getId())
+        : vkb.createObjectOfClass(version.getId(), swcls);
+    
+    if(vobj == null)
+      return null;
+    
+    if(version.getLabel() != null)
+      vkb.setLabel(vobj, version.getLabel());
+    
+    for(String propid : version.getValue().keySet()) {
+      if (!permFetureEnabled ||
+          !update            || 
+          isModerator        || 
+          PermUtils.getAccessLevelForUser(version, user.getName(), propid).equals("Write")) {
+        KBObject vprop = this.ontkb.getProperty(propid);
+        if (vprop != null) {
+          List<Entity> entities = version.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(vprop.getID());
+	        
+          // Remove existing property values if any
+          if (update) {
+            for(KBTriple t : vkb.genericTripleQuery(vobj, vprop, null))
+              vkb.removeTriple(t);
+          }
+	      
+          for(Entity entity: entities) {
+            MetadataType type = vocabulary.getType(entity.getType());
+	          
+            // Treat software entities specially 
+            if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
+              if(!this.hasSoftware(entity.getId())) {
+                SoftwareVersion subsw = new SoftwareVersion();
+                subsw.setId(entity.getId());
+                subsw.setLabel((String)entity.getValue());
+                subsw.setType(entity.getType());
+                subsw.setSoftware(swid);
+                String vid = this.addSoftwareVersion(swid, subsw, user);
+                entity.setId(vid);
+              }
+	
+              KBObject swval = vkb.getResource(entity.getId());
+              vkb.addPropertyValue(vobj, vprop, swval);
+              
+              continue;
+            }
+	          
+            // Get entity adapter for class
+            IEntityAdapter adapter = EntityRegistrar.getAdapter(vkb, ontkb, enumkb, prop.getRange());
+            if(adapter != null) {
+              if(entity.getId() == null) {
+                entity.setId(GUID.randomEntityId(version.getId(), entity.getType()));
+              }
+              if(adapter.saveEntity(entity)) {
+                KBObject entityobj = vkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = ontkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = enumkb.getIndividual(entity.getId());
+                if(entityobj != null)
+                  vkb.addPropertyValue(vobj, vprop, entityobj);
+              }
+            } else {
+              System.out.println("No adapter registered for type: "+entity.getType());
+            }
+          }
+        }
+      }
+    }
+    
+    if(!update) {
+    	KBAPI swkb = fac.getKB(this.LIBNS() + swid, OntSpec.PLAIN);
+    	KBObject swobj = swkb.getIndividual(this.LIBNS() + swid);
+    	KBObject swprop = this.ontkb.getProperty(KBConstants.ONTNS()+"hasSoftwareVersion");
+    	swkb.addPropertyValue(swobj, swprop, vobj);
+    	swkb.save();
+    }
+    
+    if(vkb.save() && enumkb.save()) {
+      if(!update) {
+    	
+        MetadataEnumeration menum = new MetadataEnumeration();
+        menum.setId(version.getId());
+        menum.setLabel(version.getLabel());
+        menum.setType(version.getType());
+        menum.setName(version.getName());
+        addEnumerationToVocabulary(menum);
+        //vocabulary.setNeedsReload(true);
+      }
+      return version.getId();
+    }
+    return null;    
+  }
   
   
   /**
@@ -867,25 +886,26 @@ public class SoftwareRepository {
     return null;
   }
   
-  public SoftwareVersion getSoftwareVersion(String swid) throws Exception {
-    KBAPI swkb = fac.getKB(swid, OntSpec.PLAIN);
-    KBObject swobj = swkb.getIndividual(swid);
-    if(swobj != null) {
-      SoftwareVersion sw = new SoftwareVersion();
-      sw.setId(swid);
-      sw.setLabel(swkb.getLabel(swobj));
-      sw.setName(swobj.getName());
+  public SoftwareVersion getSoftwareVersion(String swid, String vid) throws Exception {
+    KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
+    KBObject vobj = vkb.getIndividual(vid);
+    if(vobj != null) {
+      SoftwareVersion version = new SoftwareVersion();
+      version.setId(vid);
+      version.setLabel(vkb.getLabel(vobj));
+      version.setName(vobj.getName());
+      version.setSoftware(swid);
       
-      KBObject typeobj = swkb.getPropertyValue(swobj, ontkb.getProperty(rdfns+"type"));
-      sw.setType(typeobj.getID());
+      KBObject typeobj = vkb.getPropertyValue(vobj, ontkb.getProperty(rdfns+"type"));
+      version.setType(typeobj.getID());
 
-      MetadataType swtype = this.vocabulary.getType(sw.getType());
+      MetadataType swtype = this.vocabulary.getType(version.getType());
       
       for(MetadataProperty prop : this.vocabulary.getPropertiesForType(swtype)) {
         
-        KBObject propobj = swkb.getProperty(prop.getId());
+        KBObject propobj = vkb.getProperty(prop.getId());
         ArrayList<Entity> entities = new ArrayList<Entity>();
-        for(KBObject valobj: swkb.getPropertyValues(swobj, propobj)) {
+        for(KBObject valobj: vkb.getPropertyValues(vobj, propobj)) {
           
           MetadataType type = vocabulary.getType(prop.getRange());
           // Treat software entities specially 
@@ -901,21 +921,17 @@ public class SoftwareRepository {
             }
           }
           else {
-            Entity entity = this.getSoftwareEntity(swkb, valobj, prop.getRange());
+            Entity entity = this.getSoftwareEntity(vkb, valobj, prop.getRange());
             if(entity != null)
               entities.add(entity);
           }
         }
-        sw.addPropertyValues(prop.getId(), entities);
+        version.addPropertyValues(prop.getId(), entities);
       }
       
-      Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
-      if (swName != null)
-    	  sw.setSoftwareName(swName.getValue().toString());
-      
-      sw.setProvenance(this.prov.getSoftwareProvenance(swid));
-      sw.setPermission(this.perm_repo.getSoftwarePermission(swid));
-      return sw;
+      version.setProvenance(this.prov.getSoftwareProvenance(vid));
+      version.setPermission(this.perm_repo.getSoftwarePermission(vid));
+      return version;
     }
     return null;
   }

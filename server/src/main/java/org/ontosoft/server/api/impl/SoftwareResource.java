@@ -104,6 +104,25 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/json")
+  @Override
+  public Software getVersion(@PathParam("name") String name, @PathParam("version") String version) {
+    try {
+      String vid = version;
+      String swid = name;
+      if(!version.startsWith("http:"))
+        vid = repo.LIBNS() + version;
+      if(!name.startsWith("http:"))
+          swid = repo.LIBNS() + name;
+      return this.repo.getSoftwareVersion(vid,swid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
 
   @GET
   @Path("software/{name}")
@@ -240,11 +259,11 @@ public class SoftwareResource implements SoftwareService {
   @Override
 	public Software publishVersion(@PathParam("name") String name, @JsonProperty("software") SoftwareVersion version) {
 	  try {
-	      String swid = this.repo.addSoftwareVersion(version,
+	      String vid = this.repo.addSoftwareVersion(name, version,
 	          (User) securityContext.getUserPrincipal());
-	      if(swid != null) {
-	        version.setId(swid);
-	        return this.repo.getSoftwareVersion(swid);
+	      if(vid != null) {
+	        version.setId(vid);
+	        return this.repo.getSoftwareVersion(name, vid);
 	        //response.sendRedirect(swid);
 	        //return software;
 	      }

@@ -273,7 +273,7 @@ public class SoftwareREST {
   
   public void publishSoftwareVersion(final String software, 
 	  final SoftwareVersion version, 
-      final Callback<Software, Throwable> callback) {
+      final Callback<SoftwareVersion, Throwable> callback) {
     REST.withCallback(new MethodCallback<SoftwareVersion>() {
       @Override
       public void onSuccess(Method method, SoftwareVersion sw) {
