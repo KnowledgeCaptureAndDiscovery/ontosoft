@@ -356,8 +356,9 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
     editcol.setFieldUpdater(new FieldUpdater<SoftwareVersionSummary, String>() {
       @Override
       public void update(int index, SoftwareVersionSummary summary, String value) {
-        String swname = summary.getName();
-        History.newItem(NameTokens.publish + "/" + swname);
+        String vname = summary.getName();
+        String swname = summary.getSoftwareSummary().getName();
+        History.newItem(NameTokens.publishversion + "/" + swname + ":" + vname);
       }
     });
     table.addColumn(editcol);
@@ -460,7 +461,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
           updateList();
           
           // Go to the new item
-          History.newItem(NameTokens.publish + "/" + sw.getName());
+          History.newItem(NameTokens.publishversion + "/" + sw.getName());
           
           publishdialog.hide();
           softwarelabel.setValue(null);

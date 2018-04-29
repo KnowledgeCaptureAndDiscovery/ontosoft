@@ -736,6 +736,26 @@ public class SoftwareRepository {
     return false;
   }
   
+  /**
+   * Updating software version (for now just deleting old and adding new)
+   * @param sw
+   * @param swid
+   * @return
+   * @throws Exception
+   */
+  public boolean updateSoftwareVersion(SoftwareVersion newversion, String swid, String vid, User user) 
+      throws Exception {  
+    SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
+    
+    Provenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
+    String nswid = this.updateOrAddSoftwareVersion(swid, newversion, user, true);
+    if(nswid != null) {
+       this.prov.addProvenance(prov);
+       return true;
+    }
+    return false;
+  }
+  
   // TODO: Change this call. Make it more efficient than
   //       crawling through the whole union graph ?
   public ArrayList<SoftwareSummary> getAllSoftware() throws Exception {

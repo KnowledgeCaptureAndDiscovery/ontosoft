@@ -23,22 +23,22 @@ import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.HasSoftwareHandlers;
+import org.ontosoft.client.components.form.events.HasSoftwareVersionHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.PluginResponseHandler;
-import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
-import org.ontosoft.client.components.form.events.SoftwareChangeHandler;
-import org.ontosoft.client.components.form.events.SoftwareSaveEvent;
-import org.ontosoft.client.components.form.events.SoftwareSaveHandler;
 import org.ontosoft.client.components.form.events.SoftwareVersionChangeEvent;
 import org.ontosoft.client.components.form.events.SoftwareVersionChangeHandler;
+import org.ontosoft.client.components.form.events.SoftwareVersionSaveEvent;
+import org.ontosoft.client.components.form.events.SoftwareVersionSaveHandler;
 import org.ontosoft.client.components.form.formgroup.PropertyFormGroup;
+import org.ontosoft.client.components.form.formgroup.PropertySoftwareVersionFormGroup;
 import org.ontosoft.client.components.form.formgroup.input.EntityInput;
 import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
 import org.ontosoft.client.rest.AppNotification;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.client.rest.UserREST;
 import org.ontosoft.shared.classes.entities.Entity;
-import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Agent;
 import org.ontosoft.shared.classes.permission.Authorization;
@@ -73,8 +73,8 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 
-public class SoftwareForm extends Composite 
-implements HasSoftwareHandlers, HasPluginHandlers {
+public class SoftwareVersionForm extends Composite 
+implements HasSoftwareVersionHandlers, HasPluginHandlers {
   private HandlerManager handlerManager;
 
   @UiField
@@ -107,12 +107,12 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   SoftwareREST api = SoftwareREST.get(Config.getServerURL());
 
   Vocabulary vocabulary;
-  Software software;
+  SoftwareVersion version;
   String propidselected;
   
-  Map<String, PropertyFormGroup> propeditors;
+  Map<String, PropertySoftwareVersionFormGroup> propeditors;
   
-  interface Binder extends UiBinder<Widget, SoftwareForm> { };
+  interface Binder extends UiBinder<Widget, SoftwareVersionForm> { };
   private static Binder uiBinder = 
       GWT.create(Binder.class);
   private ListDataProvider<Authorization> listProvider = 
@@ -121,9 +121,9 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   private Comparator<Authorization> metacompare;
   private String allusers = "All Users(*)";
   
-  public SoftwareForm() {
+  public SoftwareVersionForm() {
     initWidget(uiBinder.createAndBindUi(this));
-    propeditors = new HashMap<String, PropertyFormGroup>();
+    propeditors = new HashMap<String, PropertySoftwareVersionFormGroup>();
     handlerManager = new HandlerManager(this);
     initTable();
   }
@@ -189,15 +189,15 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
 
   @Override
-  public HandlerRegistration addSoftwareSaveHandler(
-      SoftwareSaveHandler handler) {
-    return handlerManager.addHandler(SoftwareSaveEvent.TYPE, handler);
+  public HandlerRegistration addSoftwareVersionSaveHandler(
+      SoftwareVersionSaveHandler handler) {
+    return handlerManager.addHandler(SoftwareVersionSaveEvent.TYPE, handler);
   }
   
   @Override
-  public HandlerRegistration addSoftwareChangeHandler(
-      SoftwareChangeHandler handler) {
-    return handlerManager.addHandler(SoftwareChangeEvent.TYPE, handler);
+  public HandlerRegistration addSoftwareVersionChangeHandler(
+      SoftwareVersionChangeHandler handler) {
+    return handlerManager.addHandler(SoftwareVersionChangeEvent.TYPE, handler);
   }
   
   @Override
@@ -218,26 +218,26 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     }
   }
 
-  public Software getSoftware() {
-    return software;
+  public SoftwareVersion getSoftwareVersion() {
+    return version;
   }
 
-  public void setSoftware(Software software) {
-    this.software = software;
+  public void setSoftwareVersion(SoftwareVersion version) {
+    this.version = version;
   }
   
   public void setRawPropertyValues(String propid, List<Object> values) {
-    PropertyFormGroup ed = propeditors.get(propid);
+    PropertySoftwareVersionFormGroup ed = propeditors.get(propid);
     ed.setRawValue(values);
-    software.addPropertyValues(propid, ed.getValue());
-    fireEvent(new SoftwareChangeEvent(software));    
+    version.addPropertyValues(propid, ed.getValue());
+    fireEvent(new SoftwareVersionChangeEvent(version));    
   }
   
   public void setPropertyValues(String propid, List<Entity> entities) {
-    PropertyFormGroup ed = propeditors.get(propid);
+    PropertySoftwareVersionFormGroup ed = propeditors.get(propid);
     ed.setValue(entities);
-    software.addPropertyValues(propid, ed.getValue());
-    fireEvent(new SoftwareChangeEvent(software));    
+    version.addPropertyValues(propid, ed.getValue());
+    fireEvent(new SoftwareVersionChangeEvent(version));    
   }
   
   private void registerEntityInputs() {
@@ -293,7 +293,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     if(mcat == null)
       return;
     
-    for(PropertyFormGroup editor : propeditors.values())
+    for(PropertySoftwareVersionFormGroup editor : propeditors.values())
       editor.setVisible(false);
 
     boolean hasOptional = false;
@@ -329,13 +329,13 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     requiredtab.clear();
     optionaltab.clear();
     
-    MetadataType swtype = vocabulary.getType(software.getType());
+    MetadataType swtype = vocabulary.getType(version.getType());
     List<MetadataProperty> swprops = vocabulary.getPropertiesForType(swtype);
     swprops = vocabulary.filterUneditableProperties(swprops);    
     swprops = vocabulary.orderProperties(swprops);
 
     for(final MetadataProperty mprop : swprops) {
-      PropertyFormGroup editor = new PropertyFormGroup(mprop, this);
+      PropertySoftwareVersionFormGroup editor = new PropertySoftwareVersionFormGroup(mprop, this);
       editor.addPluginResponseHandler(new PluginResponseHandler() {
         @Override
         public void onPluginResponse(PluginResponseEvent event) {
@@ -369,7 +369,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
 
   public void layout() {
-    for(PropertyFormGroup ed : propeditors.values())
+    for(PropertySoftwareVersionFormGroup ed : propeditors.values())
       ed.layout();
   }
 
@@ -403,7 +403,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   }
   
   private void initAgents() {
-    ArrayList<Authorization> authorizations = new ArrayList<Authorization>(this.software.getPermission().getAuthorizations().values());
+    ArrayList<Authorization> authorizations = new ArrayList<Authorization>(this.version.getPermission().getAuthorizations().values());
     ArrayList<Authorization> authlist = new ArrayList<Authorization>();
     HashSet<String> permusers = new HashSet<String>();
 
@@ -414,14 +414,14 @@ implements HasSoftwareHandlers, HasPluginHandlers {
       Authorization auth = iter.next();
       if (!permusers.contains(auth.getAgentName()) && 
         auth.getAccessMode().getMode().equals("Write") &&
-        (auth.getAccessToObjId().equals(propid) || auth.getAccessToObjId().equals(this.software.getId())) &&
+        (auth.getAccessToObjId().equals(propid) || auth.getAccessToObjId().equals(this.version.getId())) &&
         !auth.getAgentName().equals("*")) {
           authlist.add(auth);
           permusers.add(auth.getAgentName());
       }
     }
     
-    for (Agent owner:software.getPermission().getOwners()) {
+    for (Agent owner:version.getPermission().getOwners()) {
       if (!permusers.contains(owner.getName())) {
         permusers.add(owner.getName());
 			
@@ -449,7 +449,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
   private void setBrowsePermissionHeader() {
     String perm_header = "Default Permission: ";
     String propid = KBConstants.ONTNS() + this.propidselected;
-    String mode = PermUtils.getAccessLevelForUser(this.software, "*", propid);
+    String mode = PermUtils.getAccessLevelForUser(this.version, "*", propid);
     if (mode.equals("Write"))
       perm_header += "Write";
     else
@@ -492,8 +492,8 @@ implements HasSoftwareHandlers, HasPluginHandlers {
 	
 	final String username = name.equals(allusers) ? "*" :name;
 	
-	if (software.getPermission().ownernameExists(username) ||
-      PermUtils.getAccessLevelForUser(software.getPermission(), username, software.getId()).equals("Write")) {
+	if (version.getPermission().ownernameExists(username) ||
+      PermUtils.getAccessLevelForUser(version.getPermission(), username, version.getId()).equals("Write")) {
       selectAccessLevel("Write");
       permlist.setEnabled(false);
       setpermbutton.setEnabled(false);		      	
@@ -512,7 +512,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
             setpermbutton.setEnabled(false);
             permlist.refresh();
           } else {
-            api.getPropertyAccessLevelForUser(software.getName(), propidselected, 
+            api.getPropertyAccessLevelForUser(version.getName(), propidselected, 
               username, new Callback<AccessMode, Throwable>() {
               @Override
               public void onFailure(Throwable reason) {
@@ -576,7 +576,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
     if (session != null) {
       String loggedinuser = session.getUsername();
       
-      if (software.getPermission().ownernameExists(loggedinuser) ||
+      if (version.getPermission().ownernameExists(loggedinuser) ||
         session.getRoles().contains("admin")) {
         final Authorization authorization = new Authorization();
         authorization.setId("");
@@ -591,7 +591,7 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         mode.setMode(permtype);
         authorization.setAccessMode(mode);
 
-        this.api.setPropertyPermissionForUser(software.getName(), authorization, 
+        this.api.setPropertyPermissionForUser(version.getName(), authorization, 
           new Callback<Boolean, Throwable>() {
           @Override
           public void onFailure(Throwable reason) {
@@ -602,21 +602,16 @@ implements HasSoftwareHandlers, HasPluginHandlers {
           @Override
           public void onSuccess(Boolean success) {
             if (username.equals("*")) {
-              software.getPermission().removeAuthsHavingTarget(authorization.getAccessToObjId());
+              version.getPermission().removeAuthsHavingTarget(authorization.getAccessToObjId());
             }
             permissiondialog.hide();
             AppNotification.notifySuccess("Permission updated!", 2000);
-            software.getPermission().addOrUpdateAuth(authorization);
+            version.getPermission().addOrUpdateAuth(authorization);
           }
         });
       } else {
         AppNotification.notifyFailure("Not Allowed!");
       }
     }
-  }
-  
-  public HandlerRegistration addSoftwareVersionChangeHandler(
-      SoftwareVersionChangeHandler handler) {
-    return handlerManager.addHandler(SoftwareVersionChangeEvent.TYPE, handler);
   }
 }

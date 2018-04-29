@@ -18,19 +18,18 @@ import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.SessionStorage;
-import org.ontosoft.client.components.form.SoftwareForm;
 import org.ontosoft.client.components.form.SoftwareVersionForm;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.PluginResponseHandler;
-import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
+import org.ontosoft.client.components.form.events.SoftwareVersionChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
 import org.ontosoft.client.components.form.formgroup.input.IEntityInput;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.entities.Entity;
-import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Activity;
 import org.ontosoft.shared.classes.provenance.Agent;
 import org.ontosoft.shared.classes.provenance.ProvEntity;
@@ -56,14 +55,14 @@ import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Label;
 
-public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
+public class PropertySoftwareVersionFormGroup extends FormGroup implements HasPluginHandlers {
   private HandlerManager handlerManager;
 
   private MetadataProperty property;
-  private Software software;
+  private SoftwareVersion version;
   private Vocabulary vocabulary;
   private List<Entity> entities;
-  private SoftwareForm form;
+  private SoftwareVersionForm form;
   private List<IEntityInput> inputs;
   private Map<String, Button> pluginbuttons;
   private ButtonGroup pluginButtonGroup;
@@ -71,14 +70,14 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   private boolean isModerator;
   private boolean permFeatureEnabled;
   
-  public PropertyFormGroup(final MetadataProperty property, SoftwareForm formview) {
+  public PropertySoftwareVersionFormGroup(final MetadataProperty property, SoftwareVersionForm formview) {
     super();
     handlerManager = new HandlerManager(this);
 
     this.property = property;
     this.form = formview;
     
-    this.software = formview.getSoftware();
+    this.version = formview.getSoftwareVersion();
     this.vocabulary = formview.getVocabulary();
     this.entities = new ArrayList<Entity>();
     this.inputs = new ArrayList<IEntityInput>();
@@ -104,7 +103,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   
   private void initializeProperties() {
     updatePropertyPermissions();
-    List<Entity> propEntities = software.getPropertyValues(property.getId());
+    List<Entity> propEntities = version.getPropertyValues(property.getId());
     setValue(propEntities);
     addPluginButtons();
   }
@@ -113,11 +112,11 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
     UserSession session = SessionStorage.getSession();
     if (session != null) {
       String username = session.getUsername();
-      String swaccesslevel = PermUtils.getAccessLevelForUser(software, username, software.getId());
+      String swaccesslevel = PermUtils.getAccessLevelForUser(version, username, version.getId());
       /*
        * Property permissions can only be updated by the admin or software owner.
        */
-      if (software.getPermission().ownernameExists(username) ||
+      if (version.getPermission().ownernameExists(username) ||
         session.getRoles().contains("admin")) {
         this.isModerator = true;
         this.proplocked = false;
@@ -125,7 +124,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
         this.proplocked = false;
         this.isModerator = false;
       } else {
-        String propaccesslevel = PermUtils.getAccessLevelForUser(software, username, property.getId());
+        String propaccesslevel = PermUtils.getAccessLevelForUser(version, username, property.getId());
         if (!propaccesslevel.equals("Write")) {
           this.proplocked = true;
           this.isModerator = false;
@@ -281,8 +280,8 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
           if(!validate())
             e.setValue(null);
           
-          software.updatePropertyValue(property.getId(), e);
-          form.fireEvent(new SoftwareChangeEvent(software));
+          version.updatePropertyValue(property.getId(), e);
+          form.fireEvent(new SoftwareVersionChangeEvent(version));
           //GWT.log(software.getPropertyValues(property.getId()).toString());
           
           toggleInfoBlock(infoblock);
@@ -306,8 +305,8 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
             inputs.remove(ip);
             if(entity.getValue() != null) {
               entity.setValue(null);
-              software.updatePropertyValue(property.getId(), entity);
-              form.fireEvent(new SoftwareChangeEvent(software));
+              version.updatePropertyValue(property.getId(), entity);
+              form.fireEvent(new SoftwareVersionChangeEvent(version));
             }
             //GWT.log(software.getPropertyValues(property.getId()).toString());
           }
@@ -333,7 +332,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
       
       this.add(ig);
       
-      Provenance prov = this.software.getProvenance();
+      Provenance prov = this.version.getProvenance();
       ProvEntity pentity = prov.getEntity(entity.getId());
       if(pentity != null) {
         Activity activity = prov.getActivity(pentity.getGeneratedBy());
@@ -361,14 +360,14 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   
   private Entity getNewEntity(Object value) {
     String proptype = property.getRange();
-    String id = GUID.randomEntityId(software.getId(), proptype);
+    String id = GUID.randomEntityId(version.getId(), proptype);
     
     // Convert software entities to enumerations
     MetadataClass topclass = vocabulary.getType(KBConstants.ONTNS()+"Software");
     MetadataClass eclass = vocabulary.getType(proptype);
     if(vocabulary.isA(eclass, topclass)) {
       proptype = KBConstants.ONTNS()+"EnumerationEntity";
-      id = id.replace(software.getName()+"#", "");
+      id = id.replace(version.getName()+"#", "");
     }
     
     try {
@@ -461,7 +460,7 @@ public class PropertyFormGroup extends FormGroup implements HasPluginHandlers {
   
   private void runPlugin(final String pluginname) {
     SoftwareREST api = SoftwareREST.get(Config.getServerURL());
-    api.runPlugin(pluginname, software, 
+    api.runPlugin(pluginname, version, 
         new Callback<PluginResponse, Throwable>() {
       @Override
       public void onSuccess(PluginResponse response) {

@@ -310,6 +310,33 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception in update: " + e.getMessage());
     }
   }
+  
+  @PUT
+  @Path("software/{swname}/version/{vname}")
+  @Consumes("application/json")
+  @Produces("application/json")
+  @RolesAllowed("user")
+  @Override
+  public Software updateVersion(@PathParam("swname") String swname,
+	  @PathParam("vname") String vname,
+      @JsonProperty("version") SoftwareVersion version) {
+    try {
+      String swid = swname;
+      String vid = vname;
+      if(!swname.startsWith("http:"))
+        swid = repo.LIBNS() + swname;
+      if(!vname.startsWith("http:"))
+          vid = swid + "/version/" + vname;
+      if (!this.repo.updateSoftwareVersion(version, swid, vid,
+          (User) securityContext.getUserPrincipal()))
+        throw new RuntimeException("Could not update " + vname);
+      return version;
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception in update: " + e.getMessage());
+    }
+  }
 
   @DELETE
   @Path("software/{name}")

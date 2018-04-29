@@ -22,6 +22,8 @@ import org.ontosoft.client.application.version.browse.VersionBrowsePresenter;
 import org.ontosoft.client.application.version.browse.VersionBrowseView;
 import org.ontosoft.client.application.version.list.SoftwareVersionListPresenter;
 import org.ontosoft.client.application.version.list.SoftwareVersionListView;
+import org.ontosoft.client.application.version.publish.PublishVersionPresenter;
+import org.ontosoft.client.application.version.publish.PublishVersionView;
 
 import com.gwtplatform.mvp.client.gin.AbstractPresenterModule;
 
@@ -38,6 +40,8 @@ public class ApplicationModule extends AbstractPresenterModule {
         HomeView.class, HomePresenter.MyProxy.class);
     bindPresenter(PublishPresenter.class, PublishPresenter.MyView.class,
         PublishView.class, PublishPresenter.MyProxy.class);
+    bindPresenter(PublishVersionPresenter.class, PublishVersionPresenter.MyView.class,
+        PublishVersionView.class, PublishVersionPresenter.MyProxy.class);
     bindPresenter(BrowsePresenter.class, BrowsePresenter.MyView.class,
         BrowseView.class, BrowsePresenter.MyProxy.class);
     bindPresenter(VersionBrowsePresenter.class, VersionBrowsePresenter.MyView.class,

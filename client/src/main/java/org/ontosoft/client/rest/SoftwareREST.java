@@ -395,6 +395,23 @@ public class SoftwareREST {
     }).call(this.service).update(software.getName(), software);    
   }
   
+  public void updateSoftwareVersion(final String software, final SoftwareVersion version, 
+      final Callback<SoftwareVersion, Throwable> callback) {
+    REST.withCallback(new MethodCallback<SoftwareVersion>() {
+      @Override
+      public void onSuccess(Method method, SoftwareVersion sw) {
+        softwareVersionCache.put(sw.getName(), sw);
+        AppNotification.notifySuccess(version.getLabel() + " saved", 1000);
+        callback.onSuccess(sw);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not save "+version.getLabel());
+        callback.onFailure(exception);
+      }
+    }).call(this.service).updateVersion(software, version.getName(), version);    
+  }
+  
   public void deleteSoftware(final String swname, 
       final Callback<Void, Throwable> callback) {
     REST.withCallback(new MethodCallback<Void>() {

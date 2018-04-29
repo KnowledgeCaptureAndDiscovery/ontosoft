@@ -120,6 +120,13 @@ public interface SoftwareService extends DirectRestService {
   @Consumes("application/json")
   public Software update(@PathParam("name") String name,
       @JsonProperty("software") Software software);
+  
+  @PUT
+  @Path("software/{swname}/version/{vname}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Software updateVersion(@PathParam("swname") String swname, @PathParam("vname") String vname,
+      @JsonProperty("version") SoftwareVersion version);
 
   @DELETE
   @Path("software/{name}")

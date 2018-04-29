@@ -3,6 +3,7 @@ package org.ontosoft.client.place;
 public class NameTokens {
   public static final String home = "home";
   public static final String publish = "publish";
+  public static final String publishversion = "publishversion";
   public static final String browse = "browse";
   public static final String version = "version";
   public static final String search = "search";
@@ -21,6 +22,10 @@ public class NameTokens {
 
   public static String getPublish() {
     return publish;
+  }
+  
+  public static String getPublishVersion() {
+    return publishversion;
   }
 
   public static String getBrowse() {
