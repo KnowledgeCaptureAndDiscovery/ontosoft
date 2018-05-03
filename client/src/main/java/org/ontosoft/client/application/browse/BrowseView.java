@@ -453,7 +453,7 @@ public class BrowseView extends ParameterizedViewImpl
           //updateList();
           
           // Go to the new item
-          History.newItem(NameTokens.publish + "/" + sw.getName());
+          History.newItem(NameTokens.publishversion + "/" + softwarename + ":" + sw.getName());
           
           publishdialog.hide();
           softwarelabel.setValue(null);

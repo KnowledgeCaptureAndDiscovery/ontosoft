@@ -329,7 +329,8 @@ public class VersionBrowseView extends ParameterizedViewImpl
 
   @UiHandler("editbutton")
   void onEditButtonClick(ClickEvent event) {
-    History.newItem(NameTokens.publish + "/" + software.getName());
+	String[] swnames = softwarename.split("\\s*:\\s*");
+    History.newItem(NameTokens.publishversion + "/" + swnames[0] + ":" + software.getName());
   }
   
   @UiHandler("rdfbutton")
