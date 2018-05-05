@@ -69,6 +69,11 @@ public interface SoftwareService extends DirectRestService {
   public String getGraph(@PathParam("name") String name);
   
   @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/rdf+xml")
+  public String getSoftwareVersionGraph(@PathParam("name") String name, @PathParam("version") String version);
+  
+  @GET
   @Path("software/{name}/provenance")
   @Produces("application/json")
   public Provenance getProvenance(@PathParam("name") String name);

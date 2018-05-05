@@ -155,6 +155,22 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/rdf+xml")
+  @Override
+  public String getSoftwareVersionGraph(@PathParam("name") String name, @PathParam("version") String version) {
+    try {
+      String swid = name;
+      if(!name.startsWith("http:"))
+        swid = repo.LIBNS() + name + "/version/" + version;
+      return this.repo.serializeXML(swid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
   @Path("software/{name}/provenance")
   @Produces("application/json")
   @Override

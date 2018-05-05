@@ -140,7 +140,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
       @Override
       public void onSuccess(SoftwareVersion sw) {
         software = sw;
-        //initSoftwareRDF();
+        initSoftwareRDF();
         loading.setVisible(false);
         if(vocabulary != null)
           showSoftware(software);
@@ -291,7 +291,6 @@ public class VersionBrowseView extends ParameterizedViewImpl
           heading2.addStyleName("hide-this-in-html");
           lvl2html.addStyleName("hide-this-in-html");
         }
-        
         body1.add(lvl2html);
       }
       
