@@ -1,5 +1,7 @@
 package org.ontosoft.server.repository.adapters;
 
+import java.util.List;
+
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.KBConstants;
 
@@ -42,7 +44,9 @@ public abstract class EntityAdapter implements IEntityAdapter {
   
   protected Entity fetchEntityDetailsFromKB(Entity entity, KBAPI kb) {
     KBObject entityobj = kb.getIndividual(entity.getId());
+    
     if(entityobj != null) {
+      List<KBObject> types = this.ontkb.getAllClassesOfInstance(entityobj, false);
       entity.setType(this.kbClass.getID());
       entity.setLabel(kb.getLabel(entityobj));
       entity.setName(entityobj.getName());

@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.MeasurementEntity;
+import org.ontosoft.shared.classes.entities.TextEntity;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -33,6 +35,145 @@ public class EntityBrowser {
         +(prop.getQuestion() != null ? prop.getQuestion() : prop.getLabel())
         +"</div>";
     return prophtml;
+  }
+  
+  public String getFunctionHeaderHTML(ComplexEntity entity) {  
+	Entity functionName = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionName");
+	Entity functionDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionDescription");
+	Entity functionality = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionality");
+	Entity algorithm = entity.getPropertyValue(KBConstants.ONTNS() + "usesAlgorithm");
+
+	String prophtml = "<dl class=\"method\">\n" + 
+			"   <dt id=\"flopy.modflow.mfbas.ModflowBas.plot\">\n";
+	
+	if (functionName != null)
+	{
+		prophtml += "<code class=\"descname\">" + functionName.getValue() + "</code>\n";
+	}
+	prophtml +=  "   </dt>\n" + 
+				"   <dd>\n";
+	if (functionDescription != null)
+	{
+		prophtml += "      <p>" + functionDescription.getValue() + "\n" + 
+			"      </p>\n";
+	}
+	if (algorithm != null)
+	{
+		prophtml += "      <p><b>Uses Algorithm:</b> " + algorithm.toString() + "\n" + 
+			"      </p>\n";
+	}
+	if (functionality != null)
+	{
+		prophtml +=		"      <p><b>Functionality:</b> " + functionality.toString() + "\n" + 
+			"      </p>\n"; 
+	}
+	prophtml +=		"      <table class=\"docutils field-list\" frame=\"void\" rules=\"none\">\n" + 
+			"         <col class=\"field-name\" />\n" + 
+			"         <col class=\"field-body\" />\n" + 
+			"         <tbody valign=\"top\">";
+	
+    return prophtml;
+  }
+  
+  public String getFunctionEntitiesHTML(ComplexEntity entity, List<MetadataProperty> props, boolean simple) {
+  	  
+    String html = "<ul style='padding:5px;padding-left:5px'>";
+    
+    for(MetadataProperty prop : props) {
+    	if (prop != null)
+        {
+    		html += "<li>" + this.getFunctionEntityValuesHTML(prop, entity.getPropertyValues(prop.getId()), simple) + "</li>";
+        }
+    }
+    html += "</ul>";
+    
+    return html;
+  }
+  
+  public String getInputsHTML(List<Entity> entities)
+  {
+	  String html = "<tr class=\"field-odd field\">\n" + 
+	  		"               <th class=\"field-name\">Parameters:</th>\n" + 
+	  		"               <td class=\"field-body\">\n" + 
+	  		"                  <blockquote>\n" + 
+	  		"                     <div>\n" + 
+	  		"                        <dl class=\"docutils\">";
+	  
+	  for (Entity entity : entities)
+	  {
+		  html += getInputHTML((ComplexEntity) entity);
+	  }
+	  
+	  html += "</dl>\n" + 
+	  		"                     </div>\n" + 
+	  		"                  </blockquote>\n" + 
+	  		"               </td>\n" + 
+	  		"            </tr>";
+	  
+	  return html;
+  }
+  
+  public String getInputHTML(ComplexEntity entity)
+  {
+	  String html = "";
+	  
+	  Entity inputName = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputName");
+	  Entity inputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputDescription");
+	  Entity inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasDataFormat");
+	  Entity inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasDefaultValue");
+	  
+	  String name = (inputName != null) ? inputName.toString() : "";
+	  String description = (inputDescription != null) ? inputDescription.toString() : "";
+	  String dataFormat = (inputDataFormat != null) ? inputDataFormat.toString() : "";
+	  String defaultValue = (inputDefaultValue != null) ? inputDefaultValue.toString() : "";
+	  
+	  html += "<dt>" + name + "<span class=\"classifier-delimiter\">:</span> <span class=\"classifier\">" + dataFormat + "</span> (default: " + defaultValue + ")</dt>\n" + 
+	  		"                           <dd>\n" + 
+	  		"                              <p class=\"first last\">" + description + "\n" + 
+	  		"                              </p>\n" + 
+	  		"                           </dd>";
+	  
+	  return html;
+  }
+  
+  public String getOutputsHTML(List<Entity> entities)
+  {
+	  String html = "<tr class=\"field-odd field\">\n" + 
+	  		"               <th class=\"field-name\">Returns:</th>\n" + 
+	  		"               <td class=\"field-body\">\n" + 
+	  		"                  <blockquote>\n" + 
+	  		"                     <div>\n" + 
+	  		"                        <dl class=\"docutils\">";
+	  
+	  for (Entity entity : entities)
+	  {
+		  html += getOutputHTML((ComplexEntity) entity);
+	  }
+	  
+	  html += "</dl>\n" + 
+	  		"                     </div>\n" + 
+	  		"                  </blockquote>\n" + 
+	  		"               </td>\n" + 
+	  		"            </tr>";
+	  
+	  return html;
+  }
+  
+  public String getOutputHTML(ComplexEntity entity)
+  {
+	  String html = "";
+	  
+	  Entity name = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputName");
+	  Entity description = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDescription");
+	  Entity dataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasDataFormat");
+	  
+	  html += "<dt>" + name + "<span class=\"classifier-delimiter\">:</span> <span class=\"classifier\">" + dataFormat + "</span></dt>\n" + 
+	  		"                           <dd>\n" + 
+	  		"                              <p class=\"first last\">" + description + "\n" + 
+	  		"                              </p>\n" + 
+	  		"                           </dd>";
+	  
+	  return html;
   }
     
   public String getEntityValuesHTML(MetadataProperty prop, List<Entity> entities, boolean simple) {
@@ -82,9 +223,69 @@ public class EntityBrowser {
     return entitieshtml;
   }
   
+  public String getFunctionEntityValuesHTML(MetadataProperty prop, List<Entity> entities, boolean simple) {
+    MetadataType complexEntity = vocabulary.getType(KBConstants.ONTNS() + "ComplexEntity");
+    MetadataType measurement = vocabulary.getType(KBConstants.ONTNS() + "MeasurementEntity");
+    MetadataType location = vocabulary.getType(KBConstants.ONTNS() + "Location");
+    MetadataType rangeEntity = vocabulary.getType(prop.getRange());
+    
+    String entitieshtml = "";
+    if(prop.getId() == KBConstants.ONTNS() + "hasFunction")
+      entitieshtml += "<ul style='padding:20px;padding-top:10px;padding-bottom:10px'>";
+    
+    // TODO: This part should go into viewing adapters
+    boolean isComplex = vocabulary.isA(rangeEntity, complexEntity);
+    boolean isMeasurement = vocabulary.isA(rangeEntity, measurement);
+    boolean isLocation = vocabulary.isA(rangeEntity, location);
+
+    for(Entity entity : entities) { 
+      entitieshtml += "<li>";
+      if(isComplex) {
+        ComplexEntity centity = (ComplexEntity) entity;
+        List<MetadataProperty> subprops = new ArrayList<MetadataProperty>();
+        for(String subpropid : centity.getValue().keySet())
+          subprops.add(vocabulary.getProperty(subpropid));
+        subprops = vocabulary.orderProperties(subprops);
+        entitieshtml += this.getFunctionHeaderHTML(centity);
+        //entitieshtml += this.getFunctionEntitiesHTML(centity, subprops, true);
+        entitieshtml += this.getInputsHTML(centity.getPropertyValues(KBConstants.ONTNS() + "hasInput"));
+        entitieshtml += this.getOutputsHTML(centity.getPropertyValues(KBConstants.ONTNS() + "hasOutput"));
+        entitieshtml += "</tbody>\n" + 
+        		"      </table>\n" + 
+        		"      </div>\n" + 
+        		"   </dd>\n" + 
+        		"</dl>";
+      }
+      else if(isMeasurement) {
+        MeasurementEntity me = (MeasurementEntity) entity;
+        entitieshtml += me.getValue() + " " + me.getUnits();
+      }
+      else if(isLocation) {
+        entitieshtml += "<a class='wrap-long-words' href='"+entity.getValue()+"'>"+entity.getValue()+"</a>";
+      }
+      else {
+    	entitieshtml += "<div class='wrap-pre wrap-long-words'>" + entity.toString() + "</div>";
+      }
+      if(!simple)
+        entitieshtml += "</li>";
+    }
+    if(entities.size() > 0)
+      entitieshtml += " ";
+    entitieshtml += "</ul>";
+    
+    return entitieshtml;
+  }
+  
   public String getPropertyValuesHTML(MetadataProperty prop, List<Entity> entities, boolean simple) {
-    String entitieshtml = getEntityValuesHTML(prop, entities, simple);
+    
     boolean empty = (entities.size() == 0);
+    String entitieshtml = "";
+    if (prop.getId() == KBConstants.ONTNS()+"hasFunction") {
+    	entitieshtml = getFunctionEntityValuesHTML(prop, entities, simple);
+	}
+    else {
+    	entitieshtml = getEntityValuesHTML(prop, entities, simple);
+    }
     String prophtml = getPropertyHTML(prop, simple, empty);
     String propclass = empty ? "hide-this-in-html" : "";
     String html = "<li class='"+propclass+"'>"
@@ -92,14 +293,20 @@ public class EntityBrowser {
         + entitieshtml
         +"</li>";
     return html;
-  }
-    
+  } 
+  
   public String getEntitiesHTML(ComplexEntity entity, List<MetadataProperty> props, boolean simple) {
     String html = "<ul style='padding:5px;padding-left:2px;list-style-type:none'>";
+    
     for(MetadataProperty prop : props) {
-      html += this.getPropertyValuesHTML(prop, entity.getPropertyValues(prop.getId()), simple);
+    	if (prop != null)
+        {
+    		html += this.getPropertyValuesHTML(prop, entity.getPropertyValues(prop.getId()), simple);
+        }
     }
     html += "</ul>";
+    
     return html;
   }
+
 }
