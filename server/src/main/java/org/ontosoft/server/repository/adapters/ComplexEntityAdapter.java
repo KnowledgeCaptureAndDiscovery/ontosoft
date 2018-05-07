@@ -41,7 +41,8 @@ public class ComplexEntityAdapter extends EntityAdapter {
     entity.setValue(subentities);
     
     if(subentities.keySet().size() > 0)
-      return entity;
+      //entity.setValue(null);
+    	return entity;
 
     return null;
   }
