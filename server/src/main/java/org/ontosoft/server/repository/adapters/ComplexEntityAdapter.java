@@ -69,7 +69,13 @@ public class ComplexEntityAdapter extends EntityAdapter {
               subentity.setId(entity.getId() + "-" + GUID.get());
             }
             if(adapter.saveEntity(subentity)) {
-              KBObject subentityobj = kb.getIndividual(subentity.getId());
+            	KBObject subentityobj;
+            	if (adapter instanceof EnumerationEntityAdapter) {
+            		subentityobj = enumkb.getIndividual(subentity.getId());
+            	}
+            	else {
+            		subentityobj = kb.getIndividual(subentity.getId());
+            	}
               kb.addPropertyValue(entityobj, swprop, subentityobj);
             }
           } else {
