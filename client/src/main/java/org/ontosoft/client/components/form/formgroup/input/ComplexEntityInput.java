@@ -43,7 +43,11 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
     this.addStyleName("bordered-fieldset");
     
     MetadataType type = vocabulary.getType(this.property.getRange());
-    for(MetadataProperty subprop : vocabulary.getPropertiesForType(type)) {
+    
+    List<MetadataProperty> subprops = vocabulary.getPropertiesForType(type);
+	subprops = vocabulary.orderProperties(subprops);
+    
+    for(MetadataProperty subprop : subprops) {
       String subentityid = e.getId() + "-" + GUID.get();
       Entity subentity = null;
       try {
