@@ -8,6 +8,7 @@ import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEv
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.shared.classes.entities.DateEntity;
 import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -97,4 +98,10 @@ public class DateEntityInput implements IEntityInput {
   public void disable() {
     dateinput.setEnabled(false);
   }
+
+	@Override
+	public void createWidget(Entity entity, MetadataProperty prop, Vocabulary vocabulary, SoftwareVersion version) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -2,8 +2,10 @@ package org.ontosoft.client.components.form.formgroup.input;
 
 import java.util.HashMap;
 
+import org.ontosoft.client.components.form.SoftwareVersionForm;
 import org.ontosoft.client.generator.EntityFactory;
 import org.ontosoft.shared.classes.entities.Entity;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -76,4 +78,26 @@ public class EntityRegistrar {
     }
     return null;
   }
+
+  public static IEntityInput getInput(Entity entity, MetadataProperty mprop, Vocabulary vocabulary,
+		SoftwareVersion version) 
+	throws Exception {
+	    String inputClass = inputClasses.get(mprop.getRange());
+	    if(inputClass != null) {
+	      Object item = entityFactory.instantiate(inputClass);
+	      if(item == null) {
+	        GWT.log("Cannot instantiate input for "+mprop.getRange());
+	        throw new Exception("Cannot instantiate input for "+mprop.getRange());
+	      }
+	      else if(item instanceof IEntityInput) {
+	        ((IEntityInput) item).createWidget(entity, mprop, vocabulary, version);
+	        return (IEntityInput) item;
+	      }
+	      else {
+	        GWT.log("Item not an extension of IEntityInput");
+	        throw new Exception("Item not an extension of IEntityInput");
+	      }
+	    }
+	    return null;
+	}
 }

@@ -41,6 +41,7 @@ import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.ui.Label;
 
 public class ComplexEntityInput extends FieldSet implements IEntityInput {
+  private List<Entity> entities;
   private HandlerManager handlerManager;
   SoftwareVersion version;
   ComplexEntity entity;
@@ -55,6 +56,63 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
   
   @Override
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocabulary) {
+	this.entities = new ArrayList<Entity>();
+    this.inputs = new HashMap<String, List<IEntityInput>>();
+    this.property = prop;
+    this.vocabulary = vocabulary;
+    this.addStyleName("bordered-fieldset");
+    
+    MetadataType type = vocabulary.getType(this.property.getRange());
+    
+    List<MetadataProperty> subprops = vocabulary.getPropertiesForType(type);
+	subprops = vocabulary.orderProperties(subprops);
+    
+    for(MetadataProperty subprop : subprops) {
+      String subentityid = e.getId() + "-" + GUID.get();
+      Entity subentity = null;
+      try {
+        subentity = EntityRegistrar.getEntity(subentityid, null, subprop.getRange());
+      } catch (Exception ex) {
+        GWT.log("Could not get a new entity", ex);
+        continue;
+      }
+      try {
+        subprop.setRequired(prop.isRequired());
+        String tip = subprop.getQuestion();
+        if(tip == null)
+          tip = subprop.getLabel();
+        Tooltip tooltip = new Tooltip(tip);
+        tooltip.setPlacement(Placement.BOTTOM);
+        tooltip.setTrigger(Trigger.FOCUS);
+        IEntityInput ip = EntityRegistrar.getInput(subentity, subprop, vocabulary);
+        tooltip.add(ip.asWidget());
+        this.add(tooltip);
+        
+        ip.addEntityChangeHandler(new EntityChangeHandler() {
+	        @Override
+	        public void onEntityChange(EntityChangeEvent event) {
+	          fireEvent(new EntityChangeEvent(getValue()));
+	        }
+	      });
+        
+        List<IEntityInput> entInputs = inputs.get(subprop.getId());
+        if (entInputs == null)
+        {
+        	entInputs = new ArrayList<IEntityInput>();
+        }
+        entInputs.add(ip);
+        inputs.put(subprop.getId(), entInputs);
+      }
+      catch (Exception exception) {
+        GWT.log("Problem adding sub widget: "+subprop.getId()+" for "+prop.getId(), exception);
+      }
+    }
+    this.entity = (ComplexEntity) e;
+    this.setValue(e);
+  }
+  
+  @Override
+  public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocabulary, final SoftwareVersion version) {
     this.version = version;
 	this.inputs = new HashMap<String, List<IEntityInput>>();
     this.property = prop;
@@ -258,25 +316,11 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
       ig.add(ip);
       
       ip.addEntityChangeHandler(new EntityChangeHandler() {
-        @Override
-        public void onEntityChange(EntityChangeEvent event) {
-          Entity e = event.getEntity();
-          if(e.getValue() != null && e.getValue().equals(""))
-            e.setValue(null);
-          
-          //version.updatePropertyValue(subprop.getId(), e);
-          //form.fireEvent(new SoftwareVersionChangeEvent(version));
-          ip.addEntityChangeHandler(new EntityChangeHandler() {
-	          @Override
-	          public void onEntityChange(EntityChangeEvent event) {
-	            fireEvent(new EntityChangeEvent(getValue()));
-	          }
-	        });
-          //GWT.log(software.getPropertyValues(property.getId()).toString());
-          
-          //handleEntityPlugins(e);
-        }
-      });
+          @Override
+          public void onEntityChange(EntityChangeEvent event) {
+            fireEvent(new EntityChangeEvent(getValue()));
+          }
+        });
       
       final Button btn = new Button();
       btn.addStyleName("btn-flat");
@@ -306,7 +350,6 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
           }
         }
       });
-      
       
       InputGroupButton igbtn = new InputGroupButton();
       igbtn.add(btn);

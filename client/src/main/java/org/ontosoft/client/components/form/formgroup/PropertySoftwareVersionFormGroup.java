@@ -28,6 +28,7 @@ import org.ontosoft.client.components.form.formgroup.input.IEntityInput;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeEvent;
 import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHandler;
 import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Activity;
@@ -268,7 +269,14 @@ public class PropertySoftwareVersionFormGroup extends FormGroup implements HasPl
     
     try {
       final InputGroup ig = new InputGroup();
-      final IEntityInput ip = EntityRegistrar.getInput(entity, property, vocabulary);
+      final IEntityInput ip;
+      if (entity instanceof ComplexEntity && entity.getType() != KBConstants.ONTNS() + "SoftwareVersion")
+      {
+    	  ip = EntityRegistrar.getInput(entity, property, vocabulary, version);
+      }
+      else {
+    	  ip = EntityRegistrar.getInput(entity, property, vocabulary);
+      }
       ig.add(ip);
       
       ip.addEntityChangeHandler(new EntityChangeHandler() {
