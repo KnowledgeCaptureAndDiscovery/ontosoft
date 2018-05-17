@@ -152,7 +152,9 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
         //addEntityEditor(e, subprop, version, form);
       }
       
-      for (Entity entity : propEntities)
+      int size = (propEntities != null)?propEntities.size():0;
+      
+      for (int i = 0; i < size; i++)
       {
 	      String subentityid = e.getId() + "-" + GUID.get();
 	      Entity subentity = null;

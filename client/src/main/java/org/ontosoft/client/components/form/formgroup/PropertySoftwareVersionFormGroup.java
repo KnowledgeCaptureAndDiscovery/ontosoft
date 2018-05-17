@@ -270,7 +270,10 @@ public class PropertySoftwareVersionFormGroup extends FormGroup implements HasPl
     try {
       final InputGroup ig = new InputGroup();
       final IEntityInput ip;
-      if (entity instanceof ComplexEntity && entity.getType() != KBConstants.ONTNS() + "SoftwareVersion")
+      if (entity instanceof ComplexEntity 
+    		  && property.isMultiple() 
+    		  && entity.getType() == KBConstants.ONTNS() + "Function"
+    		  && entity.getType() != KBConstants.ONTNS() + "SoftwareVersion")
       {
     	  ip = EntityRegistrar.getInput(entity, property, vocabulary, version);
       }
