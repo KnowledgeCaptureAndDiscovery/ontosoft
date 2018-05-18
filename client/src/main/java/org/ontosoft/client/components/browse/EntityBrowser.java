@@ -117,17 +117,36 @@ public class EntityBrowser {
   {
 	  String html = "";
 	  
-	  Entity inputName = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputName");
-	  Entity inputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputDescription");
-	  Entity inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasDataFormat");
-	  Entity inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasDefaultValue");
+	  Entity inputName = null;
+	  Entity inputDescription = null;
+	  Entity inputDataFormat = null;
+	  Entity inputDefaultValue = null;
+	  Entity inputDataType = null;
+	  
+	  if (entity.getType() == KBConstants.ONTNS() + "InputFile")
+	  {
+		  inputName = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileName");
+		  inputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDescription");
+		  inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDataFormat");
+		  inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDefaultValue");
+		  inputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDataType");
+	  }
+	  else if (entity.getType() == KBConstants.ONTNS() + "InputParameter")
+	  {
+		  inputName = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterName");
+		  inputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDescription");
+		  inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDataFormat");
+		  inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDefaultValue");
+		  inputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDataType");
+	  }
 	  
 	  String name = (inputName != null) ? inputName.toString() : "";
 	  String description = (inputDescription != null) ? inputDescription.toString() : "";
 	  String dataFormat = (inputDataFormat != null) ? inputDataFormat.toString() : "";
 	  String defaultValue = (inputDefaultValue != null) ? inputDefaultValue.toString() : "";
+	  String dataType = (inputDataType != null) ? inputDataType.toString() : "";
 	  
-	  html += "<dt>" + name + "<span class=\"classifier-delimiter\">:</span> <span class=\"classifier\">" + dataFormat + "</span> (default: " + defaultValue + ")</dt>\n" + 
+	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span> (type: <span class=\"classifier\"> " + dataType + "</span>) (format: " + dataFormat + ") (default value: " + defaultValue + ")</dt>\n" + 
 	  		"                           <dd>\n" + 
 	  		"                              <p class=\"first last\">" + description + "\n" + 
 	  		"                              </p>\n" + 
@@ -163,11 +182,17 @@ public class EntityBrowser {
   {
 	  String html = "";
 	  
-	  Entity name = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputName");
-	  Entity description = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDescription");
-	  Entity dataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasDataFormat");
+	  Entity outputName = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputName");
+	  Entity outputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDescription");
+	  Entity outputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDataFormat");
+	  Entity outputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDataType");
 	  
-	  html += "<dt>" + name + "<span class=\"classifier-delimiter\">:</span> <span class=\"classifier\">" + dataFormat + "</span></dt>\n" + 
+	  String name = (outputName != null) ? outputName.toString() : "";
+	  String description = (outputDescription != null) ? outputDescription.toString() : "";
+	  String dataFormat = (outputDataFormat != null) ? outputDataFormat.toString() : "";
+	  String dataType = (outputDataType != null) ? outputDataType.toString() : "";
+	  
+	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span> (type: <span class=\"classifier\"> " + dataType + "</span>) (format: " + dataFormat + ")</dt>\n" + 
 	  		"                           <dd>\n" + 
 	  		"                              <p class=\"first last\">" + description + "\n" + 
 	  		"                              </p>\n" + 
@@ -248,8 +273,18 @@ public class EntityBrowser {
         subprops = vocabulary.orderProperties(subprops);
         entitieshtml += this.getFunctionHeaderHTML(centity);
         //entitieshtml += this.getFunctionEntitiesHTML(centity, subprops, true);
-        entitieshtml += this.getInputsHTML(centity.getPropertyValues(KBConstants.ONTNS() + "hasInput"));
-        entitieshtml += this.getOutputsHTML(centity.getPropertyValues(KBConstants.ONTNS() + "hasOutput"));
+        List<Entity> inputEntities = centity.getPropertyValues(KBConstants.ONTNS() + "hasInputFile");
+        List<Entity> inputPEntities = centity.getPropertyValues(KBConstants.ONTNS() + "hasInputParameter");
+        if (inputPEntities != null) {
+        	inputEntities.addAll(inputPEntities);
+        }
+        List<Entity> outputEntities = centity.getPropertyValues(KBConstants.ONTNS() + "hasOutput");
+        if (inputEntities != null) {
+          entitieshtml += this.getInputsHTML(inputEntities);
+        }
+        if (outputEntities != null) {
+          entitieshtml += this.getOutputsHTML(outputEntities);
+        }
         entitieshtml += "</tbody>\n" + 
         		"      </table>\n" + 
         		"      </div>\n" + 
