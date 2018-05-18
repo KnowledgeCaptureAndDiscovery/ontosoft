@@ -113,7 +113,8 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
   
   @Override
   public void createWidget(Entity e, MetadataProperty prop, Vocabulary vocabulary, final SoftwareVersion version) {
-    this.version = version;
+    final FieldSet thisfs = this;
+	this.version = version;
 	this.inputs = new HashMap<String, List<IEntityInput>>();
     this.property = prop;
     this.vocabulary = vocabulary;
@@ -136,23 +137,26 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
         btn.setIcon(IconType.PLUS);
         btn.setType(ButtonType.SUCCESS);
         btn.setSize(ButtonSize.EXTRA_SMALL);
-        btn.addClickHandler(new ClickHandler() {
-          @Override
-          public void onClick(ClickEvent event) {
-	        	Entity newEntity = getNewEntity(null, subprop);
-	            addEntityEditor(newEntity, subprop);
-          }
-        });
         
         igbtn.add(btn);
         labelpanel.add(igbtn);
         this.add(labelpanel);
+        final int index = this.getWidgetIndex(labelpanel);
+        
+        btn.addClickHandler(new ClickHandler() {
+          @Override
+          public void onClick(ClickEvent event) {
+	        	Entity newEntity = getNewEntity(null, subprop);
+	            addEntityEditor(newEntity, subprop, index);
+          }
+        });
+        
         
         //Entity newEntity = getNewEntity(null);
         //addEntityEditor(e, subprop, version, form);
       }
       
-      int size = (propEntities != null)?propEntities.size():0;
+      int size = (propEntities != null)?propEntities.size():1;
       
       for (int i = 0; i < size; i++)
       {
@@ -169,13 +173,54 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
 	        String tip = subprop.getQuestion();
 	        if(tip == null)
 	          tip = subprop.getLabel();
-	        Tooltip tooltip = new Tooltip(tip);
+	        final Tooltip tooltip = new Tooltip(tip);
 	        tooltip.setPlacement(Placement.BOTTOM);
 	        tooltip.setTrigger(Trigger.FOCUS);
-	        IEntityInput ip = EntityRegistrar.getInput(subentity, subprop, vocabulary);
+	        final IEntityInput ip = EntityRegistrar.getInput(subentity, subprop, vocabulary);
 	        tooltip.add(ip.asWidget());
 	        
-	        this.add(tooltip);
+	        if (subprop.isMultiple()) {
+		        final InputGroup ig = new InputGroup();
+		        final Button btn = new Button();
+		        btn.addStyleName("btn-flat");
+		        btn.setIcon(IconType.REMOVE);
+		        btn.setColor("#5D7BA0");
+		        btn.setSize(ButtonSize.EXTRA_SMALL);
+		        btn.setTabIndex(-2);
+		        btn.addClickHandler(new ClickHandler() {
+		          @Override
+		          public void onClick(ClickEvent event) {
+		            if(subprop.isMultiple()) {
+		              // Remove if multiple entities are there
+		              thisfs.remove(ig);
+		              ip.clearValue();
+		              //entities.remove(entity);
+		              inputs.remove(ip);
+		              if(entity.getValue() != null) {
+		            	  GWT.log("remove!");
+		                entity.setValue(null);
+		              }
+		              GWT.log("remove!");
+		            }
+		            else {
+		              // Clear contents (this will fire the entitychange event)
+		              if(entity.getValue() != null)
+		                entity.setValue(null);
+		              ip.clearValue();
+		            }
+		          }
+		        });
+		        
+		        InputGroupButton igbtn2 = new InputGroupButton();
+		        igbtn2.add(btn);
+		        ig.add(tooltip);
+		        ig.add(igbtn2);
+		        
+		        this.add(ig);
+	        }
+	        else {
+	        	this.add(tooltip);
+	        }
 	
 	        ip.addEntityChangeHandler(new EntityChangeHandler() {
 	          @Override
@@ -309,7 +354,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
     }
   }
   
-  private void addEntityEditor(final Entity entity, final MetadataProperty subprop) {
+  private void addEntityEditor(final Entity entity, final MetadataProperty subprop, int index) {
     final FieldSet thisfs = this;
     
     try {
@@ -357,7 +402,7 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
       igbtn.add(btn);
       ig.add(igbtn);
       
-      this.add(ig);
+      this.insert(ig, index+1);
       
       Provenance prov = this.version.getProvenance();
       ProvEntity pentity = prov.getEntity(entity.getId());
