@@ -1,5 +1,9 @@
 @CHARSET "US-ASCII";
 
+fieldset .input-group {
+     width: 100% !important;
+}
+
 .nav-tabs>li.active {
   background: #FFF;
   /*border-radius: 5px 5px 0px 0px;
