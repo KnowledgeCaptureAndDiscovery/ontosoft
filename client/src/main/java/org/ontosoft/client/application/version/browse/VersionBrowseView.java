@@ -41,6 +41,7 @@ import com.github.gwtd3.api.core.Value;
 import com.github.gwtd3.api.functions.DatumFunction;
 import com.google.gwt.core.client.Callback;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -102,6 +103,12 @@ public class VersionBrowseView extends ParameterizedViewImpl
     initVocabulary();
     
     this.codec = GWT.create(SoftwareCodec.class);
+  }
+  
+  public static void setBrowserWindowTitle (String newTitle) {
+    if (Document.get() != null) {
+        Document.get().setTitle (newTitle + " - OntoSoft Portal");
+    }
   }
 
   // If some parameters are passed in, initialize the software and interface
@@ -202,6 +209,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
     	softwareTitle.setText(sw.getLabel());
     
     softwareBody.clear();
+    setBrowserWindowTitle(softwareTitle.getText());
     
     String topcatid = KBConstants.CATNS()+"MetadataCategory";
     MetadataCategory topcat = vocabulary.getCategory(topcatid);

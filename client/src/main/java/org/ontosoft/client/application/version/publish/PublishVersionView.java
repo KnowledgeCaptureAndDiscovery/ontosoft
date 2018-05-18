@@ -33,6 +33,7 @@ import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.AppNotification;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.client.rest.UserREST;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Agent;
@@ -47,6 +48,8 @@ import org.ontosoft.shared.utils.PermUtils;
 import com.github.gwtd3.api.D3;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Callback;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -128,6 +131,7 @@ public class PublishVersionView extends ParameterizedViewImpl
   String softwarename;
   SoftwareVersion version;
   String loggedinuser;
+  Software software;
 
   private String allusers = "All Users(*)";
   
@@ -143,6 +147,12 @@ public class PublishVersionView extends ParameterizedViewImpl
     initWidget(binder.createAndBindUi(this));
     initVocabulary();
     initTable();
+  }
+  
+  public static void setBrowserWindowTitle (String newTitle) {
+    if (Document.get() != null) {
+        Document.get().setTitle (newTitle + " - Admin - OntoSoft Portal");
+    }
   }
   
   // If some parameters are passed in, initialize the software and interface
@@ -380,6 +390,16 @@ public class PublishVersionView extends ParameterizedViewImpl
         loading.setVisible(false);
       }
     }, reload);
+    api.getSoftware(softwarename, new Callback<Software, Throwable>() {
+        @Override
+        public void onSuccess(Software sw) {
+        	software = sw;
+        }
+        @Override
+        public void onFailure(Throwable exception) {
+          GWT.log("Error fetching Software", exception);
+        }
+      }, false);
   }
   
   private void setBrowsePermissionHeader() {
@@ -569,12 +589,27 @@ public class PublishVersionView extends ParameterizedViewImpl
     breadcrumbs.clear();
     breadcrumbs.setVisible(true);
     
+    //SoftwareVersion version = piechart.getSoftware().get
+    
     String swlabel = piechart.getSoftware().getLabel();
+    setBrowserWindowTitle(swlabel);
     String swname = piechart.getSoftware().getSoftwareName();
     if (swname != null)
       swlabel = swname;
     else if (swlabel == null)
       swlabel = piechart.getSoftware().getName();
+    
+    
+    
+    AnchorListItem anchor1 = new AnchorListItem(software.getLabel());
+    anchor1.addClickHandler(new ClickHandler() {
+      @Override
+      public void onClick(ClickEvent event) {
+        History.newItem(NameTokens.publish + "/" + softwarename);
+      }
+    });
+    anchor1.setStyleName("first-crumb");
+    breadcrumbs.add(anchor1);
     
     AnchorListItem anchor = new AnchorListItem(swlabel);
     anchor.addClickHandler(new ClickHandler() {
@@ -583,7 +618,7 @@ public class PublishVersionView extends ParameterizedViewImpl
         History.newItem(NameTokens.version + "/" + softwarename + ":" + versionname);
       }
     });
-    anchor.setStyleName("first-crumb");
+    //anchor.setStyleName("first-crumb");
     breadcrumbs.add(anchor);
 
     if(piechart != null && piechart.getSoftware() != null) {
