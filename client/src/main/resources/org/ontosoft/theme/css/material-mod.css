@@ -441,7 +441,7 @@ fieldset.bordered-fieldset {
   padding: 0px 4px 0px 4px;
   border-radius: 4px !important;
   background: #F9F9F9;
-  border: 1px dashed #F0F0F0;
+  border: 1px dashed #000;
 }
 /* Labels */
 .form-group .input-label {
