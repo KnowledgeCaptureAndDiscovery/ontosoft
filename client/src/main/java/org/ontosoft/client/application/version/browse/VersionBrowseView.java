@@ -17,6 +17,7 @@ import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.DeviceSize;
 import org.gwtbootstrap3.client.ui.constants.HeadingSize;
 import org.gwtbootstrap3.client.ui.constants.PanelType;
+import org.gwtbootstrap3.client.ui.html.Div;
 import org.ontosoft.client.Config;
 import org.ontosoft.client.application.ParameterizedViewImpl;
 import org.ontosoft.client.authentication.SessionStorage;
@@ -80,6 +81,9 @@ public class VersionBrowseView extends ParameterizedViewImpl
   TextBox softwarelabel;
   
   @UiField
+  VerticalPanel softwareName;
+  
+  @UiField
   Button htmlbutton, rdfbutton, jsonbutton, editbutton;
   
   @UiField
@@ -87,7 +91,8 @@ public class VersionBrowseView extends ParameterizedViewImpl
   
   SoftwareREST api = SoftwareREST.get(Config.getServerURL());
 
-  SoftwareVersion software;
+  SoftwareVersion version;
+  Software software;
   String softwarename;
   String softwarerdf;
   String softwarehtml;
@@ -128,8 +133,8 @@ public class VersionBrowseView extends ParameterizedViewImpl
       @Override
       public void onSuccess(Vocabulary vocab) {
         vocabulary = vocab;
-        if(software != null)
-          showSoftware(software);
+        if(version != null)
+          showSoftware(version);
       }
       @Override
       public void onFailure(Throwable reason) {
@@ -145,22 +150,34 @@ public class VersionBrowseView extends ParameterizedViewImpl
 
     this.api.getSoftwareVersion(swnames[0], swnames[1], new Callback<SoftwareVersion, Throwable>() {
       @Override
-      public void onSuccess(SoftwareVersion sw) {
-        software = sw;
+      public void onSuccess(SoftwareVersion v) {
+        version = v;
         initSoftwareRDF();
         loading.setVisible(false);
-        if(vocabulary != null)
-          showSoftware(software);
       }
       @Override
       public void onFailure(Throwable exception) {
         GWT.log("Error fetching Software", exception);
       }
     }, false);
+    
+    this.api.getSoftware(swnames[0], new Callback<Software, Throwable>() {
+        @Override
+        public void onSuccess(Software sw) {
+          software = sw;
+          loading.setVisible(false);
+          if(vocabulary != null)
+            showSoftware(version);
+        }
+        @Override
+        public void onFailure(Throwable exception) {
+          GWT.log("Error fetching Software", exception);
+        }
+      }, false);
   }
   
   private void initSoftwareRDF() {
-    this.api.getSoftwareRDF(software.getId(), new Callback<String, Throwable>() {
+    this.api.getSoftwareRDF(version.getId(), new Callback<String, Throwable>() {
       @Override
       public void onSuccess(String rdf) {
         softwarerdf = rdf;
@@ -182,14 +199,14 @@ public class VersionBrowseView extends ParameterizedViewImpl
     softwareBody.clear();
     softwareTitle.setText(null);
     softwareTitle.setSubText(null);
-    software = null;
+    version = null;
   }
 
   private void initializePieChart() {
     piechart.setEventEnabled(false);
     piechart.setVisible(true);
     piechart.setVocabulary(vocabulary);
-    piechart.setSoftware(software);
+    piechart.setSoftware(version);
     if(!piechart.drawnCategories())
       piechart.drawCategories();
     piechart.fillCategories(true); 
@@ -201,6 +218,13 @@ public class VersionBrowseView extends ParameterizedViewImpl
       return;
 
     initializePieChart();
+    String softwareLink = "#" + NameTokens.browse + "/" + software.getName();
+
+    if (software.getSoftwareName() != null)
+    	softwareLink = "<a href='" + softwareLink + "'>" + software.getSoftwareName() + "</a>";
+    else
+    	softwareLink = "<a href='" + softwareLink + "'>" + software.getLabel() + "</a>";
+    softwareName.add(new HTML(softwareLink + " >> "));
     
     Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
     if (swName != null)
@@ -337,7 +361,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
   @UiHandler("editbutton")
   void onEditButtonClick(ClickEvent event) {
 	String[] swnames = softwarename.split("\\s*:\\s*");
-    History.newItem(NameTokens.publishversion + "/" + swnames[0] + ":" + software.getName());
+    History.newItem(NameTokens.publishversion + "/" + swnames[0] + ":" + version.getName());
   }
   
   @UiHandler("rdfbutton")
@@ -347,7 +371,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
   
   @UiHandler("jsonbutton")
   void onJsonButtonClick(ClickEvent event) {
-    openWindow("application/json", codec.encode(software).toString());
+    openWindow("application/json", codec.encode(version).toString());
   }
   
   @UiHandler("htmlbutton")
@@ -444,11 +468,12 @@ public class VersionBrowseView extends ParameterizedViewImpl
   }
   
   private void submitPublishForm() {
+	final String[] swnames = softwarename.split("\\s*:\\s*");
     String label = softwarelabel.getValue();
     if(softwarelabel.validate(true)) {
       SoftwareVersion tmpsw = new SoftwareVersion();
       tmpsw.setLabel(label);
-      this.api.publishSoftwareVersion(softwarename, tmpsw, new Callback<SoftwareVersion, Throwable>() {
+      this.api.publishSoftwareVersion(swnames[0], tmpsw, new Callback<SoftwareVersion, Throwable>() {
         public void onSuccess(SoftwareVersion sw) {
           // Add item to list
           SoftwareSummary newsw = new SoftwareSummary(sw);
@@ -458,7 +483,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
           //updateList();
           
           // Go to the new item
-          History.newItem(NameTokens.publish + "/" + sw.getName());
+          History.newItem(NameTokens.publish + "/" + swnames[0] + ":" + sw.getName());
           
           publishdialog.hide();
           softwarelabel.setValue(null);
