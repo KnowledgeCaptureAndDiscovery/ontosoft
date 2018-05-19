@@ -12,6 +12,7 @@ import org.fusesource.restygwt.client.Resource;
 import org.fusesource.restygwt.client.RestServiceProxy;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
@@ -41,6 +42,7 @@ public class SoftwareREST {
   private Vocabulary vocabulary;
   private List<SoftwareSummary> softwareList;
   private List<SoftwareVersionSummary> softwareVersionList;
+  private List<FunctionSummary> functionList;
   private SoftwareService service;
   
   private HashMap<String, Software> softwareCache = 
@@ -56,6 +58,8 @@ public class SoftwareREST {
       new ArrayList<Callback<List<SoftwareSummary>, Throwable>>();
   private ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>> list_version_callbacks =
 	      new ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>>();
+  private ArrayList<Callback<List<FunctionSummary>, Throwable>> list_function_callbacks =
+	      new ArrayList<Callback<List<FunctionSummary>, Throwable>>();
   private ArrayList<Callback<Boolean, Throwable>> perm_callbacks =
       new ArrayList<Callback<Boolean,Throwable>>();
   
@@ -178,6 +182,36 @@ public class SoftwareREST {
     }
   }
   
+  public void getFunctionList(final Callback<List<FunctionSummary>, Throwable> callback,
+      boolean reload) {
+    if(functionList != null && !reload) {
+      callback.onSuccess(functionList);
+    }
+    else {
+      functionList = null;
+      if(list_function_callbacks.isEmpty()) {
+        list_function_callbacks.add(callback);
+        REST.withCallback(new MethodCallback<List<FunctionSummary>>() {
+          @Override
+          public void onSuccess(Method method, List<FunctionSummary> swlist) {
+        	functionList = swlist;
+            for(Callback<List<FunctionSummary>, Throwable> cb : list_function_callbacks)
+              cb.onSuccess(functionList);    
+            list_function_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load software list");
+            callback.onFailure(exception);
+          }
+        }).call(this.service).functions();
+      }
+      else {
+        list_function_callbacks.add(callback);
+      }
+    }
+  }
+  
   public void getSoftwareListFaceted(List<EnumerationFacet> facets,
       final Callback<List<SoftwareSummary>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<SoftwareSummary>>() {
@@ -206,6 +240,20 @@ public class SoftwareREST {
     }).call(this.service).listSoftwareVersionWithFacets(facets);
   }
   
+  public void getFunctionListFaceted(List<EnumerationFacet> facets,
+      final Callback<List<FunctionSummary>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<FunctionSummary>>() {
+      @Override
+      public void onSuccess(Method method, List<FunctionSummary> swlist) {
+        callback.onSuccess(swlist);            
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(this.service).listFunctionWithFacets(facets);
+  }
+	  
   public void getSoftware(final String swname, final Callback<Software, Throwable> callback,
       final boolean reload) {
     //GWT.log(softwareCache.keySet().toString() + ": "+reload);

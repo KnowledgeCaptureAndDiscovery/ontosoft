@@ -7,6 +7,7 @@ import org.ontosoft.client.application.version.browse.VersionBrowseView;
 import org.ontosoft.client.application.version.list.SoftwareVersionListView;
 import org.ontosoft.client.application.version.publish.PublishVersionView;
 import org.ontosoft.client.application.compare.CompareView;
+import org.ontosoft.client.application.function.list.FunctionListView;
 import org.ontosoft.client.application.list.SoftwareListView;
 import org.ontosoft.client.application.publish.PublishView;
 import org.ontosoft.client.application.users.UserView;
@@ -40,7 +41,7 @@ public class ApplicationPresenter extends
   public ApplicationPresenter(EventBus eventBus, final MyView view, MyProxy proxy,
       final PlaceManager placemanager, final PublishView publishview, final PublishVersionView publishversionview,
       final BrowseView browseview, final VersionBrowseView versionbrowseview, final SoftwareListView listview,
-      final SoftwareVersionListView versionlistview,
+      final SoftwareVersionListView versionlistview, final FunctionListView functionlistview,
       final CompareView compareview, final UserView userview) {
     super(eventBus, view, proxy, RevealType.Root);
     
@@ -64,6 +65,8 @@ public class ApplicationPresenter extends
     	  sectionview = versionbrowseview;
         else if(nametoken.equals(NameTokens.versions))
           sectionview = versionlistview;
+        else if(nametoken.equals(NameTokens.functions))
+            sectionview = functionlistview;
         else if(nametoken.equals(NameTokens.list))
           sectionview = listview;        
         else if(nametoken.equals(NameTokens.compare))

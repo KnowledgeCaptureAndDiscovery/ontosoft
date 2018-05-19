@@ -23,6 +23,7 @@ import javax.ws.rs.core.SecurityContext;
 import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.server.users.User;
 import org.ontosoft.shared.api.SoftwareService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
@@ -89,6 +90,19 @@ public class SoftwareResource implements SoftwareService {
     }
   }
   
+  @GET
+  @Path("functions")
+  @Produces("application/json")
+  @Override
+  public List<FunctionSummary> functions() {
+    try {
+      return this.repo.getAllFunction();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
   @POST
   @Path("search")
   @Produces("application/json")
@@ -111,6 +125,20 @@ public class SoftwareResource implements SoftwareService {
   public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
     try {
       return this.repo.getAllSoftwareVersionWithFacets(facets);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @POST
+  @Path("searchFunction")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @Override
+  public List<FunctionSummary> listFunctionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
+    try {
+      return this.repo.getAllFunctionWithFacets(facets);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());

@@ -15,6 +15,7 @@ public class NameTokens {
   public static final String users = "users";
   public static final String permission = "permission";
   public static final String versions = "versions";
+  public static final String functions = "functions";
 
   public static String getHome() {
     return home;
@@ -34,6 +35,10 @@ public class NameTokens {
   
   public static String getVersion() {
     return version;
+  }
+  
+  public static String getFunctions() {
+    return functions;
   }
 
   public static String getSearch() {

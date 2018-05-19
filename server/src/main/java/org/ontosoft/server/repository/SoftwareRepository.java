@@ -18,6 +18,7 @@ import org.ontosoft.server.repository.plugins.GithubPlugin;
 import org.ontosoft.server.users.User;
 import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.server.util.Config;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Entity;
@@ -766,6 +767,10 @@ public class SoftwareRepository {
     return this.getAllSoftwareVersionWithFacets(null);
   }
   
+  public ArrayList<FunctionSummary> getAllFunction() throws Exception {
+    return this.getAllFunctionWithFacets(null);
+  }
+  
   public ArrayList<SoftwareSummary> getAllSoftwareWithFacets(
       List<EnumerationFacet> facets) throws Exception {
     /*if(facets == null || facets.size() == 0)
@@ -982,6 +987,110 @@ public class SoftwareRepository {
       if(time != null && time.getValue() != null) {
         Date timestamp = (Date)time.getValue();
         summary.setTime(timestamp.getTime());
+      }
+      list.add(summary);
+    }
+    return list;
+  }
+  
+
+  public ArrayList<FunctionSummary> getAllFunctionWithFacets(
+      List<EnumerationFacet> facets) throws Exception {
+    /*if(facets == null || facets.size() == 0)
+      return getAllSoftware();*/
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
+    
+    String facetquery = "";
+    if(facets != null) {
+      for(EnumerationFacet facet : facets) {
+        int i=0;
+        int num = facet.getEnumerationIds().size();
+        if(num > 0) {
+          facetquery += "\t {\n";
+          for(String propid : facet.getPropertyIds()) {
+            for(String enumid : facet.getEnumerationIds()) {
+              if(i > 0)
+                facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?v <" + ons + "hasFunction> ?x . \n";
+              facetquery += "\t\t  ?v <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?v <" + ons + "hasFunction> ?x . \n";
+              facetquery += "\t\t ?sw <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?sw <"+propid+"> <"+enumid+"> }\n";
+              i++;
+            }
+          }
+          facetquery += "\t } .\n";
+        }
+      }
+    }
+
+    String swquery = "\t ?x a <" + ons +"Function> .\n"
+    			   + "\t ?vobj <" + ons + "hasFunction> ?x .\n"
+    			   + "\t ?swobj <" + ons + "hasSoftwareVersion> ?vobj .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasFunctionDescription> ?dobj .\n"
+                   + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
+                   + "\t } .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasFunctionName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n";
+       String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
+        + " (SAMPLE(?name) as ?fname)"
+        + " (SAMPLE(?swobj) as ?software)"
+        + " (SAMPLE(?vobj) as ?version)"
+        + " WHERE {\n" + swquery + facetquery + "}"
+        + " GROUP BY ?x\n";
+        
+    System.out.println(query);
+    ArrayList<FunctionSummary> list = new ArrayList<FunctionSummary>();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+    for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
+      KBObject function = soln.get(0).getObject();
+      KBObject desc = soln.get(1).getObject();
+      KBObject name = soln.get(2).getObject();
+      KBObject sw = soln.get(3).getObject();
+      KBObject version = soln.get(4).getObject();
+      
+      if(function == null)
+        continue;
+      
+      SoftwareSummary swsummary = new SoftwareSummary();
+      swsummary.setId(sw.getID());
+      swsummary.setName(sw.getName());
+      swsummary.setType(topclass);
+      
+      SoftwareVersionSummary vsummary = new SoftwareVersionSummary();
+      vsummary.setSoftwareSummary(swsummary);
+      vsummary.setId(version.getID());
+      vsummary.setName(version.getName());
+      vsummary.setLabel(allkb.getLabel(version));
+      vsummary.setType(topclassversion);
+      
+      FunctionSummary summary = new FunctionSummary();
+      summary.setSoftwareVersionSummary(vsummary);
+      summary.setSoftwareSummary(swsummary);
+      summary.setId(function.getID());
+      summary.setName(function.getName());
+      summary.setLabel(allkb.getLabel(function));
+      summary.setType(KBConstants.ONTNS() + "Function");
+      summary.setPermission(this.perm_repo.getSoftwarePermission(function.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
+      
+      if(desc != null && desc.getValue() != null) {
+        String description = desc.getValue().toString();
+        description = Pattern.compile("\\n\\nInitial metadata was retrieved .*$", Pattern.DOTALL).
+          matcher(description).replaceAll("");
+        if(description.length() > 300)
+          description = description.substring(0, 297) + "...";
+        summary.setDescription(description);
       }
       list.add(summary);
     }

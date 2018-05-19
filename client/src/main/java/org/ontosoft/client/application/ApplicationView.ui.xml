@@ -22,6 +22,8 @@
 								targetHistoryToken="{nameTokens.getList}" />
 							<b:AnchorListItem icon="COPY" text="Software Versions"
 								targetHistoryToken="{nameTokens.getVersions}" />
+							<b:AnchorListItem icon="GEARS" text="Software Functions"
+								targetHistoryToken="{nameTokens.getFunctions}" />
 							<b:AnchorListItem icon="USERS" text="Community"
 								targetHistoryToken="{nameTokens.getCommunity}" />
 							<b:AnchorListItem icon="GRADUATION_CAP" text="Training"

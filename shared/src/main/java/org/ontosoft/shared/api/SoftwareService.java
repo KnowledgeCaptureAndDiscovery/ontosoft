@@ -13,6 +13,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.fusesource.restygwt.client.DirectRestService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
@@ -43,6 +44,11 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   public List<SoftwareVersionSummary> versions();
   
+  @GET
+  @Path("functions")
+  @Produces("application/json")
+  public List<FunctionSummary> functions();
+  
   /*
    * Query functions
    */
@@ -58,6 +64,13 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   @Consumes("application/json")
   public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(
+      @JsonProperty("facets") List<EnumerationFacet> facets);
+  
+  @POST
+  @Path("searchFunction")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public List<FunctionSummary> listFunctionWithFacets(
       @JsonProperty("facets") List<EnumerationFacet> facets);
   
   @GET
