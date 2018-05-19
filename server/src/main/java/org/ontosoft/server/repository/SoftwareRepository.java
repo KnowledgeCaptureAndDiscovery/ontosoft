@@ -1020,6 +1020,15 @@ public class SoftwareRepository {
               facetquery += "\t\t { ?v <" + ons + "hasFunction> ?x . \n";
               facetquery += "\t\t ?sw <" + ons + "hasSoftwareVersion> ?v . \n";
               facetquery += "\t\t  ?sw <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasInputFile> ?if . \n";
+              facetquery += "\t\t  ?if <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasInputParameter> ?ip . \n";
+              facetquery += "\t\t  ?ip <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasOutput> ?out . \n";
+              facetquery += "\t\t  ?out <"+propid+"> <"+enumid+"> }\n";
               i++;
             }
           }
@@ -1035,26 +1044,32 @@ public class SoftwareRepository {
                    + "\t\t ?x <" + ons + "hasFunctionDescription> ?dobj .\n"
                    + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
                    + "\t } .\n"
+                   + "\t ?vobj <" + pns + "wasGeneratedBy> ?act .\n"
+                   + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
+                   + "\t ?act <" + pns + "endedAtTime> ?time .\n"
                    + "\t OPTIONAL {\n"
                    + "\t\t ?x <" + ons + "hasFunctionName> ?nobj .\n"
                    + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
                    + "\t } .\n";
        String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
         + " (SAMPLE(?name) as ?fname)"
+        + " (SAMPLE(?agent) as ?user)"
+        + " (SAMPLE(?time) as ?posttime)"
         + " (SAMPLE(?swobj) as ?software)"
         + " (SAMPLE(?vobj) as ?version)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
         
-    System.out.println(query);
     ArrayList<FunctionSummary> list = new ArrayList<FunctionSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
       KBObject function = soln.get(0).getObject();
       KBObject desc = soln.get(1).getObject();
       KBObject name = soln.get(2).getObject();
-      KBObject sw = soln.get(3).getObject();
-      KBObject version = soln.get(4).getObject();
+      KBObject agent = soln.get(3).getObject();
+      KBObject time = soln.get(4).getObject();
+      KBObject sw = soln.get(5).getObject();
+      KBObject version = soln.get(6).getObject();
       
       if(function == null)
         continue;
@@ -1092,6 +1107,12 @@ public class SoftwareRepository {
           description = description.substring(0, 297) + "...";
         summary.setDescription(description);
       }
+      if(agent != null)
+        summary.setUser(agent.getName());
+	  if(time != null && time.getValue() != null) {
+	    Date timestamp = (Date)time.getValue();
+	    summary.setTime(timestamp.getTime());
+	  }
       list.add(summary);
     }
     return list;
