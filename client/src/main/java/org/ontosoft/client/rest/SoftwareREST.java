@@ -203,7 +203,7 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(this.service).listWithFacets(facets);
+    }).call(this.service).listSoftwareVersionWithFacets(facets);
   }
   
   public void getSoftware(final String swname, final Callback<Software, Throwable> callback,

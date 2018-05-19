@@ -53,6 +53,13 @@ public interface SoftwareService extends DirectRestService {
   public List<SoftwareSummary> listWithFacets(
       @JsonProperty("facets") List<EnumerationFacet> facets);
   
+  @POST
+  @Path("searchVersion")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(
+      @JsonProperty("facets") List<EnumerationFacet> facets);
+  
   @GET
   @Path("software/{name}")
   @Produces("application/json")
@@ -218,4 +225,5 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")  
   @Consumes("application/json")
   public Boolean getPermissionFeatureEnabled();
+
 }

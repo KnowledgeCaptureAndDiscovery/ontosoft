@@ -770,7 +770,8 @@ public class SoftwareRepository {
       List<EnumerationFacet> facets) throws Exception {
     /*if(facets == null || facets.size() == 0)
       return getAllSoftware();*/
-    
+	String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
     String facetquery = "";
     if(facets != null) {
       for(EnumerationFacet facet : facets) {
@@ -783,6 +784,13 @@ public class SoftwareRepository {
               if(i > 0)
                 facetquery += "\t\t UNION\n";
               facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?v <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?v <" + ons + "hasFunction> ?f . \n";
+              facetquery += "\t\t  ?f <"+propid+"> <"+enumid+"> }\n";
               i++;
             }
           }
@@ -790,8 +798,7 @@ public class SoftwareRepository {
         }
       }
     }
-    String ons = KBConstants.ONTNS();
-    String pns = KBConstants.PROVNS();
+    
     String swquery = "\t ?x a <" + ons +"Software> .\n"
                    + "\t OPTIONAL {\n"
                    + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
@@ -815,7 +822,7 @@ public class SoftwareRepository {
         + " (SAMPLE(?name) as ?swname)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
-        
+       
     ArrayList<SoftwareSummary> list = new ArrayList<SoftwareSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
@@ -871,6 +878,8 @@ public class SoftwareRepository {
       List<EnumerationFacet> facets) throws Exception {
     /*if(facets == null || facets.size() == 0)
       return getAllSoftware();*/
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
     
     String facetquery = "";
     if(facets != null) {
@@ -884,6 +893,9 @@ public class SoftwareRepository {
               if(i > 0)
                 facetquery += "\t\t UNION\n";
               facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasFunction> ?f . \n";
+              facetquery += "\t\t  ?f <"+propid+"> <"+enumid+"> }\n";
               i++;
             }
           }
@@ -891,8 +903,7 @@ public class SoftwareRepository {
         }
       }
     }
-    String ons = KBConstants.ONTNS();
-    String pns = KBConstants.PROVNS();
+
     String swquery = "\t ?x a <" + ons +"SoftwareVersion> .\n"
     			   + "\t ?swobj <" + ons + "hasSoftwareVersion> ?x .\n"
                    + "\t OPTIONAL {\n"

@@ -103,6 +103,20 @@ public class SoftwareResource implements SoftwareService {
     }
   }
   
+  @POST
+  @Path("searchVersion")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @Override
+  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
+    try {
+      return this.repo.getAllSoftwareVersionWithFacets(facets);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
   @GET
   @Path("software/{name}")
   @Produces("application/json")
