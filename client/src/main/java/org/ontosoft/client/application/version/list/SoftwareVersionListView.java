@@ -242,6 +242,8 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
             SafeHtmlBuilder sb = new SafeHtmlBuilder();
             
             String link = "#" + NameTokens.version + "/" + summary.getSoftwareSummary().getName() + ":" + summary.getName();
+            String softwareLink = "#" + NameTokens.browse + "/" + summary.getSoftwareSummary().getName();
+
             String extralabel = "";
             
             if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL)) {
@@ -253,6 +255,12 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
             sb.appendHtmlConstant("<div class='software-list-item'>");
             sb.appendHtmlConstant("<div class='software-name'>");
             sb.appendHtmlConstant(extralabel);
+            if (summary.getSoftwareSummary().getSoftwareName() != null)
+              sb.appendHtmlConstant("<a href='" + softwareLink + "'>" + summary.getSoftwareSummary().getSoftwareName() + "</a>");
+            else
+              sb.appendHtmlConstant("<a href='" + softwareLink + "'>" + summary.getSoftwareSummary().getLabel() + "</a>");
+            sb.appendHtmlConstant(" >> ");
+            
             if (summary.getSoftwareName() != null)
               sb.appendHtmlConstant("<a href='" + link + "'>" + summary.getSoftwareName() + "</a>");
             else

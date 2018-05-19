@@ -241,6 +241,9 @@ public class FunctionListView extends ParameterizedViewImpl
             SafeHtmlBuilder sb = new SafeHtmlBuilder();
             
             String link = "#" + NameTokens.version + "/" + summary.getSoftwareSummary().getName() + ":" + summary.getSoftwareVersionSummary().getName();
+            String softwareLink = "#" + NameTokens.browse + "/" + summary.getSoftwareSummary().getName();
+            String softwareVersionLink = "#" + NameTokens.version + "/" + summary.getSoftwareSummary().getName() + ":" + summary.getSoftwareVersionSummary().getName();
+            
             String extralabel = "";
             
             if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL)) {
@@ -250,6 +253,17 @@ public class FunctionListView extends ParameterizedViewImpl
             }
             
             sb.appendHtmlConstant("<div class='software-list-item'>");
+            sb.appendHtmlConstant("<div class='software-name'>");
+            if (summary.getSoftwareSummary().getSoftwareName() != null)
+              sb.appendHtmlConstant("<a href='" + softwareLink + "'>" + summary.getSoftwareSummary().getSoftwareName() + "</a>");
+            else
+              sb.appendHtmlConstant("<a href='" + softwareLink + "'>" + summary.getSoftwareSummary().getLabel() + "</a>");
+            sb.appendHtmlConstant(" >> ");
+            if (summary.getSoftwareVersionSummary().getSoftwareName() != null)
+              sb.appendHtmlConstant("<a href='" + softwareVersionLink + "'>" + summary.getSoftwareVersionSummary().getSoftwareName() + "</a>");
+            else
+              sb.appendHtmlConstant("<a href='" + softwareVersionLink + "'>" + summary.getSoftwareVersionSummary().getLabel() + "</a>");
+            sb.appendHtmlConstant("</div>");
             sb.appendHtmlConstant("<div class='software-name'>");
             sb.appendHtmlConstant(extralabel);
             if (summary.getSoftwareName() != null)

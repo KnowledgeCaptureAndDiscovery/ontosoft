@@ -952,6 +952,7 @@ public class SoftwareRepository {
       SoftwareSummary swsummary = new SoftwareSummary();
       swsummary.setId(sw.getID());
       swsummary.setName(sw.getName());
+      swsummary.setLabel(allkb.getLabel(sw));
       swsummary.setType(topclass);
       
       SoftwareVersionSummary summary = new SoftwareVersionSummary();
@@ -1077,6 +1078,7 @@ public class SoftwareRepository {
       SoftwareSummary swsummary = new SoftwareSummary();
       swsummary.setId(sw.getID());
       swsummary.setName(sw.getName());
+      swsummary.setLabel(allkb.getLabel(sw));
       swsummary.setType(topclass);
       
       SoftwareVersionSummary vsummary = new SoftwareVersionSummary();
