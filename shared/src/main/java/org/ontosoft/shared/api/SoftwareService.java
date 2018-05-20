@@ -17,6 +17,7 @@ import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.AccessMode;
@@ -82,6 +83,11 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}/version/{version}")
   @Produces("application/json")
   public SoftwareVersion getVersion(@PathParam("name") String name, @PathParam("version") String version);
+
+  @GET
+  @Path("software/{name}/version/{version}/function/{function}")
+  @Produces("application/json")
+  public SoftwareFunction getSoftwareFunction(@PathParam("name") String name, @PathParam("version") String version, @PathParam("function") String function);
 
   @GET
   @Path("software/{name}")

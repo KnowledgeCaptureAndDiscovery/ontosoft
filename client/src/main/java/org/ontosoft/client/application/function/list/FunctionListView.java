@@ -504,10 +504,10 @@ public class FunctionListView extends ParameterizedViewImpl
         if(i > 0) idtext += ",";
         if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
           idtext += summary.getExternalRepositoryId()+":";
-        idtext += summary.getName();
+        idtext += summary.getSoftwareSummary().getName() + ":" + summary.getSoftwareVersionSummary().getName() + ":" + summary.getName();
         i++;
       }
-      History.newItem(NameTokens.compare + "/" + idtext);
+      History.newItem(NameTokens.comparefunction + "/" + idtext);
     }
   }
 

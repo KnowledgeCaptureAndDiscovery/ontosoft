@@ -16,6 +16,7 @@ import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -49,6 +50,8 @@ public class SoftwareREST {
       new HashMap<String, Software>();
   private HashMap<String, SoftwareVersion> softwareVersionCache = 
 	      new HashMap<String, SoftwareVersion>();
+  private HashMap<String, SoftwareFunction> softwareFunctionCache = 
+	      new HashMap<String, SoftwareFunction>();
   private HashMap<String, List<MetadataEnumeration>> enumCache = 
       new HashMap<String, List<MetadataEnumeration>>();
   
@@ -67,7 +70,7 @@ public class SoftwareREST {
     enum_callbacks =
       new HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>>();
   
-  private Boolean permFeatureEnabled = null; 
+  private Boolean permFeatureEnabled = null;
   
   public static SoftwareREST get(String key) {
     if(singletons.containsKey(key))
@@ -315,6 +318,39 @@ public class SoftwareREST {
           callback.onFailure(exception);
         }
       }).call(this.service).getVersion(URL.encodeQueryString(swname), URL.encodeQueryString(vname));
+    }
+  }
+  
+  public void getSoftwareFunction(final String swname, final String vname, final String fname, 
+		  final Callback<SoftwareFunction, Throwable> callback,
+      final boolean reload) {
+    //GWT.log(softwareCache.keySet().toString() + ": "+reload);
+    if(softwareFunctionCache.containsKey(vname) && !reload) {
+      callback.onSuccess(softwareFunctionCache.get(fname));
+    }    
+    else {
+      REST.withCallback(new MethodCallback<SoftwareFunction>() {
+        @Override
+        public void onSuccess(Method method, SoftwareFunction f) {
+          //GWT.log("caching "+sw.getName());
+          if(f != null) {
+            softwareFunctionCache.put(f.getName(), f);
+            if(reload)
+              AppNotification.notifySuccess(f.getLabel() + " reloaded", 1000);
+            callback.onSuccess(f);
+          }
+          else {
+            AppNotification.notifyFailure("Could not find "+vname);
+            callback.onFailure(new Throwable("Software details could not be found"));
+          }
+        }
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          GWT.log("Could nto fetch software: "+vname, exception);
+          AppNotification.notifyFailure("Could not fetch software: "+vname);
+          callback.onFailure(exception);
+        }
+      }).call(this.service).getSoftwareFunction(URL.encodeQueryString(swname), URL.encodeQueryString(vname), URL.encodeQueryString(fname));
     }
   }
   
@@ -646,4 +682,5 @@ public class SoftwareREST {
       }
     }
   }
+
 }

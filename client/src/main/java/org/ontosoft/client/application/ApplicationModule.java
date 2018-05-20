@@ -6,6 +6,8 @@ import org.ontosoft.client.application.community.CommunityPresenter;
 import org.ontosoft.client.application.community.CommunityView;
 import org.ontosoft.client.application.compare.ComparePresenter;
 import org.ontosoft.client.application.compare.CompareView;
+import org.ontosoft.client.application.function.compare.CompareFunctionPresenter;
+import org.ontosoft.client.application.function.compare.CompareFunctionView;
 import org.ontosoft.client.application.function.list.FunctionListPresenter;
 import org.ontosoft.client.application.function.list.FunctionListView;
 import org.ontosoft.client.application.home.HomePresenter;
@@ -62,6 +64,8 @@ public class ApplicationModule extends AbstractPresenterModule {
     		FunctionListView.class, FunctionListPresenter.MyProxy.class);
     bindPresenter(ComparePresenter.class, ComparePresenter.MyView.class,
         CompareView.class, ComparePresenter.MyProxy.class);
+    bindPresenter(CompareFunctionPresenter.class, CompareFunctionPresenter.MyView.class,
+        CompareFunctionView.class, CompareFunctionPresenter.MyProxy.class);
     bindPresenter(UserPresenter.class, UserPresenter.MyView.class,
         UserView.class, UserPresenter.MyProxy.class);        
   }

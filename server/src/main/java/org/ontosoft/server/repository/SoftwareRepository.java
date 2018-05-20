@@ -24,6 +24,7 @@ import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.AccessMode;
@@ -1233,6 +1234,37 @@ public class SoftwareRepository {
     return null;
   }
   
+  public SoftwareFunction getSoftwareFunction(String swid, String vid, String fid) throws Exception {
+    KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
+    KBObject vobj = vkb.getIndividual(fid);
+    if(vobj != null) {
+      SoftwareFunction function = new SoftwareFunction();
+      function.setId(fid);
+      function.setLabel(vkb.getLabel(vobj));
+      function.setName(vobj.getName());
+      
+      KBObject typeobj = vkb.getPropertyValue(vobj, ontkb.getProperty(rdfns+"type"));
+      function.setType(typeobj.getID());
+
+      MetadataType swtype = this.vocabulary.getType(function.getType());
+      
+      for(MetadataProperty prop : this.vocabulary.getPropertiesForType(swtype)) {
+        
+        KBObject propobj = vkb.getProperty(prop.getId());
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+        for(KBObject valobj: vkb.getPropertyValues(vobj, propobj)) {                    
+	      Entity entity = this.getSoftwareEntity(vkb, valobj, prop.getRange());
+	      if(entity != null)
+	        entities.add(entity);
+        }
+        function.addPropertyValues(prop.getId(), entities);
+      }
+      
+      return function;
+    }
+    return null;
+  }
+  
   public Provenance getProvenance(String swid) throws Exception {
     return this.prov.getSoftwareProvenance(swid);
   }
@@ -1529,4 +1561,5 @@ public class SoftwareRepository {
   private String getUserId(UserCredentials user) {
 	return this.USERNS() + user.getName().replaceAll("[^a-zA-Z0-9_]", "_");    
   }
+
 }

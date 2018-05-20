@@ -27,6 +27,7 @@ import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.Permission;
@@ -174,6 +175,27 @@ public class SoftwareResource implements SoftwareService {
       if(!name.startsWith("http:"))
           vid = swid + "/version/" + version;
       return this.repo.getSoftwareVersion(swid, vid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
+  @Path("software/{name}/version/{version}/function/{function}")
+  @Produces("application/json")
+  @Override
+  public SoftwareFunction getSoftwareFunction(@PathParam("name") String name, @PathParam("version") String version, @PathParam("function") String function) {
+    try {
+      String vid = version;
+      String swid = name;
+      String fid = function;
+      if(!name.startsWith("http:")) {
+          swid = repo.LIBNS() + name;
+          vid = swid + "/version/" + version;
+          fid = swid + "/version/" + version + "#" + function;
+      }          
+      return this.repo.getSoftwareFunction(swid, vid, fid);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());

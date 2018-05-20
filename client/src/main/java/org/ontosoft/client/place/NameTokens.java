@@ -12,6 +12,7 @@ public class NameTokens {
   public static final String list = "list";
   public static final String router = "router";
   public static final String compare = "compare";
+  public static final String comparefunction = "comparefunction";
   public static final String users = "users";
   public static final String permission = "permission";
   public static final String versions = "versions";
@@ -59,6 +60,10 @@ public class NameTokens {
   
   public static String getCompare() {
     return compare;
+  }
+  
+  public static String getCompareFunction() {
+    return comparefunction;
   }
   
   public static String getList() {
