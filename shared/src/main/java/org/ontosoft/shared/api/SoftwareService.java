@@ -42,7 +42,7 @@ public interface SoftwareService extends DirectRestService {
   @GET
   @Path("versions")
   @Produces("application/json")
-  public List<SoftwareVersionSummary> versions();
+  public List<SoftwareVersionSummary> versions(String software);
   
   @GET
   @Path("functions")
@@ -64,7 +64,7 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   @Consumes("application/json")
   public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(
-      @JsonProperty("facets") List<EnumerationFacet> facets);
+      @JsonProperty("facets") List<EnumerationFacet> facets, @PathParam("software") String software);
   
   @POST
   @Path("searchFunction")

@@ -763,8 +763,8 @@ public class SoftwareRepository {
     return this.getAllSoftwareWithFacets(null);
   }
   
-  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersion() throws Exception {
-    return this.getAllSoftwareVersionWithFacets(null);
+  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersion(String software) throws Exception {
+    return this.getAllSoftwareVersionWithFacets(null, software);
   }
   
   public ArrayList<FunctionSummary> getAllFunction() throws Exception {
@@ -880,7 +880,7 @@ public class SoftwareRepository {
   }
   
   public ArrayList<SoftwareVersionSummary> getAllSoftwareVersionWithFacets(
-      List<EnumerationFacet> facets) throws Exception {
+      List<EnumerationFacet> facets, String software) throws Exception {
     /*if(facets == null || facets.size() == 0)
       return getAllSoftware();*/
     String ons = KBConstants.ONTNS();
@@ -925,7 +925,13 @@ public class SoftwareRepository {
                    + "\t\t ?x <" + ons + "hasName> ?nobj .\n"
                    + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
                    + "\t } .\n"
-                   + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))";
+                   + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))\n";
+    
+    if (software != null && software != "")
+    {
+    	swquery += "FILTER (regex(STR(?swobj),\"" + LIBURI() + software + "\"))";
+    }
+
     String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
         + " (GROUP_CONCAT(?creator) as ?creators)"
         + " (SAMPLE(?agent) as ?user)"
@@ -934,7 +940,7 @@ public class SoftwareRepository {
         + " (SAMPLE(?swobj) as ?software)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
-        
+
     ArrayList<SoftwareVersionSummary> list = new ArrayList<SoftwareVersionSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {

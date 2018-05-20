@@ -81,9 +81,9 @@ public class SoftwareResource implements SoftwareService {
   @Path("versions")
   @Produces("application/json")
   @Override
-  public List<SoftwareVersionSummary> versions() {
+  public List<SoftwareVersionSummary> versions(String software) {
     try {
-      return this.repo.getAllSoftwareVersion();
+      return this.repo.getAllSoftwareVersion(software);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());
@@ -122,9 +122,9 @@ public class SoftwareResource implements SoftwareService {
   @Produces("application/json")
   @Consumes("application/json")
   @Override
-  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
+  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets, @PathParam("version") String software) {
     try {
-      return this.repo.getAllSoftwareVersionWithFacets(facets);
+      return this.repo.getAllSoftwareVersionWithFacets(facets, software);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());

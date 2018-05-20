@@ -32,7 +32,12 @@
 			    <b.html:Div styleName="chart-icon pull-right">
 			        <c:CategoryPieChart ui:field="piechart" name="topchart" size="100" />
 			    </b.html:Div>
-				<b:PageHeader ui:field="softwareTitle" />				
+				<b:PageHeader ui:field="softwareTitle" />	
+				<b:ButtonGroup pull="LEFT" styleName="btn-group btn-group-responsive has-bottom-margin" 
+				visible="true">
+					<b:Button ui:field="softwareVersions" type="INFO" icon="LINK"
+						text="See versions of this software" />
+				</b:ButtonGroup>			
 			</g:FlowPanel>
 			<g:FlowPanel>
 				<b:ButtonGroup pull="LEFT" styleName="btn-group btn-group-responsive has-bottom-margin" 

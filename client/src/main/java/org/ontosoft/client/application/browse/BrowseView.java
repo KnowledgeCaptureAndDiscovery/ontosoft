@@ -70,7 +70,7 @@ public class BrowseView extends ParameterizedViewImpl
   VerticalPanel loading;
   
   @UiField
-  Button publishbutton, cancelbutton, bigpublishbutton;
+  Button publishbutton, cancelbutton, bigpublishbutton, softwareVersions;
   
   @UiField
   Modal publishdialog;
@@ -436,6 +436,11 @@ public class BrowseView extends ParameterizedViewImpl
   @UiHandler("cancelbutton")
   void onCancelPublish(ClickEvent event) {
     softwarelabel.setValue(null);
+  }
+  
+  @UiHandler("softwareVersions")
+  void onSoftwareVersionsClick(ClickEvent event) {
+    History.newItem(NameTokens.versions + "/" + softwarename);
   }
   
   private void submitPublishForm() {

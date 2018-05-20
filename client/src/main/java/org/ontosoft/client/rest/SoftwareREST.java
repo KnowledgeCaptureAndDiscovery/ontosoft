@@ -152,7 +152,7 @@ public class SoftwareREST {
     }
   }
   
-  public void getSoftwareVersionList(final Callback<List<SoftwareVersionSummary>, Throwable> callback,
+  public void getSoftwareVersionList(String software, final Callback<List<SoftwareVersionSummary>, Throwable> callback,
       boolean reload) {
     if(softwareVersionList != null && !reload) {
       callback.onSuccess(softwareVersionList);
@@ -174,7 +174,7 @@ public class SoftwareREST {
             AppNotification.notifyFailure("Could not load software list");
             callback.onFailure(exception);
           }
-        }).call(this.service).versions();
+        }).call(this.service).versions(software);
       }
       else {
         list_version_callbacks.add(callback);
@@ -226,7 +226,7 @@ public class SoftwareREST {
     }).call(this.service).listWithFacets(facets);
   }
   
-  public void getSoftwareVersionListFaceted(List<EnumerationFacet> facets,
+  public void getSoftwareVersionListFaceted(List<EnumerationFacet> facets, String software,
       final Callback<List<SoftwareVersionSummary>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<SoftwareVersionSummary>>() {
       @Override
@@ -237,7 +237,7 @@ public class SoftwareREST {
       public void onFailure(Method method, Throwable exception) {
         callback.onFailure(exception);
       }
-    }).call(this.service).listSoftwareVersionWithFacets(facets);
+    }).call(this.service).listSoftwareVersionWithFacets(facets, software);
   }
   
   public void getFunctionListFaceted(List<EnumerationFacet> facets,

@@ -27,6 +27,7 @@ import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
+import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.users.UserSession;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
@@ -98,6 +99,8 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
   Map<String, SoftwareREST> apis;
   Map<String, String> clientUrls;
   
+  String softwarename;
+  
   private List<SoftwareVersionSummary> allSoftwareList;
   private HashMap<String, Boolean> filteredSoftwareIdMap =
       new HashMap<String, Boolean>();
@@ -113,6 +116,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
 
   @Inject
   public SoftwareVersionListView(Binder binder) {
+	softwarename = null;
     initWidget(binder.createAndBindUi(this));
     initAPIs();
     initVocabulary();
@@ -157,7 +161,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
     for(final String sname : apis.keySet()) {
       SoftwareREST sapi = apis.get(sname);
       allSoftwareList = new ArrayList<SoftwareVersionSummary>();
-      sapi.getSoftwareVersionList(new Callback<List<SoftwareVersionSummary>, Throwable>() {
+      sapi.getSoftwareVersionList(softwarename, new Callback<List<SoftwareVersionSummary>, Throwable>() {
         @Override
         public void onSuccess(List<SoftwareVersionSummary> list) {
           for(SoftwareVersionSummary sum : list) {
@@ -186,7 +190,6 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
     }   
   }
 
-  
   @Override
   public void initializeParameters(String[] params) {
     UserSession session = SessionStorage.getSession();
@@ -197,7 +200,10 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
       if (session.getRoles().contains("admin"))
         this.isadmin = true;
     }
-    this.updateList();
+    if(params.length > 0) {
+       this.softwarename = params[0];
+    }
+    this.updateList(softwarename);
     this.redrawControls();
   }
   
@@ -411,19 +417,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
   }
   
   private void deleteSoftware(final SoftwareVersionSummary sw) {
-    if (Window.confirm("Are you sure you want to delete the software ?")) {
-      this.api.deleteSoftware(sw.getName(),
-          new Callback<Void, Throwable>() {
-            @Override
-            public void onSuccess(Void v) {
-              removeFromList(sw);
-              updateList();
-            }
-            @Override
-            public void onFailure(Throwable exception) { }
-          }
-      );
-    }
+    
   }
   
   @UiHandler("publishdialog")
@@ -457,19 +451,19 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
   private void submitPublishForm() {
     String label = softwarelabel.getValue();
     if(softwarelabel.validate(true)) {
-      SoftwareVersion tmpsw = new SoftwareVersion();
+      Software tmpsw = new Software();
       tmpsw.setLabel(label);
       // TODO: provide Software name, instead of an empty string
-      this.api.publishSoftwareVersion("", tmpsw, new Callback<SoftwareVersion, Throwable>() {
-        public void onSuccess(SoftwareVersion sw) {
+      this.api.publishSoftware(tmpsw, new Callback<Software, Throwable>() {
+        public void onSuccess(Software sw) {
           // Add item to list
-          SoftwareVersionSummary newsw = new SoftwareVersionSummary(sw);
-          newsw.setExternalRepositoryId(SoftwareREST.LOCAL);
-          addToList(newsw);
-          updateList();
+          //SoftwareSummary newsw = new SoftwareSummary(sw);
+          //newsw.setExternalRepositoryId(SoftwareREST.LOCAL);
+          //addToList(newsw);
+          //updateList();
           
           // Go to the new item
-          History.newItem(NameTokens.publishversion + "/" + sw.getName());
+          History.newItem(NameTokens.publish + "/" + sw.getName());
           
           publishdialog.hide();
           softwarelabel.setValue(null);
@@ -480,43 +474,27 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
     } 
   }
   
-  private void addToList(SoftwareVersionSummary summary) {
-    boolean contains = false;
-    for(SoftwareVersionSummary sum : allSoftwareList) {
-      if(sum.getId().equals(summary.getId())) {
-        contains = true;
-        break;
-      }
-    }
-    if(!contains)
-      allSoftwareList.add(summary);
-    filteredSoftwareIdMap.put(summary.getId(), true);
-    Collections.sort(allSoftwareList, swcompare);    
-  }
-  
-  private void removeFromList(SoftwareVersionSummary summary) {
-    filteredSoftwareIdMap.remove(summary);
-    allSoftwareList.remove(summary);
-  }
-  
   @UiHandler("searchbox")
   void onSearch(KeyUpEvent event) {
-    updateList();
+    updateList(softwarename);
   }
   
   @UiHandler("clearsearch")
   void onClearSearch(ClickEvent event) {
     searchbox.setValue("");
-    updateList();
+    updateList(softwarename);
   }
   
-  void updateList() {
+  void updateList(String software) {
     listProvider.getList().clear();
     String value = searchbox.getValue();
     for(SoftwareVersionSummary summary : allSoftwareList) {
       if(filteredSoftwareIdMap.containsKey(summary.getId())) {
-        if(value == null || value.equals("") ||
-            summary.getLabel().toLowerCase().contains(value.toLowerCase()))
+        if((value == null || value.equals("") ||
+            summary.getLabel().toLowerCase().contains(value.toLowerCase())) 
+        		&& (softwarename == null 
+        		|| (softwarename != null && softwarename != "" && summary.getSoftwareSummary().getName() == softwarename))
+        		)
         listProvider.getList().add(summary);
       }
     }
@@ -537,7 +515,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
     final List<SoftwareVersionSummary> facetList = new ArrayList<SoftwareVersionSummary>();
     for(final String sname : apis.keySet()) {
       SoftwareREST sapi = apis.get(sname);
-      sapi.getSoftwareVersionListFaceted(facets.getFacets(),
+      sapi.getSoftwareVersionListFaceted(facets.getFacets(), softwarename,
           new Callback<List<SoftwareVersionSummary>, Throwable>() {
         @Override
         public void onSuccess(List<SoftwareVersionSummary> list) {
@@ -547,7 +525,7 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
             filteredSoftwareIdMap.clear();
             for(SoftwareVersionSummary flist: facetList)
               filteredSoftwareIdMap.put(flist.getId(), true);
-            updateList();
+            updateList(softwarename);
           }
         }
         @Override
