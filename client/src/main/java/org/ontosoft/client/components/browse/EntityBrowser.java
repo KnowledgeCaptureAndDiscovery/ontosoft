@@ -3,6 +3,7 @@ package org.ontosoft.client.components.browse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
@@ -233,6 +234,9 @@ public class EntityBrowser {
       else if(isLocation) {
         entitieshtml += "<a class='wrap-long-words' href='"+entity.getValue()+"'>"+entity.getValue()+"</a>";
       }
+      else if(entity.getType() == KBConstants.ONTNS() + "SoftwareVersion") {
+	    entitieshtml += "<a class='wrap-long-words' href='#" + NameTokens.version + "/" + entity.getId().split("/")[5] + ":" + entity.getId().split("/")[7] +"'>"+entity.getValue()+"</a>";
+	  }
       else {
         entitieshtml += "<div class='wrap-pre wrap-long-words'>" + entity.toString() + "</div>";
       }

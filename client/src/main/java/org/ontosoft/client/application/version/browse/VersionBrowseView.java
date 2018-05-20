@@ -197,6 +197,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
     softwareBody.setVisible(false);
     softwareTitle.setVisible(false);
     softwareBody.clear();
+    softwareName.clear();
     softwareTitle.setText(null);
     softwareTitle.setSubText(null);
     version = null;
@@ -218,6 +219,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
       return;
 
     initializePieChart();
+    softwareName.clear();
     String softwareLink = "#" + NameTokens.browse + "/" + software.getName();
 
     if (software.getSoftwareName() != null)
@@ -233,6 +235,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
     	softwareTitle.setText(sw.getLabel());
     
     softwareBody.clear();
+    
     setBrowserWindowTitle(softwareTitle.getText());
     
     String topcatid = KBConstants.CATNS()+"MetadataCategory";
@@ -483,7 +486,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
           //updateList();
           
           // Go to the new item
-          History.newItem(NameTokens.publish + "/" + swnames[0] + ":" + sw.getName());
+          History.newItem(NameTokens.publishversion + "/" + swnames[0] + ":" + sw.getName());
           
           publishdialog.hide();
           softwarelabel.setValue(null);
