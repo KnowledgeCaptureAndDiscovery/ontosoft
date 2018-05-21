@@ -154,6 +154,8 @@ public class VersionBrowseView extends ParameterizedViewImpl
         version = v;
         initSoftwareRDF();
         loading.setVisible(false);
+        if(vocabulary != null)
+            showSoftware(version);
       }
       @Override
       public void onFailure(Throwable exception) {
@@ -165,9 +167,14 @@ public class VersionBrowseView extends ParameterizedViewImpl
         @Override
         public void onSuccess(Software sw) {
           software = sw;
-          loading.setVisible(false);
-          if(vocabulary != null)
-            showSoftware(version);
+          softwareName.clear();
+          String softwareLink = "#" + NameTokens.browse + "/" + software.getName();
+
+          if (software.getSoftwareName() != null)
+          	softwareLink = "<a href='" + softwareLink + "'>" + software.getSoftwareName() + "</a>";
+          else
+          	softwareLink = "<a href='" + softwareLink + "'>" + software.getLabel() + "</a>";
+          softwareName.add(new HTML(softwareLink + " >> "));
         }
         @Override
         public void onFailure(Throwable exception) {
@@ -218,15 +225,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
     if(sw == null || vocabulary == null)
       return;
 
-    initializePieChart();
-    softwareName.clear();
-    String softwareLink = "#" + NameTokens.browse + "/" + software.getName();
-
-    if (software.getSoftwareName() != null)
-    	softwareLink = "<a href='" + softwareLink + "'>" + software.getSoftwareName() + "</a>";
-    else
-    	softwareLink = "<a href='" + softwareLink + "'>" + software.getLabel() + "</a>";
-    softwareName.add(new HTML(softwareLink + " >> "));
+    initializePieChart();    
     
     Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
     if (swName != null)

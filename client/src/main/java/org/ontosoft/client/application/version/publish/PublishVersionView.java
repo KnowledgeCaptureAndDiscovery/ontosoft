@@ -356,7 +356,7 @@ public class PublishVersionView extends ParameterizedViewImpl
     });	  
   }
   
-  private void initSoftware(String versionname, final boolean reload) {    
+  private void initSoftware(final String versionname, final boolean reload) {    
     if(!reload)
       loading.setVisible(true);
     else
@@ -364,36 +364,38 @@ public class PublishVersionView extends ParameterizedViewImpl
     
     String[] swnames = versionname.split("\\s*:\\s*");
     softwarename = swnames[0];
-    versionname = swnames[1];
+    final String versionname1 = swnames[1];
     this.versionname = versionname;
     
-    this.api.getSoftwareVersion(softwarename, versionname, 
-        new Callback<SoftwareVersion, Throwable>() {
-      @Override
-      public void onSuccess(SoftwareVersion sw) {
-        reloadbutton.setIconSpin(false);
-        loading.setVisible(false);
-        savebutton.setEnabled(sw.isDirty());
-        
-        version = sw;
-        initialDraw();
-        
-        setPermButtonVisibility();
-        
-        notifications.showNotificationsForSoftwareVersion(version.getId());
-        String swlabel = version.getLabel();
-        permissiondialog.setTitle("Set Permissions for " + swlabel.substring(0, 1).toUpperCase() + swlabel.substring(1));
-      }
-      @Override
-      public void onFailure(Throwable reason) {
-        reloadbutton.setIconSpin(false);
-        loading.setVisible(false);
-      }
-    }, reload);
+    
     api.getSoftware(softwarename, new Callback<Software, Throwable>() {
         @Override
         public void onSuccess(Software sw) {
         	software = sw;
+        	
+        	api.getSoftwareVersion(softwarename, versionname1, 
+    	        new Callback<SoftwareVersion, Throwable>() {
+    	      @Override
+    	      public void onSuccess(SoftwareVersion sw) {
+    	        reloadbutton.setIconSpin(false);
+    	        loading.setVisible(false);
+    	        savebutton.setEnabled(sw.isDirty());
+    	        
+    	        version = sw;
+    	        initialDraw();
+    	        
+    	        setPermButtonVisibility();
+    	        
+    	        notifications.showNotificationsForSoftwareVersion(version.getId());
+    	        String swlabel = version.getLabel();
+    	        permissiondialog.setTitle("Set Permissions for " + swlabel.substring(0, 1).toUpperCase() + swlabel.substring(1));
+    	      }
+    	      @Override
+    	      public void onFailure(Throwable reason) {
+    	        reloadbutton.setIconSpin(false);
+    	        loading.setVisible(false);
+    	      }
+    	    }, reload);
         }
         @Override
         public void onFailure(Throwable exception) {
@@ -598,8 +600,6 @@ public class PublishVersionView extends ParameterizedViewImpl
       swlabel = swname;
     else if (swlabel == null)
       swlabel = piechart.getSoftware().getName();
-    
-    
     
     AnchorListItem anchor1 = new AnchorListItem(software.getLabel());
     anchor1.addClickHandler(new ClickHandler() {
