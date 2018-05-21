@@ -260,9 +260,13 @@ public class SoftwareRepository {
       MetadataType enumtype = this.vocabulary.getType(KBConstants.ONTNS() + "EnumerationEntity");
       //MetadataType swtype = this.vocabulary.getType(KBConstants.ONTNS() + "Software");
       
+      List<MetadataType> types = this.vocabulary.getSubTypes(enumtype);
+      types.add(this.vocabulary.getType(KBConstants.ONTNS() + "Function"));
+      types.add(this.vocabulary.getType(KBConstants.ONTNS() + "KnownIssue"));
+      
       enumerations = new HashMap<String, List<MetadataEnumeration>>();
       
-      for(MetadataType type : this.vocabulary.getSubTypes(enumtype)) {
+      for(MetadataType type : types) {
         List<MetadataEnumeration> typeenums = new ArrayList<MetadataEnumeration>();
         KBAPI kb = enumkb;
         //if(vocabulary.isA(type, swtype))
@@ -270,15 +274,32 @@ public class SoftwareRepository {
         for(KBTriple t : kb.genericTripleQuery(null, rdftype, ontkb.getConcept(type.getId()))) {
           MetadataEnumeration menum = new MetadataEnumeration();
           KBObject inst = t.getSubject();
+          KBObject i = this.ontkb.getProperty(KBConstants.ONTNS() + "hasFunctionName");
+          KBObject i2 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasFunction");
+          KBObject i3 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasTextValue");
           menum.setId(inst.getID());
           menum.setName(inst.getName());
           menum.setType(type.getId());
-          String label = this.ontkb.getLabel(inst);
-          if(label == null)
-            label = inst.getName();
-          menum.setLabel(label);
+          String label = null;
+          if (type.getId().equals(KBConstants.ONTNS() + "Function")) {
+        	  KBObject value = this.ontkb.getPropertyValue(inst, i);
+        	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+        	  KBObject individual = vkb.getIndividual(value.getID());
+        	  
+        	  if (individual != null) {
+        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
+        		  menum.setLabel(label);
+        		  typeenums.add(menum);
+        	  }
+          }
+          else {
+        	  label = this.ontkb.getLabel(inst);
+        	  if(label == null)
+                  label = inst.getName();
+              menum.setLabel(label);
 
-          typeenums.add(menum);
+              typeenums.add(menum);
+          }
         }
         enumerations.put(type.getId(), typeenums);
       }

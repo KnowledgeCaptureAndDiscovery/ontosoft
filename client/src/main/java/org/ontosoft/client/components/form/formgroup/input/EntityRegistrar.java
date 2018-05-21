@@ -6,6 +6,7 @@ import org.ontosoft.client.components.form.SoftwareVersionForm;
 import org.ontosoft.client.generator.EntityFactory;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
+import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 
@@ -36,6 +37,10 @@ public class EntityRegistrar {
   public static IEntityInput getInput(Entity entity, MetadataProperty mprop, Vocabulary vocabulary) 
       throws Exception {
     String inputClass = inputClasses.get(mprop.getRange());
+    if (mprop.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction" || mprop.getId() == KBConstants.ONTNS() + "fixedKnownIssue")
+    {
+    	inputClass = "org.ontosoft.client.components.form.formgroup.input.EnumerationEntityInput";
+    }
     if(inputClass != null) {
       Object item = entityFactory.instantiate(inputClass);
       if(item == null) {

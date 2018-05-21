@@ -339,9 +339,11 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
     // Convert software entities to enumerations
     MetadataClass topclass = vocabulary.getType(KBConstants.ONTNS()+"SoftwareVersion");
     MetadataClass eclass = vocabulary.getType(proptype);
-    if(vocabulary.isA(eclass, topclass)) {
+    if(vocabulary.isA(eclass, topclass)
+    		|| property.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction") {
       proptype = KBConstants.ONTNS()+"EnumerationEntity";
       id = id.replace(version.getName()+"#", "");
+      GWT.log(property.getId());
     }
     
     try {
@@ -378,15 +380,15 @@ public class ComplexEntityInput extends FieldSet implements IEntityInput {
       btn.addClickHandler(new ClickHandler() {
         @Override
         public void onClick(ClickEvent event) {
-          if(property.isMultiple()) {
+          if(subprop.isMultiple()) {
             // Remove if multiple entities are there
             thisfs.remove(ig);
             //entities.remove(entity);
             inputs.remove(ip);
             if(entity.getValue() != null) {
               entity.setValue(null);
-
             }
+            ip.clearValue();
             //GWT.log(software.getPropertyValues(property.getId()).toString());
           }
           else {

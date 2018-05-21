@@ -374,11 +374,13 @@ public class PropertySoftwareVersionFormGroup extends FormGroup implements HasPl
     String id = GUID.randomEntityId(version.getId(), proptype);
     
     // Convert software entities to enumerations
-    MetadataClass topclass = vocabulary.getType(KBConstants.ONTNS()+"Software");
+    MetadataClass topclass = vocabulary.getType(KBConstants.ONTNS()+"SoftwareVersion");
     MetadataClass eclass = vocabulary.getType(proptype);
-    if(vocabulary.isA(eclass, topclass)) {
+    if(vocabulary.isA(eclass, topclass)
+    		|| property.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction") {
       proptype = KBConstants.ONTNS()+"EnumerationEntity";
       id = id.replace(version.getName()+"#", "");
+      GWT.log(property.getId());
     }
     
     try {
