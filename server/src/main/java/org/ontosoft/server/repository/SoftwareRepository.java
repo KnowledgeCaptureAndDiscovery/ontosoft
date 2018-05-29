@@ -284,12 +284,15 @@ public class SoftwareRepository {
           if (type.getId().equals(KBConstants.ONTNS() + "Function")) {
         	  KBObject value = this.ontkb.getPropertyValue(inst, i);
         	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
-        	  KBObject individual = vkb.getIndividual(value.getID());
-        	  
-        	  if (individual != null) {
-        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
-        		  menum.setLabel(label);
-        		  typeenums.add(menum);
+        	  if (value != null)
+        	  {
+	        	  KBObject individual = vkb.getIndividual(value.getID());
+	        	  
+	        	  if (individual != null) {
+	        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
+	        		  menum.setLabel(label);
+	        		  typeenums.add(menum);
+	        	  }
         	  }
           }
           else {
@@ -629,6 +632,7 @@ public class SoftwareRepository {
   private String updateOrAddSoftwareVersion(String swid, SoftwareVersion version, User user, boolean update) throws Exception {
     boolean isModerator = false;
     Boolean permFetureEnabled = getPermissionFeatureEnabled();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     
     if (update) {
       String accesslevel = PermUtils.getAccessLevelForUser(version, user.getName(), version.getId());
@@ -703,6 +707,8 @@ public class SoftwareRepository {
                   entityobj = ontkb.getIndividual(entity.getId());
                 if(entityobj == null)
                   entityobj = enumkb.getIndividual(entity.getId());
+                if (entityobj == null)
+                  entityobj = allkb.getIndividual(entity.getId());
                 if(entityobj != null)
                   vkb.addPropertyValue(vobj, vprop, entityobj);
               }
@@ -718,7 +724,19 @@ public class SoftwareRepository {
     	KBAPI swkb = fac.getKB(this.LIBNS() + swid, OntSpec.PLAIN);
     	KBObject swobj = swkb.getIndividual(this.LIBNS() + swid);
     	KBObject swprop = this.ontkb.getProperty(KBConstants.ONTNS()+"hasSoftwareVersion");
+    	KBObject swprop2 = this.ontkb.getProperty(KBConstants.ONTNS()+"hasLatestSoftwareVersion");
+    	
+    	KBObject latestVersion = swkb.getPropertyValue(swobj, swprop2);
+    	if (latestVersion != null)
+    	{
+    		copyVersionPropertiesToNewLatestSoftwareVersion(swobj, latestVersion, vobj, vkb, allkb);
+    	}
+    	
+    	for(KBTriple t :  swkb.genericTripleQuery(swobj, swprop2, null))
+        	swkb.removeTriple(t);
+    	
     	swkb.addPropertyValue(swobj, swprop, vobj);
+    	swkb.addPropertyValue(swobj, swprop2, vobj);
     	swkb.save();
     }
     
@@ -739,7 +757,49 @@ public class SoftwareRepository {
   }
   
   
-  /**
+  private void copyVersionPropertiesToNewLatestSoftwareVersion(KBObject swobj, KBObject latestVersion, KBObject vobj, KBAPI vkb, KBAPI allkb) throws Exception {
+	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN);
+	SoftwareVersion version = getSoftwareVersion(swobj.getID(), latestVersion.getID());
+    
+    for(String propid : version.getValue().keySet()) {
+        KBObject vprop = this.ontkb.getProperty(propid);
+        if (vprop != null) {
+          List<Entity> entities = version.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(vprop.getID());
+	      if (!(propid.equals(KBConstants.ONTNS()+"supersedes")
+	    		  || propid.equals(KBConstants.ONTNS()+"supersededBy"))) {
+          
+	          for(Entity entity: entities) {
+		          
+	            // Get entity adapter for class
+	            IEntityAdapter adapter = EntityRegistrar.getAdapter(lvkb, ontkb, enumkb, prop.getRange());
+	            if(adapter != null) {
+		            KBObject entityobj = lvkb.getIndividual(entity.getId());
+		            if(entityobj == null)
+		              entityobj = ontkb.getIndividual(entity.getId());
+		            if(entityobj == null)
+		              entityobj = enumkb.getIndividual(entity.getId());
+		            if (entityobj == null)
+		              entityobj = allkb.getIndividual(entity.getId());
+		            if(entityobj != null)
+		              vkb.addPropertyValue(vobj, vprop, entityobj);
+		          }
+	          }
+	      }
+        }
+        
+    }
+    KBObject swprop = this.ontkb.getProperty(KBConstants.ONTNS()+"supersedes");
+    KBObject swprop2 = this.ontkb.getProperty(KBConstants.ONTNS()+"supersededBy");
+    vkb.addPropertyValue(vobj, swprop, latestVersion);
+    vkb.save();
+    
+
+    lvkb.addPropertyValue(latestVersion, swprop2, vobj);
+    lvkb.save();
+  }
+
+/**
    * Updating software (for now just deleting old and adding new)
    * @param sw
    * @param swid
@@ -1088,7 +1148,7 @@ public class SoftwareRepository {
         + " (SAMPLE(?vobj) as ?version)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
-        
+               
     ArrayList<FunctionSummary> list = new ArrayList<FunctionSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
@@ -1206,7 +1266,8 @@ public class SoftwareRepository {
   }
   
   public SoftwareVersion getSoftwareVersion(String swid, String vid) throws Exception {
-    KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
+	KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+	KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
     KBObject vobj = vkb.getIndividual(vid);
     if(vobj != null) {
       SoftwareVersion version = new SoftwareVersion();
@@ -1240,9 +1301,19 @@ public class SoftwareRepository {
             }
           }
           else {
-            Entity entity = this.getSoftwareEntity(vkb, valobj, prop.getRange());
-            if(entity != null)
-              entities.add(entity);
+            Entity entity = this.getSoftwareEntity(allkb, valobj, prop.getRange());
+            
+            if(entity != null) {
+            	if (entity.getType().equals(KBConstants.ONTNS() + "Function")) {
+            		
+            		KBObject f = allkb.getIndividual(entity.getId());
+                	KBObject obj = allkb.getPropertyValue(f, ontkb.getProperty(KBConstants.ONTNS() + "hasFunctionName"));
+                	KBObject value = allkb.getPropertyValue(obj, this.ontkb.getProperty(KBConstants.ONTNS() + "hasTextValue"));
+                	entity.setLabel(value.getValue().toString());
+                }
+            	entities.add(entity);
+            }
+              
           }
         }
         version.addPropertyValues(prop.getId(), entities);
