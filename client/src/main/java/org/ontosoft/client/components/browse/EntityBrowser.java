@@ -29,7 +29,7 @@ public class EntityBrowser {
     
     String prophtml = "";
     if(simple)
-      prophtml = "<div style='float:left'><b>"+prop.getLabel()+":&nbsp;</b></div>";
+      prophtml = "<b>"+prop.getLabel()+":&nbsp;</b>";
     else
       prophtml = "<div style='white-space:normal;padding:0.2em' class='" + labelclass + "'>"
         +(prop.isRequired() ? "" : "[OPTIONAL] ")
@@ -225,6 +225,7 @@ public class EntityBrowser {
         List<MetadataProperty> subprops = new ArrayList<MetadataProperty>();
         for(String subpropid : centity.getValue().keySet())
           subprops.add(vocabulary.getProperty(subpropid));
+        subprops = vocabulary.orderProperties(subprops);
         entitieshtml += this.getEntitiesHTML(centity, subprops, true);
       }
       else if(isMeasurement) {
@@ -238,7 +239,7 @@ public class EntityBrowser {
 	    entitieshtml += "<a class='wrap-long-words' href='#" + NameTokens.version + "/" + entity.getId().split("/")[5] + ":" + entity.getId().split("/")[7] +"'>"+entity.getValue()+"</a>";
 	  }
       else {
-        entitieshtml += "<div class='wrap-pre wrap-long-words'>" + entity.toString() + "</div>";
+        entitieshtml += "<span class='wrap-pre wrap-long-words'>" + entity.toString() + "</span>";
       }
       if(!simple)
         entitieshtml += "</li>";
