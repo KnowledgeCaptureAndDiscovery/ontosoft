@@ -1,6 +1,8 @@
 package org.ontosoft.client.components.browse;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.ontosoft.client.place.NameTokens;
@@ -13,6 +15,9 @@ import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
+
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 
 public class EntityBrowser {
 
@@ -206,6 +211,7 @@ public class EntityBrowser {
     MetadataType complexEntity = vocabulary.getType(KBConstants.ONTNS() + "ComplexEntity");
     MetadataType measurement = vocabulary.getType(KBConstants.ONTNS() + "MeasurementEntity");
     MetadataType location = vocabulary.getType(KBConstants.ONTNS() + "Location");
+    MetadataType date = vocabulary.getType(KBConstants.ONTNS() + "DateEntity");
     MetadataType rangeEntity = vocabulary.getType(prop.getRange());
     
     String entitieshtml = "";
@@ -216,6 +222,7 @@ public class EntityBrowser {
     boolean isComplex = vocabulary.isA(rangeEntity, complexEntity);
     boolean isMeasurement = vocabulary.isA(rangeEntity, measurement);
     boolean isLocation = vocabulary.isA(rangeEntity, location);
+    boolean isDate = vocabulary.isA(rangeEntity, date);
 
     for(Entity entity : entities) {
       if(!simple) 
@@ -235,6 +242,10 @@ public class EntityBrowser {
       else if(isLocation) {
         entitieshtml += "<a class='wrap-long-words' href='"+entity.getValue()+"'>"+entity.getValue()+"</a>";
       }
+      else if(isDate) {
+    	DateTimeFormat fmt = DateTimeFormat.getFormat(PredefinedFormat.DATE_SHORT);
+	    entitieshtml += fmt.format((Date)entity.getValue());
+	  }
       else if(entity.getType() == KBConstants.ONTNS() + "SoftwareVersion") {
 	    entitieshtml += "<a class='wrap-long-words' href='#" + NameTokens.version + "/" + entity.getId().split("/")[5] + ":" + entity.getId().split("/")[7] +"'>"+entity.getValue()+"</a>";
 	  }
