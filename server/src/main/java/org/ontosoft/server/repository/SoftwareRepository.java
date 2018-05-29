@@ -275,7 +275,7 @@ public class SoftwareRepository {
           MetadataEnumeration menum = new MetadataEnumeration();
           KBObject inst = t.getSubject();
           KBObject i = this.ontkb.getProperty(KBConstants.ONTNS() + "hasFunctionName");
-          KBObject i2 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasFunction");
+          KBObject i2 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasKnownIssueDescription");
           KBObject i3 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasTextValue");
           menum.setId(inst.getID());
           menum.setName(inst.getName());
@@ -283,6 +283,20 @@ public class SoftwareRepository {
           String label = null;
           if (type.getId().equals(KBConstants.ONTNS() + "Function")) {
         	  KBObject value = this.ontkb.getPropertyValue(inst, i);
+        	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+        	  if (value != null)
+        	  {
+	        	  KBObject individual = vkb.getIndividual(value.getID());
+	        	  
+	        	  if (individual != null) {
+	        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
+	        		  menum.setLabel(label);
+	        		  typeenums.add(menum);
+	        	  }
+        	  }
+          }
+          else if (type.getId().equals(KBConstants.ONTNS() + "KnownIssue")) {
+        	  KBObject value = this.ontkb.getPropertyValue(inst, i2);
         	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
         	  if (value != null)
         	  {

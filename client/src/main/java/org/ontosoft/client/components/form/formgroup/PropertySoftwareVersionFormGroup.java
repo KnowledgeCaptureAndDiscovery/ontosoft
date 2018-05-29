@@ -380,7 +380,6 @@ public class PropertySoftwareVersionFormGroup extends FormGroup implements HasPl
     		|| property.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction") {
       proptype = KBConstants.ONTNS()+"EnumerationEntity";
       id = id.replace(version.getName()+"#", "");
-      GWT.log(property.getId());
     }
     
     try {

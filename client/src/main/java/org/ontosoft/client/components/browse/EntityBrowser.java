@@ -227,13 +227,17 @@ public class EntityBrowser {
     for(Entity entity : entities) {
       if(!simple) 
         entitieshtml += "<li>";
-      if(isComplex) {
+      if(isComplex && prop.getId() != KBConstants.ONTNS() + "affectsSoftwareFunction") {
         ComplexEntity centity = (ComplexEntity) entity;
         List<MetadataProperty> subprops = new ArrayList<MetadataProperty>();
         for(String subpropid : centity.getValue().keySet())
           subprops.add(vocabulary.getProperty(subpropid));
         subprops = vocabulary.orderProperties(subprops);
         entitieshtml += this.getEntitiesHTML(centity, subprops, true);
+      }
+      else if (prop.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction") {
+        ComplexEntity centity = (ComplexEntity) entity;
+        entitieshtml += centity.getLabel();
       }
       else if(isMeasurement) {
         MeasurementEntity me = (MeasurementEntity) entity;
