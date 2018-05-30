@@ -741,13 +741,17 @@ public class SoftwareRepository {
     	KBObject swprop2 = this.ontkb.getProperty(KBConstants.ONTNS()+"hasLatestSoftwareVersion");
     	
     	KBObject latestVersion = swkb.getPropertyValue(swobj, swprop2);
-    	if (latestVersion != null)
-    	{
-    		copyVersionPropertiesToNewLatestSoftwareVersion(swobj, latestVersion, vobj, vkb, allkb);
+    	if (latestVersion != null) {
+	    	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN, true);
+	    	KBObject latestVersionIndidual = lvkb.getIndividual(latestVersion.getID());
+	    	if(latestVersionIndidual != null)
+	    	{
+	    		copyVersionPropertiesToNewLatestSoftwareVersion(swobj, latestVersion, vobj, vkb, allkb);
+	    	}
+	    	
+	    	for(KBTriple t :  swkb.genericTripleQuery(swobj, swprop2, null))
+	        	swkb.removeTriple(t);
     	}
-    	
-    	for(KBTriple t :  swkb.genericTripleQuery(swobj, swprop2, null))
-        	swkb.removeTriple(t);
     	
     	swkb.addPropertyValue(swobj, swprop, vobj);
     	swkb.addPropertyValue(swobj, swprop2, vobj);
@@ -756,7 +760,6 @@ public class SoftwareRepository {
     
     if(vkb.save() && enumkb.save()) {
       if(!update) {
-    	
         MetadataEnumeration menum = new MetadataEnumeration();
         menum.setId(version.getId());
         menum.setLabel(version.getLabel());
@@ -842,12 +845,12 @@ public class SoftwareRepository {
    */
   public boolean updateSoftwareVersion(SoftwareVersion newversion, String swid, String vid, User user) 
       throws Exception {  
-    SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
+    //SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
     
-    Provenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
+    //rovenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
     String nswid = this.updateOrAddSoftwareVersion(swid, newversion, user, true);
     if(nswid != null) {
-       this.prov.addProvenance(prov);
+    //   this.prov.addProvenance(prov);
        return true;
     }
     return false;
