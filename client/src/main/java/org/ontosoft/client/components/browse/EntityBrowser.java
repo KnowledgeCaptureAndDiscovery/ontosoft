@@ -1,6 +1,5 @@
 package org.ontosoft.client.components.browse;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,9 +7,7 @@ import java.util.List;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
-import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.MeasurementEntity;
-import org.ontosoft.shared.classes.entities.TextEntity;
 import org.ontosoft.shared.classes.util.KBConstants;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -128,6 +125,7 @@ public class EntityBrowser {
 	  Entity inputDataFormat = null;
 	  Entity inputDefaultValue = null;
 	  Entity inputDataType = null;
+	  Entity inputArgument = null;
 	  
 	  if (entity.getType() == KBConstants.ONTNS() + "InputFile")
 	  {
@@ -136,6 +134,7 @@ public class EntityBrowser {
 		  inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDataFormat");
 		  inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDefaultValue");
 		  inputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDataType");
+		  inputArgument = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputFileDataArgument");
 	  }
 	  else if (entity.getType() == KBConstants.ONTNS() + "InputParameter")
 	  {
@@ -144,6 +143,7 @@ public class EntityBrowser {
 		  inputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDataFormat");
 		  inputDefaultValue = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDefaultValue");
 		  inputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterDataType");
+		  inputArgument = entity.getPropertyValue(KBConstants.ONTNS() + "hasInputParameterArgument");
 	  }
 	  
 	  String name = (inputName != null) ? inputName.toString() : "";
@@ -151,8 +151,18 @@ public class EntityBrowser {
 	  String dataFormat = (inputDataFormat != null) ? inputDataFormat.toString() : "";
 	  String defaultValue = (inputDefaultValue != null) ? inputDefaultValue.toString() : "";
 	  String dataType = (inputDataType != null) ? inputDataType.toString() : "";
+	  String argument = (inputArgument != null) ? inputArgument.toString() : "";
 	  
-	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span> (type: <span class=\"classifier\"> " + dataType + "</span>) (format: " + dataFormat + ") (default value: " + defaultValue + ")</dt>\n" + 
+	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span>";
+	  if (argument != "")
+		  html += "(prefix: <span class=\"classifier\"> " + argument + "</span>)";
+	  if (dataType != "")
+		  html += "(type: <span class=\"classifier\"> " + dataType + "</span>)";
+	  if (dataFormat != "")
+		  html += "(format: " + dataFormat + ")";
+	  if (defaultValue != "")
+		  html += "(default value: " + defaultValue + ")</dt>\n";
+	  html += 
 	  		"                           <dd>\n" + 
 	  		"                              <p class=\"first last\">" + description + "\n" + 
 	  		"                              </p>\n" + 
@@ -192,13 +202,22 @@ public class EntityBrowser {
 	  Entity outputDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDescription");
 	  Entity outputDataFormat = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDataFormat");
 	  Entity outputDataType = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputDataType");
+	  Entity outputArgument = entity.getPropertyValue(KBConstants.ONTNS() + "hasOutputArgument");
 	  
 	  String name = (outputName != null) ? outputName.toString() : "";
 	  String description = (outputDescription != null) ? outputDescription.toString() : "";
 	  String dataFormat = (outputDataFormat != null) ? outputDataFormat.toString() : "";
 	  String dataType = (outputDataType != null) ? outputDataType.toString() : "";
+	  String argument = (outputArgument != null) ? outputArgument.toString() : "";
 	  
-	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span> (type: <span class=\"classifier\"> " + dataType + "</span>) (format: " + dataFormat + ")</dt>\n" + 
+	  html += "<dt>name: " + name + " <span class=\"classifier-delimiter\"></span>";
+	  if (argument != "")
+		  html += "(prefix: <span class=\"classifier\"> " + argument + "</span>)";
+	  if (dataType != "")
+		  html += "(type: <span class=\"classifier\"> " + dataType + "</span>)";
+	  if (dataFormat != "")
+		  html += "(format: " + dataFormat + ")</dt>\n";
+	  html += 
 	  		"                           <dd>\n" + 
 	  		"                              <p class=\"first last\">" + description + "\n" + 
 	  		"                              </p>\n" + 
