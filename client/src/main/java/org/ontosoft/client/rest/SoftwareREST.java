@@ -516,6 +516,26 @@ public class SoftwareREST {
     }).call(this.service).delete(swname);    
   }
   
+  public void deleteSoftwareVersion(final String swname, final String vname, 
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void v) {
+        softwareVersionCache.remove(swname);
+        for(SoftwareSummary sum: softwareVersionList)
+          if(sum.getName().equals(swname))
+            softwareVersionList.remove(sum);
+        callback.onSuccess(v);
+        AppNotification.notifySuccess(swname+" deleted", 1000);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not delete "+vname);
+        callback.onFailure(exception);
+      }
+    }).call(this.service).deleteSoftwareVersion(swname, vname);    
+  }
+  
   public void runPlugin(final String pluginname, final Software software, 
       final Callback<PluginResponse, Throwable> callback) {
     

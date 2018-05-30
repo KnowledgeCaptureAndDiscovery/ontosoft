@@ -437,6 +437,25 @@ public class SoftwareResource implements SoftwareService {
   }
   
   @DELETE
+  @Path("software/{name}/version/{vname}")
+  @Produces("text/html")
+  @RolesAllowed("user")
+  @Override
+  public void deleteSoftwareVersion(@PathParam("name") String name, @PathParam("vname") String vname) {
+    try {
+      String swid = name;
+      if(!name.startsWith("http:"))
+        swid = repo.LIBNS() + name;
+      String vid = swid + "/version/" + vname;
+      if (!this.repo.deleteSoftwareVersion(swid,vid, (User) securityContext.getUserPrincipal()))
+        throw new RuntimeException("Could not delete " + name);
+    } catch (Exception e) {
+      //e.printStackTrace();
+      throw new RuntimeException("Exception in delete: " + e.getMessage());
+    }
+  }
+  
+  @DELETE
   @Path("software/enumerations/{name}")
   @Produces("text/html")
   @RolesAllowed("user")

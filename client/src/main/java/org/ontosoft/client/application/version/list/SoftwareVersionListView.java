@@ -26,6 +26,7 @@ import org.ontosoft.client.components.form.facet.FacetedSearchPanel;
 import org.ontosoft.client.components.form.facet.events.FacetSelectionEvent;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
+import org.ontosoft.shared.classes.SoftwareSummary;
 import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
@@ -417,7 +418,37 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
   }
   
   private void deleteSoftware(final SoftwareVersionSummary sw) {
-    
+  if (Window.confirm("Are you sure you want to delete the software version?")) {
+      this.api.deleteSoftwareVersion(sw.getSoftwareSummary().getName(), sw.getName(),
+          new Callback<Void, Throwable>() {
+            @Override
+            public void onSuccess(Void v) {
+              removeFromList(sw);
+              updateList();
+            }
+            @Override
+            public void onFailure(Throwable exception) { }
+          }
+      );
+    }
+  }
+  
+  void updateList() {
+    listProvider.getList().clear();
+    String value = searchbox.getValue();
+    for(SoftwareVersionSummary summary : allSoftwareList) {
+      if(filteredSoftwareIdMap.containsKey(summary.getId())) {
+        if(value == null || value.equals("") ||
+            summary.getLabel().toLowerCase().contains(value.toLowerCase()))
+        listProvider.getList().add(summary);
+      }
+    }
+    this.listProvider.flush();    
+  }
+  
+  private void removeFromList(SoftwareVersionSummary summary) {
+    filteredSoftwareIdMap.remove(summary);
+    allSoftwareList.remove(summary);
   }
   
   @UiHandler("publishdialog")

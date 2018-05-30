@@ -1632,6 +1632,22 @@ public class SoftwareRepository {
     return false;
   }
   
+  public boolean deleteSoftwareVersion(String swid, String vid, User loggedinuser) throws Exception {
+	Permission perm = getSoftwarePermission(vid);
+	if (loggedinuser.getRoles().contains("admin") || PermUtils.hasOwnerAccess(perm,  loggedinuser.getName()))
+	{
+	    KBAPI swkb = fac.getKB(vid, OntSpec.PLAIN);
+	    //KBObject swobj = swkb.getIndividual(swid);
+	    if (swkb.delete()) { // && (swobj != null)) {
+	      deleteEnumerationFromVocabulary(vid);
+	      this.prov.deleteSoftwareProvenance(vid);
+	      this.perm_repo.deleteSoftwarePermission(vid);
+	      return true;
+	    }		
+	}
+    return false;
+  }
+  
   public boolean deleteEnumeration(String enumid) throws Exception {
     KBObject enumobj = enumkb.getIndividual(enumid);
     if(enumobj != null) {

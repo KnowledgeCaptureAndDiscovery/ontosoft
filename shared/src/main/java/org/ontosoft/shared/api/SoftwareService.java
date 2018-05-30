@@ -163,6 +163,11 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}")
   @Produces("text/html")
   public void delete(@PathParam("name") String name);
+  
+  @DELETE
+  @Path("software/{name}/version/{vname}")
+  @Produces("text/html")
+  public void deleteSoftwareVersion(@PathParam("name") String name, @PathParam("vname") String vname);
 
   @DELETE
   @Path("software/enumerations/{name}")
