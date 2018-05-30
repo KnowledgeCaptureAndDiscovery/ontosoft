@@ -45,13 +45,14 @@ public class EntityBrowser {
 	Entity functionDescription = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionDescription");
 	Entity functionality = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionality");
 	Entity algorithm = entity.getPropertyValue(KBConstants.ONTNS() + "usesAlgorithm");
+	Entity invocation = entity.getPropertyValue(KBConstants.ONTNS() + "hasFunctionInvocation");
 
 	String prophtml = "<dl class=\"method\">\n" + 
 			"   <dt id=\"flopy.modflow.mfbas.ModflowBas.plot\">\n";
 	
 	if (functionName != null)
 	{
-		prophtml += "<code class=\"descname\">" + functionName.getValue() + "</code>\n";
+		prophtml += "<span class=\"badge badge-pill badge-success\">" + functionName.getValue() + "</span>\n";
 	}
 	prophtml +=  "   </dt>\n" + 
 				"   <dd>\n";
@@ -69,6 +70,11 @@ public class EntityBrowser {
 	{
 		prophtml +=		"      <p><b>Functionality:</b> " + functionality.toString() + "\n" + 
 			"      </p>\n"; 
+	}
+	if (invocation != null)
+	{
+		prophtml += "      <p><b>Invocation Line:</b> " + invocation.toString() + "\n" + 
+			"      </p>\n";
 	}
 	prophtml +=		"      <table class=\"docutils field-list\" frame=\"void\" rules=\"none\">\n" + 
 			"         <col class=\"field-name\" />\n" + 
