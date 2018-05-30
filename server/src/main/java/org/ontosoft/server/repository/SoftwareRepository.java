@@ -772,7 +772,7 @@ public class SoftwareRepository {
   
   
   private void copyVersionPropertiesToNewLatestSoftwareVersion(KBObject swobj, KBObject latestVersion, KBObject vobj, KBAPI vkb, KBAPI allkb) throws Exception {
-	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN);
+	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN, true);
 	SoftwareVersion version = getSoftwareVersion(swobj.getID(), latestVersion.getID());
     
     for(String propid : version.getValue().keySet()) {
@@ -808,8 +808,8 @@ public class SoftwareRepository {
     vkb.addPropertyValue(vobj, swprop, latestVersion);
     vkb.save();
     
-
-    lvkb.addPropertyValue(latestVersion, swprop2, vobj);
+    KBObject latestVersionIndidual = lvkb.getIndividual(latestVersion.getID());
+    lvkb.addPropertyValue(latestVersionIndidual, swprop2, vobj);
     lvkb.save();
   }
 
