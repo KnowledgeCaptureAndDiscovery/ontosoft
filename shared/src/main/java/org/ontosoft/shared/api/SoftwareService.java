@@ -114,7 +114,7 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}/version")
   @Produces("application/json")
   @Consumes("application/json")
-  public Software publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version);
+  public SoftwareVersion publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version);
   
   @GET
   @Path("vocabulary")

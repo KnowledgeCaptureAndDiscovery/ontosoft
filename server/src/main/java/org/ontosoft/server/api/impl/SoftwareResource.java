@@ -351,7 +351,7 @@ public class SoftwareResource implements SoftwareService {
   @Consumes("application/json")
   @RolesAllowed("user")
   @Override
-	public Software publishVersion(@PathParam("name") String name, @JsonProperty("software") SoftwareVersion version) {
+	public SoftwareVersion publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version) {
 	  try {
 	      String vid = this.repo.addSoftwareVersion(name, version,
 	          (User) securityContext.getUserPrincipal());

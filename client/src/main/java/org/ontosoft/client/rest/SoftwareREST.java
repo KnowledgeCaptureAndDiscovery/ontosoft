@@ -444,8 +444,8 @@ public class SoftwareREST {
       @Override
       public void onSuccess(Method method, SoftwareVersion sw) {
         if(sw != null) {
-          softwareCache.put(sw.getName(), sw);
-          softwareList.add(new SoftwareSummary(sw));
+          softwareVersionCache.put(sw.getName(), sw);
+          softwareVersionList.add(new SoftwareVersionSummary(sw));
           AppNotification.notifySuccess(version.getLabel() + " published. Now enter some details !", 1500);
           callback.onSuccess(sw);
         }

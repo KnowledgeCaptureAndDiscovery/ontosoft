@@ -27,6 +27,7 @@ import org.ontosoft.client.components.chart.CategoryPieChart;
 import org.ontosoft.client.place.NameTokens;
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Software;
 import org.ontosoft.shared.classes.entities.SoftwareVersion;
@@ -471,6 +472,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
   
   private void submitPublishForm() {
 	final String[] swnames = softwarename.split("\\s*:\\s*");
+	GWT.log("here");
     String label = softwarelabel.getValue();
     if(softwarelabel.validate(true)) {
       SoftwareVersion tmpsw = new SoftwareVersion();
@@ -478,7 +480,7 @@ public class VersionBrowseView extends ParameterizedViewImpl
       this.api.publishSoftwareVersion(swnames[0], tmpsw, new Callback<SoftwareVersion, Throwable>() {
         public void onSuccess(SoftwareVersion sw) {
           // Add item to list
-          SoftwareSummary newsw = new SoftwareSummary(sw);
+          SoftwareVersionSummary newsw = new SoftwareVersionSummary(sw);
           newsw.setExternalRepositoryId(SoftwareREST.LOCAL);
           // TODO: do the same to versions
           //addToList(newsw);
