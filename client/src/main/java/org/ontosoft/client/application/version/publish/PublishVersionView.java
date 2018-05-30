@@ -365,7 +365,7 @@ public class PublishVersionView extends ParameterizedViewImpl
     String[] swnames = versionname.split("\\s*:\\s*");
     softwarename = swnames[0];
     final String versionname1 = swnames[1];
-    this.versionname = versionname;
+    this.versionname = versionname1;
     
     
     api.getSoftware(softwarename, new Callback<Software, Throwable>() {

@@ -7,6 +7,7 @@ import java.util.List;
 import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.GUID;
+import org.ontosoft.shared.classes.util.KBConstants;
 
 import edu.isi.wings.ontapi.KBAPI;
 import edu.isi.wings.ontapi.KBObject;
@@ -24,6 +25,12 @@ public class ComplexEntityAdapter extends EntityAdapter {
     KBObject entityobj = this.kb.getIndividual(id);
     ComplexEntity entity = (ComplexEntity) super.getEntity(id);
     
+    if (entity.getType().equals(KBConstants.ONTNS() + "Function")) {    	
+      KBObject valobj2 = kb.getPropertyValue(entityobj, kb.getProperty(KBConstants.ONTNS() + "hasFunctionName"));
+      KBObject valobj3 = kb.getPropertyValue(valobj2, kb.getProperty(KBConstants.ONTNS() + "hasTextValue"));
+      if (valobj3 != null)
+    	  entity.setLabel(valobj3.getValue().toString());
+    }
     HashMap<String, List<Entity>> subentities = new HashMap<String, List<Entity>>();
     for(KBObject propobj: properties) {
       List<Entity> entities = new ArrayList<Entity>();

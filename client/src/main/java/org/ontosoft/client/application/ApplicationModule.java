@@ -24,6 +24,8 @@ import org.ontosoft.client.application.users.UserPresenter;
 import org.ontosoft.client.application.users.UserView;
 import org.ontosoft.client.application.version.browse.VersionBrowsePresenter;
 import org.ontosoft.client.application.version.browse.VersionBrowseView;
+import org.ontosoft.client.application.version.compare.CompareVersionPresenter;
+import org.ontosoft.client.application.version.compare.CompareVersionView;
 import org.ontosoft.client.application.version.list.SoftwareVersionListPresenter;
 import org.ontosoft.client.application.version.list.SoftwareVersionListView;
 import org.ontosoft.client.application.version.publish.PublishVersionPresenter;
@@ -66,6 +68,8 @@ public class ApplicationModule extends AbstractPresenterModule {
         CompareView.class, ComparePresenter.MyProxy.class);
     bindPresenter(CompareFunctionPresenter.class, CompareFunctionPresenter.MyView.class,
         CompareFunctionView.class, CompareFunctionPresenter.MyProxy.class);
+    bindPresenter(CompareVersionPresenter.class, CompareVersionPresenter.MyView.class,
+        CompareVersionView.class, CompareVersionPresenter.MyProxy.class);
     bindPresenter(UserPresenter.class, UserPresenter.MyView.class,
         UserView.class, UserPresenter.MyProxy.class);        
   }

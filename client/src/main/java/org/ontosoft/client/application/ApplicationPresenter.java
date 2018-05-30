@@ -3,15 +3,16 @@ package org.ontosoft.client.application;
 import java.util.Arrays;
 
 import org.ontosoft.client.application.browse.BrowseView;
-import org.ontosoft.client.application.version.browse.VersionBrowseView;
-import org.ontosoft.client.application.version.list.SoftwareVersionListView;
-import org.ontosoft.client.application.version.publish.PublishVersionView;
 import org.ontosoft.client.application.compare.CompareView;
 import org.ontosoft.client.application.function.compare.CompareFunctionView;
 import org.ontosoft.client.application.function.list.FunctionListView;
 import org.ontosoft.client.application.list.SoftwareListView;
 import org.ontosoft.client.application.publish.PublishView;
 import org.ontosoft.client.application.users.UserView;
+import org.ontosoft.client.application.version.browse.VersionBrowseView;
+import org.ontosoft.client.application.version.compare.CompareVersionView;
+import org.ontosoft.client.application.version.list.SoftwareVersionListView;
+import org.ontosoft.client.application.version.publish.PublishVersionView;
 import org.ontosoft.client.place.NameTokens;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -43,7 +44,7 @@ public class ApplicationPresenter extends
       final PlaceManager placemanager, final PublishView publishview, final PublishVersionView publishversionview,
       final BrowseView browseview, final VersionBrowseView versionbrowseview, final SoftwareListView listview,
       final SoftwareVersionListView versionlistview, final FunctionListView functionlistview,
-      final CompareView compareview, final CompareFunctionView comparefunctionview, final UserView userview) {
+      final CompareView compareview, final CompareFunctionView comparefunctionview, final CompareVersionView compareversionview, final UserView userview) {
     super(eventBus, view, proxy, RevealType.Root);
     
     final PlaceRequest.Builder builder = new PlaceRequest.Builder();
@@ -74,6 +75,8 @@ public class ApplicationPresenter extends
           sectionview = compareview;
         else if(nametoken.equals(NameTokens.comparefunction))
             sectionview = comparefunctionview;
+        else if(nametoken.equals(NameTokens.compareversion))
+            sectionview = compareversionview;
         else if(nametoken.equals(NameTokens.users))
           sectionview = userview;        
 

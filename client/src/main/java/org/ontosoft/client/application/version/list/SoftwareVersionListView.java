@@ -568,10 +568,10 @@ public class SoftwareVersionListView extends ParameterizedViewImpl
         if(i > 0) idtext += ",";
         if(!summary.getExternalRepositoryId().equals(SoftwareREST.LOCAL))
           idtext += summary.getExternalRepositoryId()+":";
-        idtext += summary.getName();
+        idtext += summary.getSoftwareSummary().getName() + ":" + summary.getName();
         i++;
       }
-      History.newItem(NameTokens.compare + "/" + idtext);
+      History.newItem(NameTokens.compareversion + "/" + idtext);
     }
   }
 
