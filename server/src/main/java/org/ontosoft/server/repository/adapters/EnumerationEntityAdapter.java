@@ -37,6 +37,10 @@ public class EnumerationEntityAdapter extends EntityAdapter {
 
   @Override
   public boolean saveEntity(Entity entity) {
+	if (entity.getLabel().equals("") 
+			|| entity.getLabel() == null) {
+		return false;
+	}
     KBObject entityobj = this.ontkb.getIndividual(entity.getId());
     if(entityobj == null)
       entityobj = this.enumkb.getIndividual(entity.getId());
