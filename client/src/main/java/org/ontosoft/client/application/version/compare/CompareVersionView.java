@@ -205,6 +205,13 @@ public class CompareVersionView extends ParameterizedViewImpl
   }
   
   private void addRow(MetadataProperty prop, EntityBrowser browser) {
+  if (prop.getId() != KBConstants.ONTNS() + "hasFunction"
+			&& prop.getId() != KBConstants.ONTNS() + "hasImplementationLanguage"
+			&& prop.getId() != KBConstants.ONTNS() + "supportsOperatingSystem"
+			&& prop.getId() != KBConstants.ONTNS() + "hasKnownIssue")
+	{
+		return;
+	}
     int numRows = table.getRowCount();
     boolean novalue = true;
     for(SoftwareVersion sw : softwares) {
