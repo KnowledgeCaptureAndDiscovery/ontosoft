@@ -845,12 +845,12 @@ public class SoftwareRepository {
    */
   public boolean updateSoftwareVersion(SoftwareVersion newversion, String swid, String vid, User user) 
       throws Exception {  
-    //SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
+    SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
     
-    //rovenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
+    Provenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
     String nswid = this.updateOrAddSoftwareVersion(swid, newversion, user, true);
     if(nswid != null) {
-    //   this.prov.addProvenance(prov);
+       this.prov.addProvenance(prov);
        return true;
     }
     return false;
