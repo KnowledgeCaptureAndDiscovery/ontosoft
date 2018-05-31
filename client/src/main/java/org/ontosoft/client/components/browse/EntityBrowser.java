@@ -293,6 +293,66 @@ public class EntityBrowser {
     return entitieshtml;
   }
   
+  public String getEntityValuesHTMLCompareVersion(MetadataProperty prop, List<Entity> entities, boolean simple) {
+    MetadataType complexEntity = vocabulary.getType(KBConstants.ONTNS() + "ComplexEntity");
+    MetadataType measurement = vocabulary.getType(KBConstants.ONTNS() + "MeasurementEntity");
+    MetadataType location = vocabulary.getType(KBConstants.ONTNS() + "Location");
+    MetadataType date = vocabulary.getType(KBConstants.ONTNS() + "DateEntity");
+    MetadataType rangeEntity = vocabulary.getType(prop.getRange());
+    
+    String entitieshtml = "";
+    if(!simple)
+      entitieshtml += "<ul style='padding:20px;padding-top:10px;padding-bottom:10px'>";
+    
+    // TODO: This part should go into viewing adapters
+    boolean isComplex = vocabulary.isA(rangeEntity, complexEntity);
+    boolean isMeasurement = vocabulary.isA(rangeEntity, measurement);
+    boolean isLocation = vocabulary.isA(rangeEntity, location);
+    boolean isDate = vocabulary.isA(rangeEntity, date);
+
+    for(Entity entity : entities) {
+      entitieshtml += "<li>";
+      if(isComplex 
+    		  && prop.getId() != KBConstants.ONTNS() + "affectsSoftwareFunction" 
+    		  && prop.getId() != KBConstants.ONTNS() + "hasFunction") {
+        ComplexEntity centity = (ComplexEntity) entity;
+        List<MetadataProperty> subprops = new ArrayList<MetadataProperty>();
+        for(String subpropid : centity.getValue().keySet())
+          subprops.add(vocabulary.getProperty(subpropid));
+        subprops = vocabulary.orderProperties(subprops);
+        entitieshtml += this.getEntitiesHTML(centity, subprops, true);
+      }
+      else if (prop.getId() == KBConstants.ONTNS() + "affectsSoftwareFunction"
+    		  || prop.getId() == KBConstants.ONTNS() + "hasFunction") {
+	      ComplexEntity centity = (ComplexEntity) entity;
+	      entitieshtml += centity.getLabel();
+	  }
+      else if(isMeasurement) {
+          MeasurementEntity me = (MeasurementEntity) entity;
+          entitieshtml += me.getValue()+ " " + me.getUnits();
+      }
+      else if(isLocation) {
+        entitieshtml += "<a class='wrap-long-words' href='"+entity.getValue()+"'>"+entity.getValue()+"</a>";
+      }
+      else if(isDate) {
+    	DateTimeFormat fmt = DateTimeFormat.getFormat(PredefinedFormat.DATE_SHORT);
+	    entitieshtml += fmt.format((Date)entity.getValue());
+	  }
+      else if(entity.getType() == KBConstants.ONTNS() + "SoftwareVersion") {
+	    entitieshtml += "<a class='wrap-long-words' href='#" + NameTokens.version + "/" + entity.getId().split("/")[5] + ":" + entity.getId().split("/")[7] +"'>"+entity.getValue()+"</a>";
+	  }
+      else {
+        entitieshtml += "<span class='wrap-pre wrap-long-words'>" + entity.toString() + "</span>";
+      }
+      entitieshtml += "</li>";
+    }
+    if(entities.size() > 0)
+      entitieshtml += " ";
+    entitieshtml += "</ul>";
+
+    return entitieshtml;
+  }
+  
   public String getFunctionEntityValuesHTML(MetadataProperty prop, List<Entity> entities, boolean simple) {
     MetadataType complexEntity = vocabulary.getType(KBConstants.ONTNS() + "ComplexEntity");
     MetadataType measurement = vocabulary.getType(KBConstants.ONTNS() + "MeasurementEntity");

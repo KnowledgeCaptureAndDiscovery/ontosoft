@@ -225,7 +225,7 @@ public class CompareVersionView extends ParameterizedViewImpl
     for(SoftwareVersion sw : softwares) {
       if(sw.getPropertyValues(prop.getId()).size() == 0)
         cellFormatter.addStyleName(numRows+1, i, "empty-cell");
-      String html = browser.getEntityValuesHTML(prop, sw.getPropertyValues(prop.getId()), true);
+      String html = browser.getEntityValuesHTMLCompareVersion(prop, sw.getPropertyValues(prop.getId()), true);
       table.setHTML(numRows+1, i++, html);
     }
     cellFormatter.addStyleName(numRows+1, i-1, "no-border-cell");
