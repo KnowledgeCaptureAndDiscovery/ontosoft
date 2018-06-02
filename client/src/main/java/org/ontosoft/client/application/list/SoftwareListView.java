@@ -491,6 +491,7 @@ public class SoftwareListView extends ParameterizedViewImpl
     Collections.sort(allSoftwareList, swcompare);    
   }
   
+  @SuppressWarnings("unlikely-arg-type")
   private void removeFromList(SoftwareSummary summary) {
     filteredSoftwareIdMap.remove(summary);
     allSoftwareList.remove(summary);
