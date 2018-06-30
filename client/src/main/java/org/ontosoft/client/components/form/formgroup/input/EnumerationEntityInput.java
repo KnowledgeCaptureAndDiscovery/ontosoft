@@ -10,6 +10,7 @@ import org.ontosoft.client.components.form.formgroup.input.events.EntityChangeHa
 import org.ontosoft.client.rest.SoftwareREST;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.MetadataProperty;
 import org.ontosoft.shared.classes.vocabulary.MetadataType;
@@ -154,4 +155,10 @@ public class EnumerationEntityInput implements IEntityInput {
   public void disable() {
     myinput.setEnabled(false);
   }
+
+@Override
+public void createWidget(Entity entity, MetadataProperty prop, Vocabulary vocabulary, SoftwareVersion version) {
+	// TODO Auto-generated method stub
+	
+}
 }

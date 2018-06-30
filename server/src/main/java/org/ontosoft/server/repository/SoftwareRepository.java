@@ -17,10 +17,14 @@ import org.ontosoft.server.repository.plugins.GithubPlugin;
 import org.ontosoft.server.users.User;
 import org.ontosoft.server.users.UserDatabase;
 import org.ontosoft.server.util.Config;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Authorization;
@@ -63,7 +67,7 @@ public class SoftwareRepository {
   
   String server;
   
-  String topclass, uniongraph;
+  String topclass, topclassversion, uniongraph;
 
   Vocabulary vocabulary;
   Map<String, List<MetadataEnumeration>> enumerations;
@@ -119,7 +123,8 @@ public class SoftwareRepository {
   private void setConfiguration() {
     PropertyListConfiguration props = Config.get().getProperties();
     this.server = props.getString("server");
-    onturi = KBConstants.ONTURI();
+    //onturi = KBConstants.ONTURI();
+    onturi = "http://localhost/software-v2.owl";
     caturi = KBConstants.CATURI();
     liburi = this.LIBURI();
     enumuri = this.ENUMURI();
@@ -136,6 +141,7 @@ public class SoftwareRepository {
     // TODO: Parse "imports" and "exports" details
     
     topclass = ontns + "Software";
+    topclassversion = ontns + "SoftwareVersion";
     uniongraph = "urn:x-arq:UnionGraph";
     
     owlns = KBConstants.OWLNS();
@@ -253,9 +259,13 @@ public class SoftwareRepository {
       MetadataType enumtype = this.vocabulary.getType(KBConstants.ONTNS() + "EnumerationEntity");
       //MetadataType swtype = this.vocabulary.getType(KBConstants.ONTNS() + "Software");
       
+      List<MetadataType> types = this.vocabulary.getSubTypes(enumtype);
+      types.add(this.vocabulary.getType(KBConstants.ONTNS() + "Function"));
+      types.add(this.vocabulary.getType(KBConstants.ONTNS() + "KnownIssue"));
+      
       enumerations = new HashMap<String, List<MetadataEnumeration>>();
       
-      for(MetadataType type : this.vocabulary.getSubTypes(enumtype)) {
+      for(MetadataType type : types) {
         List<MetadataEnumeration> typeenums = new ArrayList<MetadataEnumeration>();
         KBAPI kb = enumkb;
         //if(vocabulary.isA(type, swtype))
@@ -263,15 +273,49 @@ public class SoftwareRepository {
         for(KBTriple t : kb.genericTripleQuery(null, rdftype, ontkb.getConcept(type.getId()))) {
           MetadataEnumeration menum = new MetadataEnumeration();
           KBObject inst = t.getSubject();
+          KBObject i = this.ontkb.getProperty(KBConstants.ONTNS() + "hasFunctionName");
+          KBObject i2 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasKnownIssueDescription");
+          KBObject i3 = this.ontkb.getProperty(KBConstants.ONTNS() + "hasTextValue");
           menum.setId(inst.getID());
           menum.setName(inst.getName());
           menum.setType(type.getId());
-          String label = this.ontkb.getLabel(inst);
-          if(label == null)
-            label = inst.getName();
-          menum.setLabel(label);
+          String label = null;
+          if (type.getId().equals(KBConstants.ONTNS() + "Function")) {
+        	  KBObject value = this.ontkb.getPropertyValue(inst, i);
+        	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+        	  if (value != null)
+        	  {
+	        	  KBObject individual = vkb.getIndividual(value.getID());
+	        	  
+	        	  if (individual != null) {
+	        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
+	        		  menum.setLabel(label);
+	        		  typeenums.add(menum);
+	        	  }
+        	  }
+          }
+          else if (type.getId().equals(KBConstants.ONTNS() + "KnownIssue")) {
+        	  KBObject value = this.ontkb.getPropertyValue(inst, i2);
+        	  KBAPI vkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+        	  if (value != null)
+        	  {
+	        	  KBObject individual = vkb.getIndividual(value.getID());
+	        	  
+	        	  if (individual != null) {
+	        		  label = vkb.getPropertyValue(individual, i3).getValue().toString();
+	        		  menum.setLabel(label);
+	        		  typeenums.add(menum);
+	        	  }
+        	  }
+          }
+          else {
+        	  label = this.ontkb.getLabel(inst);
+        	  if(label == null)
+                  label = inst.getName();
+              menum.setLabel(label);
 
-          typeenums.add(menum);
+              typeenums.add(menum);
+          }
         }
         enumerations.put(type.getId(), typeenums);
       }
@@ -410,6 +454,37 @@ public class SoftwareRepository {
   /**
    * Adding new software
    * 
+   * @param version Software
+   * @return
+   * @throws Exception
+   */
+  public String addSoftwareVersion(String swid, SoftwareVersion version, User user) throws Exception {
+    if(version.getId() == null) 
+      version.setId(this.LIBNS() + swid + "/version/" + "SoftwareVersion-" + GUID.get());
+    
+    if(version.getType() == null)
+      version.setType(topclassversion);
+    
+    // First Look for existing software with same label
+    for(MetadataEnumeration menum : enumerations.get(topclassversion)) {
+      if(menum.getLabel().equalsIgnoreCase(version.getLabel())) {
+        version.setId(menum.getId());
+        return version.getId();
+      }
+    }
+    String vid = updateOrAddSoftwareVersion(swid, version, user, false);
+    if(version != null)  {
+      Provenance prov = this.prov.getAddProvenance(version, user);
+      this.prov.addProvenance(prov);
+      Permission perm = this.perm_repo.createSoftwarePermisson(version.getId(), user);
+      this.perm_repo.commitPermission(perm, version.getId());
+    }
+    return vid;
+  }
+  
+  /**
+   * Adding new software
+   * 
    * @param sw Software
    * @return
    * @throws Exception
@@ -508,6 +583,26 @@ public class SoftwareRepository {
               swkb.addPropertyValue(swobj, swprop, swval);
               continue;
             }
+            
+            if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
+            	String[] parts = entity.getId().split("#");
+            	if (parts.length > 1) {
+            	  String vid = this.LIBNS() + sw.getName() + "/version/" + parts[1];
+            	  entity.setId(vid);
+            	}
+            	if(!this.hasSoftware(entity.getId())) {
+	              SoftwareVersion subsw = new SoftwareVersion();
+	              subsw.setId(entity.getId());
+	              subsw.setLabel(entity.getValue().toString());
+	              subsw.setType(entity.getType());
+	              String swid = this.addSoftwareVersion(sw.getName(), subsw, user);
+	              entity.setId(swid);
+	            }
+	
+	            KBObject swval = swkb.getResource(entity.getId());
+	            swkb.addPropertyValue(swobj, swprop, swval);
+	            continue;
+	          }
 	          
             // Get entity adapter for class
             IEntityAdapter adapter = EntityRegistrar.getAdapter(swkb, ontkb, enumkb, prop.getRange());
@@ -547,8 +642,180 @@ public class SoftwareRepository {
     return null;    
   }
   
+  private String updateOrAddSoftwareVersion(String swid, SoftwareVersion version, User user, boolean update) throws Exception {
+    boolean isModerator = false;
+    Boolean permFetureEnabled = getPermissionFeatureEnabled();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+    
+    if (update) {
+      String accesslevel = PermUtils.getAccessLevelForUser(version, user.getName(), version.getId());
+      if (user.getRoles().contains("admin") || 
+          PermUtils.hasOwnerAccess(version.getPermission(), user.getName())
+          || accesslevel.equals("Write")) {
+        isModerator = true;
+      }
+    }
+
+    KBAPI vkb = fac.getKB(version.getId(), OntSpec.PLAIN, true);
+    String swtype = version.getType();
+    if(swtype == null)
+      swtype = topclassversion;
+    KBObject swcls = this.ontkb.getConcept(swtype);
+
+    KBObject vobj = update ? vkb.getIndividual(version.getId())
+        : vkb.createObjectOfClass(version.getId(), swcls);
+    
+    if(vobj == null)
+      return null;
+    
+    if(version.getLabel() != null)
+      vkb.setLabel(vobj, version.getLabel());
+    
+    for(String propid : version.getValue().keySet()) {
+      if (!permFetureEnabled ||
+          !update            || 
+          isModerator        || 
+          PermUtils.getAccessLevelForUser(version, user.getName(), propid).equals("Write")) {
+        KBObject vprop = this.ontkb.getProperty(propid);
+        if (vprop != null) {
+          List<Entity> entities = version.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(vprop.getID());
+	        
+          // Remove existing property values if any
+          if (update) {
+            for(KBTriple t : vkb.genericTripleQuery(vobj, vprop, null))
+              vkb.removeTriple(t);
+          }
+	      
+          for(Entity entity: entities) {
+            MetadataType type = vocabulary.getType(entity.getType());
+	          
+            // Treat software entities specially 
+            if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
+              if(!this.hasSoftware(entity.getId())) {
+                SoftwareVersion subsw = new SoftwareVersion();
+                subsw.setId(entity.getId());
+                subsw.setLabel((String)entity.getValue());
+                subsw.setType(entity.getType());
+                subsw.setSoftware(swid);
+                String vid = this.addSoftwareVersion(swid, subsw, user);
+                entity.setId(vid);
+              }
+	
+              KBObject swval = vkb.getResource(entity.getId());
+              vkb.addPropertyValue(vobj, vprop, swval);
+              
+              continue;
+            }
+	          
+            // Get entity adapter for class
+            IEntityAdapter adapter = EntityRegistrar.getAdapter(vkb, ontkb, enumkb, prop.getRange());
+            if(adapter != null) {
+              if(entity.getId() == null) {
+                entity.setId(GUID.randomEntityId(version.getId(), entity.getType()));
+              }
+              if(adapter.saveEntity(entity)) {
+                KBObject entityobj = vkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = ontkb.getIndividual(entity.getId());
+                if(entityobj == null)
+                  entityobj = enumkb.getIndividual(entity.getId());
+                if (entityobj == null)
+                  entityobj = allkb.getIndividual(entity.getId());
+                if(entityobj != null)
+                  vkb.addPropertyValue(vobj, vprop, entityobj);
+              }
+            } else {
+              System.out.println("No adapter registered for type: "+entity.getType());
+            }
+          }
+        }
+      }
+    }
+    
+    if(!update) {
+    	KBAPI swkb = fac.getKB(this.LIBNS() + swid, OntSpec.PLAIN);
+    	KBObject swobj = swkb.getIndividual(this.LIBNS() + swid);
+    	KBObject swprop = this.ontkb.getProperty(KBConstants.ONTNS()+"hasSoftwareVersion");
+    	KBObject swprop2 = this.ontkb.getProperty(KBConstants.ONTNS()+"hasLatestSoftwareVersion");
+    	
+    	KBObject latestVersion = swkb.getPropertyValue(swobj, swprop2);
+    	if (latestVersion != null) {
+	    	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN, true);
+	    	KBObject latestVersionIndidual = lvkb.getIndividual(latestVersion.getID());
+	    	if(latestVersionIndidual != null)
+	    	{
+	    		copyVersionPropertiesToNewLatestSoftwareVersion(swobj, latestVersion, vobj, vkb, allkb);
+	    	}
+	    	
+	    	for(KBTriple t :  swkb.genericTripleQuery(swobj, swprop2, null))
+	        	swkb.removeTriple(t);
+    	}
+    	
+    	swkb.addPropertyValue(swobj, swprop, vobj);
+    	swkb.addPropertyValue(swobj, swprop2, vobj);
+    	swkb.save();
+    }
+    
+    if(vkb.save() && enumkb.save()) {
+      if(!update) {
+        MetadataEnumeration menum = new MetadataEnumeration();
+        menum.setId(version.getId());
+        menum.setLabel(version.getLabel());
+        menum.setType(version.getType());
+        menum.setName(version.getName());
+        addEnumerationToVocabulary(menum);
+        //vocabulary.setNeedsReload(true);
+      }
+      return version.getId();
+    }
+    return null;    
+  }
   
-  /**
+  
+  private void copyVersionPropertiesToNewLatestSoftwareVersion(KBObject swobj, KBObject latestVersion, KBObject vobj, KBAPI vkb, KBAPI allkb) throws Exception {
+	KBAPI lvkb = fac.getKB(latestVersion.getID(), OntSpec.PLAIN, true);
+	SoftwareVersion version = getSoftwareVersion(swobj.getID(), latestVersion.getID());
+    
+    for(String propid : version.getValue().keySet()) {
+        KBObject vprop = this.ontkb.getProperty(propid);
+        if (vprop != null) {
+          List<Entity> entities = version.getValue().get(propid);
+          MetadataProperty prop = vocabulary.getProperty(vprop.getID());
+	      if (!(propid.equals(KBConstants.ONTNS()+"supersedes")
+	    		  || propid.equals(KBConstants.ONTNS()+"supersededBy"))) {
+          
+	          for(Entity entity: entities) {
+		          
+	            // Get entity adapter for class
+	            IEntityAdapter adapter = EntityRegistrar.getAdapter(lvkb, ontkb, enumkb, prop.getRange());
+	            if(adapter != null) {
+		            KBObject entityobj = lvkb.getIndividual(entity.getId());
+		            if(entityobj == null)
+		              entityobj = ontkb.getIndividual(entity.getId());
+		            if(entityobj == null)
+		              entityobj = enumkb.getIndividual(entity.getId());
+		            if (entityobj == null)
+		              entityobj = allkb.getIndividual(entity.getId());
+		            if(entityobj != null)
+		              vkb.addPropertyValue(vobj, vprop, entityobj);
+		          }
+	          }
+	      }
+        }
+        
+    }
+    KBObject swprop = this.ontkb.getProperty(KBConstants.ONTNS()+"supersedes");
+    KBObject swprop2 = this.ontkb.getProperty(KBConstants.ONTNS()+"supersededBy");
+    vkb.addPropertyValue(vobj, swprop, latestVersion);
+    vkb.save();
+    
+    KBObject latestVersionIndidual = lvkb.getIndividual(latestVersion.getID());
+    lvkb.addPropertyValue(latestVersionIndidual, swprop2, vobj);
+    lvkb.save();
+  }
+
+/**
    * Updating software (for now just deleting old and adding new)
    * @param sw
    * @param swid
@@ -568,17 +835,46 @@ public class SoftwareRepository {
     return false;
   }
   
+  /**
+   * Updating software version (for now just deleting old and adding new)
+   * @param sw
+   * @param swid
+   * @return
+   * @throws Exception
+   */
+  public boolean updateSoftwareVersion(SoftwareVersion newversion, String swid, String vid, User user) 
+      throws Exception {  
+    SoftwareVersion curv = this.getSoftwareVersion(swid, vid);
+    
+    Provenance prov = this.prov.getUpdateProvenance(curv, newversion, user);
+    String nswid = this.updateOrAddSoftwareVersion(swid, newversion, user, true);
+    if(nswid != null) {
+       this.prov.addProvenance(prov);
+       return true;
+    }
+    return false;
+  }
+  
   // TODO: Change this call. Make it more efficient than
   //       crawling through the whole union graph ?
   public ArrayList<SoftwareSummary> getAllSoftware() throws Exception {
     return this.getAllSoftwareWithFacets(null);
   }
   
+  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersion(String software) throws Exception {
+    return this.getAllSoftwareVersionWithFacets(null, software);
+  }
+  
+  public ArrayList<FunctionSummary> getAllFunction() throws Exception {
+    return this.getAllFunctionWithFacets(null);
+  }
+  
   public ArrayList<SoftwareSummary> getAllSoftwareWithFacets(
       List<EnumerationFacet> facets) throws Exception {
     /*if(facets == null || facets.size() == 0)
       return getAllSoftware();*/
-    
+	String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
     String facetquery = "";
     if(facets != null) {
       for(EnumerationFacet facet : facets) {
@@ -591,6 +887,13 @@ public class SoftwareRepository {
               if(i > 0)
                 facetquery += "\t\t UNION\n";
               facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?v <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?v <" + ons + "hasFunction> ?f . \n";
+              facetquery += "\t\t  ?f <"+propid+"> <"+enumid+"> }\n";
               i++;
             }
           }
@@ -598,8 +901,7 @@ public class SoftwareRepository {
         }
       }
     }
-    String ons = KBConstants.ONTNS();
-    String pns = KBConstants.PROVNS();
+    
     String swquery = "\t ?x a <" + ons +"Software> .\n"
                    + "\t OPTIONAL {\n"
                    + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
@@ -611,14 +913,19 @@ public class SoftwareRepository {
                    + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
                    + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
                    + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n"
                    + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))";
     String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
         + " (GROUP_CONCAT(?creator) as ?creators)"
         + " (SAMPLE(?agent) as ?user)"
         + " (SAMPLE(?time) as ?posttime)"
+        + " (SAMPLE(?name) as ?swname)"
         + " WHERE {\n" + swquery + facetquery + "}"
         + " GROUP BY ?x\n";
-    
+       
     ArrayList<SoftwareSummary> list = new ArrayList<SoftwareSummary>();
     KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
     for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
@@ -627,6 +934,7 @@ public class SoftwareRepository {
       KBObject creator = soln.get(2).getObject();
       KBObject agent = soln.get(3).getObject();
       KBObject time = soln.get(4).getObject();
+      KBObject name = soln.get(5).getObject();
       
       if(sw == null)
         continue;
@@ -637,6 +945,10 @@ public class SoftwareRepository {
       summary.setLabel(allkb.getLabel(sw));
       summary.setType(topclass);
       summary.setPermission(this.perm_repo.getSoftwarePermission(sw.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
       
       if(desc != null && desc.getValue() != null) {
         String description = desc.getValue().toString();
@@ -660,6 +972,253 @@ public class SoftwareRepository {
         Date timestamp = (Date)time.getValue();
         summary.setTime(timestamp.getTime());
       }
+      list.add(summary);
+    }
+    return list;
+  }
+  
+  public ArrayList<SoftwareVersionSummary> getAllSoftwareVersionWithFacets(
+      List<EnumerationFacet> facets, String software) throws Exception {
+    /*if(facets == null || facets.size() == 0)
+      return getAllSoftware();*/
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
+    
+    String facetquery = "";
+    if(facets != null) {
+      for(EnumerationFacet facet : facets) {
+        int i=0;
+        int num = facet.getEnumerationIds().size();
+        if(num > 0) {
+          facetquery += "\t {\n";
+          for(String propid : facet.getPropertyIds()) {
+            for(String enumid : facet.getEnumerationIds()) {
+              if(i > 0)
+                facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasFunction> ?f . \n";
+              facetquery += "\t\t  ?f <"+propid+"> <"+enumid+"> }\n";
+              i++;
+            }
+          }
+          facetquery += "\t } .\n";
+        }
+      }
+    }
+
+    String swquery = "\t ?x a <" + ons +"SoftwareVersion> .\n"
+    			   + "\t ?swobj <" + ons + "hasSoftwareVersion> ?x .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasShortDescription> ?dobj .\n"
+                   + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
+                   + "\t } .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasCreator> ?creator .\n"
+                   + "\t } .\n"
+                   + "\t ?x <" + pns + "wasGeneratedBy> ?act .\n"
+                   + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
+                   + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n"
+                   + "\t FILTER (STRSTARTS(STR(?act), CONCAT(STR(?x), '/" + ProvenanceRepository.PROV_GRAPH + "')))\n";
+    
+    if (software != null && software != "")
+    {
+    	swquery += "FILTER (regex(STR(?swobj),\"" + LIBURI() + software + "\"))";
+    }
+
+    String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
+        + " (GROUP_CONCAT(?creator) as ?creators)"
+        + " (SAMPLE(?agent) as ?user)"
+        + " (SAMPLE(?time) as ?posttime)"
+        + " (SAMPLE(?name) as ?swname)"
+        + " (SAMPLE(?swobj) as ?software)"
+        + " WHERE {\n" + swquery + facetquery + "}"
+        + " GROUP BY ?x\n";
+
+    ArrayList<SoftwareVersionSummary> list = new ArrayList<SoftwareVersionSummary>();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+    for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
+      KBObject version = soln.get(0).getObject();
+      KBObject desc = soln.get(1).getObject();
+      KBObject creator = soln.get(2).getObject();
+      KBObject agent = soln.get(3).getObject();
+      KBObject time = soln.get(4).getObject();
+      KBObject name = soln.get(5).getObject();
+      KBObject sw = soln.get(6).getObject();
+      
+      if(version == null)
+        continue;
+      
+      SoftwareSummary swsummary = new SoftwareSummary();
+      swsummary.setId(sw.getID());
+      swsummary.setName(sw.getName());
+      swsummary.setLabel(allkb.getLabel(sw));
+      swsummary.setType(topclass);
+      
+      SoftwareVersionSummary summary = new SoftwareVersionSummary();
+      summary.setSoftwareSummary(swsummary);
+      summary.setId(version.getID());
+      summary.setName(version.getName());
+      summary.setLabel(allkb.getLabel(version));
+      summary.setType(topclassversion);
+      summary.setPermission(this.perm_repo.getSoftwarePermission(version.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
+      
+      if(desc != null && desc.getValue() != null) {
+        String description = desc.getValue().toString();
+        description = Pattern.compile("\\n\\nInitial metadata was retrieved .*$", Pattern.DOTALL).
+          matcher(description).replaceAll("");
+        if(description.length() > 300)
+          description = description.substring(0, 297) + "...";
+        summary.setDescription(description);
+      }
+      if(creator != null && creator.getValue() != null) {
+        List<String> authors = new ArrayList<String>();
+        for(String creatorid : creator.getValue().toString().split("\\s")) {
+          KBObject authobj = allkb.getResource(creatorid);
+          authors.add(allkb.getLabel(authobj));
+        }
+        summary.setAuthors(authors);
+      }
+      if(agent != null)
+        summary.setUser(agent.getName());
+      if(time != null && time.getValue() != null) {
+        Date timestamp = (Date)time.getValue();
+        summary.setTime(timestamp.getTime());
+      }
+      list.add(summary);
+    }
+    return list;
+  }
+  
+
+  public ArrayList<FunctionSummary> getAllFunctionWithFacets(
+      List<EnumerationFacet> facets) throws Exception {
+    /*if(facets == null || facets.size() == 0)
+      return getAllSoftware();*/
+    String ons = KBConstants.ONTNS();
+    String pns = KBConstants.PROVNS();
+    
+    String facetquery = "";
+    if(facets != null) {
+      for(EnumerationFacet facet : facets) {
+        int i=0;
+        int num = facet.getEnumerationIds().size();
+        if(num > 0) {
+          facetquery += "\t {\n";
+          for(String propid : facet.getPropertyIds()) {
+            for(String enumid : facet.getEnumerationIds()) {
+              if(i > 0)
+                facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?v <" + ons + "hasFunction> ?x . \n";
+              facetquery += "\t\t  ?v <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?v <" + ons + "hasFunction> ?x . \n";
+              facetquery += "\t\t ?sw <" + ons + "hasSoftwareVersion> ?v . \n";
+              facetquery += "\t\t  ?sw <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasInputFile> ?if . \n";
+              facetquery += "\t\t  ?if <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasInputParameter> ?ip . \n";
+              facetquery += "\t\t  ?ip <"+propid+"> <"+enumid+"> }\n";
+              facetquery += "\t\t UNION\n";
+              facetquery += "\t\t { ?x <" + ons + "hasOutput> ?out . \n";
+              facetquery += "\t\t  ?out <"+propid+"> <"+enumid+"> }\n";
+              i++;
+            }
+          }
+          facetquery += "\t } .\n";
+        }
+      }
+    }
+
+    String swquery = "\t ?x a <" + ons +"Function> .\n"
+    			   + "\t ?vobj <" + ons + "hasFunction> ?x .\n"
+    			   + "\t ?swobj <" + ons + "hasSoftwareVersion> ?vobj .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasFunctionDescription> ?dobj .\n"
+                   + "\t\t ?dobj <" + ons + "hasTextValue> ?desc \n"
+                   + "\t } .\n"
+                   + "\t ?vobj <" + pns + "wasGeneratedBy> ?act .\n"
+                   + "\t ?act <" + pns + "wasAssociatedWith> ?agent .\n"
+                   + "\t ?act <" + pns + "endedAtTime> ?time .\n"
+                   + "\t OPTIONAL {\n"
+                   + "\t\t ?x <" + ons + "hasFunctionName> ?nobj .\n"
+                   + "\t\t ?nobj <" + ons + "hasTextValue> ?name \n"
+                   + "\t } .\n";
+       String query = "SELECT ?x (SAMPLE(?desc) as ?description) "
+        + " (SAMPLE(?name) as ?fname)"
+        + " (SAMPLE(?agent) as ?user)"
+        + " (SAMPLE(?time) as ?posttime)"
+        + " (SAMPLE(?swobj) as ?software)"
+        + " (SAMPLE(?vobj) as ?version)"
+        + " WHERE {\n" + swquery + facetquery + "}"
+        + " GROUP BY ?x\n";
+               
+    ArrayList<FunctionSummary> list = new ArrayList<FunctionSummary>();
+    KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+    for(ArrayList<SparqlQuerySolution> soln : allkb.sparqlQuery(query)) {
+      KBObject function = soln.get(0).getObject();
+      KBObject desc = soln.get(1).getObject();
+      KBObject name = soln.get(2).getObject();
+      KBObject agent = soln.get(3).getObject();
+      KBObject time = soln.get(4).getObject();
+      KBObject sw = soln.get(5).getObject();
+      KBObject version = soln.get(6).getObject();
+      
+      if(function == null)
+        continue;
+      
+      SoftwareSummary swsummary = new SoftwareSummary();
+      swsummary.setId(sw.getID());
+      swsummary.setName(sw.getName());
+      swsummary.setLabel(allkb.getLabel(sw));
+      swsummary.setType(topclass);
+      
+      SoftwareVersionSummary vsummary = new SoftwareVersionSummary();
+      vsummary.setSoftwareSummary(swsummary);
+      vsummary.setId(version.getID());
+      vsummary.setName(version.getName());
+      vsummary.setLabel(allkb.getLabel(version));
+      vsummary.setType(topclassversion);
+      
+      FunctionSummary summary = new FunctionSummary();
+      summary.setSoftwareVersionSummary(vsummary);
+      summary.setSoftwareSummary(swsummary);
+      summary.setId(function.getID());
+      summary.setName(function.getName());
+      summary.setLabel(allkb.getLabel(function));
+      summary.setType(KBConstants.ONTNS() + "Function");
+      summary.setPermission(this.perm_repo.getSoftwarePermission(function.getID()));
+      
+      if(name != null && name.getValue() != null) {
+    	  summary.setSoftwareName(name.getValueAsString());
+      }
+      
+      if(desc != null && desc.getValue() != null) {
+        String description = desc.getValue().toString();
+        description = Pattern.compile("\\n\\nInitial metadata was retrieved .*$", Pattern.DOTALL).
+          matcher(description).replaceAll("");
+        if(description.length() > 300)
+          description = description.substring(0, 297) + "...";
+        summary.setDescription(description);
+      }
+      if(agent != null)
+        summary.setUser(agent.getName());
+	  if(time != null && time.getValue() != null) {
+	    Date timestamp = (Date)time.getValue();
+	    summary.setTime(timestamp.getTime());
+	  }
       list.add(summary);
     }
     return list;
@@ -691,7 +1250,7 @@ public class SoftwareRepository {
           
           MetadataType type = vocabulary.getType(prop.getRange());
           // Treat software entities specially 
-          if(vocabulary.isA(type, vocabulary.getType(topclass))) {
+          if(vocabulary.isA(type, vocabulary.getType(topclass)) || vocabulary.isA(type, vocabulary.getType(topclassversion))) {
             KBAPI tmpkb = fac.getKB(valobj.getID(), OntSpec.PLAIN);
             KBObject valswobj = tmpkb.getIndividual(valobj.getID());
             if(valswobj != null) {
@@ -711,9 +1270,105 @@ public class SoftwareRepository {
         sw.addPropertyValues(prop.getId(), entities);
       }
       
+      Entity swName = sw.getPropertyValue(KBConstants.ONTNS()+"hasName");
+      if (swName != null)
+    	  sw.setSoftwareName(swName.getValue().toString());
+      
       sw.setProvenance(this.prov.getSoftwareProvenance(swid));
       sw.setPermission(this.perm_repo.getSoftwarePermission(swid));
       return sw;
+    }
+    return null;
+  }
+  
+  public SoftwareVersion getSoftwareVersion(String swid, String vid) throws Exception {
+	KBAPI allkb = fac.getKB(uniongraph, OntSpec.PLAIN);
+	KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
+    KBObject vobj = vkb.getIndividual(vid);
+    if(vobj != null) {
+      SoftwareVersion version = new SoftwareVersion();
+      version.setId(vid);
+      version.setLabel(vkb.getLabel(vobj));
+      version.setName(vobj.getName());
+      version.setSoftware(swid);
+      
+      KBObject typeobj = vkb.getPropertyValue(vobj, ontkb.getProperty(rdfns+"type"));
+      version.setType(typeobj.getID());
+
+      MetadataType swtype = this.vocabulary.getType(version.getType());
+      
+      for(MetadataProperty prop : this.vocabulary.getPropertiesForType(swtype)) {
+        
+        KBObject propobj = vkb.getProperty(prop.getId());
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+        for(KBObject valobj: vkb.getPropertyValues(vobj, propobj)) {
+          
+          MetadataType type = vocabulary.getType(prop.getRange());
+          // Treat software entities specially 
+          if(vocabulary.isA(type, vocabulary.getType(topclassversion))) {
+            KBAPI tmpkb = fac.getKB(valobj.getID(), OntSpec.PLAIN);
+            KBObject valswobj = tmpkb.getIndividual(valobj.getID());
+            if(valswobj != null) {
+              Entity entity = new EnumerationEntity();
+              entity.setId(valobj.getID());
+              entity.setLabel(tmpkb.getLabel(valswobj));
+              entity.setType(prop.getRange());
+              entities.add(entity);
+            }
+          }
+          else {
+            Entity entity = this.getSoftwareEntity(allkb, valobj, prop.getRange());
+            
+            if(entity != null) {
+            	if (entity.getType().equals(KBConstants.ONTNS() + "Function")) {
+            		
+            		KBObject f = allkb.getIndividual(entity.getId());
+                	KBObject obj = allkb.getPropertyValue(f, ontkb.getProperty(KBConstants.ONTNS() + "hasFunctionName"));
+                	KBObject value = allkb.getPropertyValue(obj, this.ontkb.getProperty(KBConstants.ONTNS() + "hasTextValue"));
+                	entity.setLabel(value.getValue().toString());
+                }
+            	entities.add(entity);
+            }
+              
+          }
+        }
+        version.addPropertyValues(prop.getId(), entities);
+      }
+      
+      version.setProvenance(this.prov.getSoftwareProvenance(vid));
+      version.setPermission(this.perm_repo.getSoftwarePermission(vid));
+      return version;
+    }
+    return null;
+  }
+  
+  public SoftwareFunction getSoftwareFunction(String swid, String vid, String fid) throws Exception {
+    KBAPI vkb = fac.getKB(vid, OntSpec.PLAIN);
+    KBObject vobj = vkb.getIndividual(fid);
+    if(vobj != null) {
+      SoftwareFunction function = new SoftwareFunction();
+      function.setId(fid);
+      function.setLabel(vkb.getLabel(vobj));
+      function.setName(vobj.getName());
+      
+      KBObject typeobj = vkb.getPropertyValue(vobj, ontkb.getProperty(rdfns+"type"));
+      function.setType(typeobj.getID());
+
+      MetadataType swtype = this.vocabulary.getType(function.getType());
+      
+      for(MetadataProperty prop : this.vocabulary.getPropertiesForType(swtype)) {
+        
+        KBObject propobj = vkb.getProperty(prop.getId());
+        ArrayList<Entity> entities = new ArrayList<Entity>();
+        for(KBObject valobj: vkb.getPropertyValues(vobj, propobj)) {                    
+	      Entity entity = this.getSoftwareEntity(vkb, valobj, prop.getRange());
+	      if(entity != null)
+	        entities.add(entity);
+        }
+        function.addPropertyValues(prop.getId(), entities);
+      }
+      
+      return function;
     }
     return null;
   }
@@ -979,6 +1634,22 @@ public class SoftwareRepository {
     return false;
   }
   
+  public boolean deleteSoftwareVersion(String swid, String vid, User loggedinuser) throws Exception {
+	Permission perm = getSoftwarePermission(vid);
+	if (loggedinuser.getRoles().contains("admin") || PermUtils.hasOwnerAccess(perm,  loggedinuser.getName()))
+	{
+	    KBAPI swkb = fac.getKB(vid, OntSpec.PLAIN);
+	    //KBObject swobj = swkb.getIndividual(swid);
+	    if (swkb.delete()) { // && (swobj != null)) {
+	      deleteEnumerationFromVocabulary(vid);
+	      this.prov.deleteSoftwareProvenance(vid);
+	      this.perm_repo.deleteSoftwarePermission(vid);
+	      return true;
+	    }		
+	}
+    return false;
+  }
+  
   public boolean deleteEnumeration(String enumid) throws Exception {
     KBObject enumobj = enumkb.getIndividual(enumid);
     if(enumobj != null) {
@@ -1014,4 +1685,5 @@ public class SoftwareRepository {
   private String getUserId(UserCredentials user) {
 	return this.USERNS() + user.getName().replaceAll("[^a-zA-Z0-9_]", "_");    
   }
+
 }

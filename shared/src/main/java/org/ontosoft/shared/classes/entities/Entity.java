@@ -13,7 +13,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
   @Type(name="MeasurementEntity", value=MeasurementEntity.class),
   @Type(name="Location", value=Location.class),
   @Type(name="ComplexEntity", value=ComplexEntity.class),
-  @Type(name="Software", value=Software.class)
+  @Type(name="Software", value=Software.class),
+  @Type(name="SoftwareVersion", value=SoftwareVersion.class),
+  @Type(name="SoftwareFunction", value=SoftwareFunction.class)
 })
 @JsonTypeInfo(use=Id.NAME)
 public abstract class Entity {

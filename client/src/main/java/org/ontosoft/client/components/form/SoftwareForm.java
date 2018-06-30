@@ -29,6 +29,8 @@ import org.ontosoft.client.components.form.events.SoftwareChangeEvent;
 import org.ontosoft.client.components.form.events.SoftwareChangeHandler;
 import org.ontosoft.client.components.form.events.SoftwareSaveEvent;
 import org.ontosoft.client.components.form.events.SoftwareSaveHandler;
+import org.ontosoft.client.components.form.events.SoftwareVersionChangeEvent;
+import org.ontosoft.client.components.form.events.SoftwareVersionChangeHandler;
 import org.ontosoft.client.components.form.formgroup.PropertyFormGroup;
 import org.ontosoft.client.components.form.formgroup.input.EntityInput;
 import org.ontosoft.client.components.form.formgroup.input.EntityRegistrar;
@@ -611,5 +613,10 @@ implements HasSoftwareHandlers, HasPluginHandlers {
         AppNotification.notifyFailure("Not Allowed!");
       }
     }
+  }
+  
+  public HandlerRegistration addSoftwareVersionChangeHandler(
+      SoftwareVersionChangeHandler handler) {
+    return handlerManager.addHandler(SoftwareVersionChangeEvent.TYPE, handler);
   }
 }

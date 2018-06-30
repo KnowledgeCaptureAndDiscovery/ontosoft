@@ -4,9 +4,15 @@ import java.util.Arrays;
 
 import org.ontosoft.client.application.browse.BrowseView;
 import org.ontosoft.client.application.compare.CompareView;
+import org.ontosoft.client.application.function.compare.CompareFunctionView;
+import org.ontosoft.client.application.function.list.FunctionListView;
 import org.ontosoft.client.application.list.SoftwareListView;
 import org.ontosoft.client.application.publish.PublishView;
 import org.ontosoft.client.application.users.UserView;
+import org.ontosoft.client.application.version.browse.VersionBrowseView;
+import org.ontosoft.client.application.version.compare.CompareVersionView;
+import org.ontosoft.client.application.version.list.SoftwareVersionListView;
+import org.ontosoft.client.application.version.publish.PublishVersionView;
 import org.ontosoft.client.place.NameTokens;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -35,9 +41,10 @@ public class ApplicationPresenter extends
 
   @Inject
   public ApplicationPresenter(EventBus eventBus, final MyView view, MyProxy proxy,
-      final PlaceManager placemanager, final PublishView publishview,
-      final BrowseView browseview, final SoftwareListView listview, 
-      final CompareView compareview, final UserView userview) {
+      final PlaceManager placemanager, final PublishView publishview, final PublishVersionView publishversionview,
+      final BrowseView browseview, final VersionBrowseView versionbrowseview, final SoftwareListView listview,
+      final SoftwareVersionListView versionlistview, final FunctionListView functionlistview,
+      final CompareView compareview, final CompareFunctionView comparefunctionview, final CompareVersionView compareversionview, final UserView userview) {
     super(eventBus, view, proxy, RevealType.Root);
     
     final PlaceRequest.Builder builder = new PlaceRequest.Builder();
@@ -52,12 +59,24 @@ public class ApplicationPresenter extends
         ParameterizedView sectionview = null;
         if(nametoken.equals(NameTokens.publish))
           sectionview = publishview;
+        else if(nametoken.equals(NameTokens.publishversion))
+            sectionview = publishversionview;
         else if(nametoken.equals(NameTokens.browse))
           sectionview = browseview;
+        else if(nametoken.equals(NameTokens.version))
+    	  sectionview = versionbrowseview;
+        else if(nametoken.equals(NameTokens.versions))
+          sectionview = versionlistview;
+        else if(nametoken.equals(NameTokens.functions))
+            sectionview = functionlistview;
         else if(nametoken.equals(NameTokens.list))
           sectionview = listview;        
         else if(nametoken.equals(NameTokens.compare))
           sectionview = compareview;
+        else if(nametoken.equals(NameTokens.comparefunction))
+            sectionview = comparefunctionview;
+        else if(nametoken.equals(NameTokens.compareversion))
+            sectionview = compareversionview;
         else if(nametoken.equals(NameTokens.users))
           sectionview = userview;        
 

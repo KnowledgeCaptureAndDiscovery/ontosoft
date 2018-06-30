@@ -12,8 +12,12 @@ import org.fusesource.restygwt.client.Resource;
 import org.fusesource.restygwt.client.RestServiceProxy;
 import org.ontosoft.client.authentication.AuthenticatedDispatcher;
 import org.ontosoft.shared.api.SoftwareService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 import org.ontosoft.shared.classes.vocabulary.Vocabulary;
 import org.ontosoft.shared.plugins.PluginResponse;
@@ -38,10 +42,16 @@ public class SoftwareREST {
   
   private Vocabulary vocabulary;
   private List<SoftwareSummary> softwareList;
+  private List<SoftwareVersionSummary> softwareVersionList;
+  private List<FunctionSummary> functionList;
   private SoftwareService service;
   
   private HashMap<String, Software> softwareCache = 
       new HashMap<String, Software>();
+  private HashMap<String, SoftwareVersion> softwareVersionCache = 
+	      new HashMap<String, SoftwareVersion>();
+  private HashMap<String, SoftwareFunction> softwareFunctionCache = 
+	      new HashMap<String, SoftwareFunction>();
   private HashMap<String, List<MetadataEnumeration>> enumCache = 
       new HashMap<String, List<MetadataEnumeration>>();
   
@@ -49,6 +59,10 @@ public class SoftwareREST {
       new ArrayList<Callback<Vocabulary, Throwable>>();  
   private ArrayList<Callback<List<SoftwareSummary>, Throwable>> list_callbacks =
       new ArrayList<Callback<List<SoftwareSummary>, Throwable>>();
+  private ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>> list_version_callbacks =
+	      new ArrayList<Callback<List<SoftwareVersionSummary>, Throwable>>();
+  private ArrayList<Callback<List<FunctionSummary>, Throwable>> list_function_callbacks =
+	      new ArrayList<Callback<List<FunctionSummary>, Throwable>>();
   private ArrayList<Callback<Boolean, Throwable>> perm_callbacks =
       new ArrayList<Callback<Boolean,Throwable>>();
   
@@ -56,7 +70,7 @@ public class SoftwareREST {
     enum_callbacks =
       new HashMap<String, ArrayList<Callback<List<MetadataEnumeration>, Throwable>>>();
   
-  private Boolean permFeatureEnabled = null; 
+  private Boolean permFeatureEnabled = null;
   
   public static SoftwareREST get(String key) {
     if(singletons.containsKey(key))
@@ -141,6 +155,66 @@ public class SoftwareREST {
     }
   }
   
+  public void getSoftwareVersionList(String software, final Callback<List<SoftwareVersionSummary>, Throwable> callback,
+      boolean reload) {
+    if(softwareVersionList != null && !reload) {
+      callback.onSuccess(softwareVersionList);
+    }
+    else {
+      softwareVersionList = null;
+      if(list_version_callbacks.isEmpty()) {
+        list_version_callbacks.add(callback);
+        REST.withCallback(new MethodCallback<List<SoftwareVersionSummary>>() {
+          @Override
+          public void onSuccess(Method method, List<SoftwareVersionSummary> swlist) {
+            softwareVersionList = swlist;
+            for(Callback<List<SoftwareVersionSummary>, Throwable> cb : list_version_callbacks)
+              cb.onSuccess(softwareVersionList);    
+            list_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load software list");
+            callback.onFailure(exception);
+          }
+        }).call(this.service).versions(software);
+      }
+      else {
+        list_version_callbacks.add(callback);
+      }
+    }
+  }
+  
+  public void getFunctionList(final Callback<List<FunctionSummary>, Throwable> callback,
+      boolean reload) {
+    if(functionList != null && !reload) {
+      callback.onSuccess(functionList);
+    }
+    else {
+      functionList = null;
+      if(list_function_callbacks.isEmpty()) {
+        list_function_callbacks.add(callback);
+        REST.withCallback(new MethodCallback<List<FunctionSummary>>() {
+          @Override
+          public void onSuccess(Method method, List<FunctionSummary> swlist) {
+        	functionList = swlist;
+            for(Callback<List<FunctionSummary>, Throwable> cb : list_function_callbacks)
+              cb.onSuccess(functionList);    
+            list_function_callbacks.clear();
+          }
+          @Override
+          public void onFailure(Method method, Throwable exception) {
+            AppNotification.notifyFailure("Could not load software list");
+            callback.onFailure(exception);
+          }
+        }).call(this.service).functions();
+      }
+      else {
+        list_function_callbacks.add(callback);
+      }
+    }
+  }
+  
   public void getSoftwareListFaceted(List<EnumerationFacet> facets,
       final Callback<List<SoftwareSummary>, Throwable> callback) {
     REST.withCallback(new MethodCallback<List<SoftwareSummary>>() {
@@ -155,6 +229,34 @@ public class SoftwareREST {
     }).call(this.service).listWithFacets(facets);
   }
   
+  public void getSoftwareVersionListFaceted(List<EnumerationFacet> facets, String software,
+      final Callback<List<SoftwareVersionSummary>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<SoftwareVersionSummary>>() {
+      @Override
+      public void onSuccess(Method method, List<SoftwareVersionSummary> swlist) {
+        callback.onSuccess(swlist);            
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(this.service).listSoftwareVersionWithFacets(facets, software);
+  }
+  
+  public void getFunctionListFaceted(List<EnumerationFacet> facets,
+      final Callback<List<FunctionSummary>, Throwable> callback) {
+    REST.withCallback(new MethodCallback<List<FunctionSummary>>() {
+      @Override
+      public void onSuccess(Method method, List<FunctionSummary> swlist) {
+        callback.onSuccess(swlist);            
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        callback.onFailure(exception);
+      }
+    }).call(this.service).listFunctionWithFacets(facets);
+  }
+	  
   public void getSoftware(final String swname, final Callback<Software, Throwable> callback,
       final boolean reload) {
     //GWT.log(softwareCache.keySet().toString() + ": "+reload);
@@ -184,6 +286,71 @@ public class SoftwareREST {
           callback.onFailure(exception);
         }
       }).call(this.service).get(URL.encodeQueryString(swname));
+    }
+  }
+  
+  public void getSoftwareVersion(final String swname, final String vname, final Callback<SoftwareVersion, Throwable> callback,
+      final boolean reload) {
+    //GWT.log(softwareCache.keySet().toString() + ": "+reload);
+    if(softwareVersionCache.containsKey(vname) && !reload) {
+      callback.onSuccess(softwareVersionCache.get(vname));
+    }    
+    else {
+      REST.withCallback(new MethodCallback<SoftwareVersion>() {
+        @Override
+        public void onSuccess(Method method, SoftwareVersion sw) {
+          //GWT.log("caching "+sw.getName());
+          if(sw != null) {
+            softwareVersionCache.put(sw.getName(), sw);
+            if(reload)
+              AppNotification.notifySuccess(sw.getLabel() + " reloaded", 1000);
+            callback.onSuccess(sw);
+          }
+          else {
+            AppNotification.notifyFailure("Could not find "+vname);
+            callback.onFailure(new Throwable("Software details could not be found"));
+          }
+        }
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          GWT.log("Could nto fetch software: "+vname, exception);
+          AppNotification.notifyFailure("Could not fetch software: "+vname);
+          callback.onFailure(exception);
+        }
+      }).call(this.service).getVersion(URL.encodeQueryString(swname), URL.encodeQueryString(vname));
+    }
+  }
+  
+  public void getSoftwareFunction(final String swname, final String vname, final String fname, 
+		  final Callback<SoftwareFunction, Throwable> callback,
+      final boolean reload) {
+    //GWT.log(softwareCache.keySet().toString() + ": "+reload);
+    if(softwareFunctionCache.containsKey(vname) && !reload) {
+      callback.onSuccess(softwareFunctionCache.get(fname));
+    }    
+    else {
+      REST.withCallback(new MethodCallback<SoftwareFunction>() {
+        @Override
+        public void onSuccess(Method method, SoftwareFunction f) {
+          //GWT.log("caching "+sw.getName());
+          if(f != null) {
+            softwareFunctionCache.put(f.getName(), f);
+            if(reload)
+              AppNotification.notifySuccess(f.getLabel() + " reloaded", 1000);
+            callback.onSuccess(f);
+          }
+          else {
+            AppNotification.notifyFailure("Could not find "+vname);
+            callback.onFailure(new Throwable("Software details could not be found"));
+          }
+        }
+        @Override
+        public void onFailure(Method method, Throwable exception) {
+          GWT.log("Could nto fetch software: "+vname, exception);
+          AppNotification.notifyFailure("Could not fetch software: "+vname);
+          callback.onFailure(exception);
+        }
+      }).call(this.service).getSoftwareFunction(URL.encodeQueryString(swname), URL.encodeQueryString(vname), URL.encodeQueryString(fname));
     }
   }
   
@@ -270,6 +437,31 @@ public class SoftwareREST {
     }).call(this.service).publish(software);    
   }
   
+  public void publishSoftwareVersion(final String software, 
+	  final SoftwareVersion version, 
+      final Callback<SoftwareVersion, Throwable> callback) {
+    REST.withCallback(new MethodCallback<SoftwareVersion>() {
+      @Override
+      public void onSuccess(Method method, SoftwareVersion sw) {
+        if(sw != null) {
+          softwareVersionCache.put(sw.getName(), sw);
+          softwareVersionList.add(new SoftwareVersionSummary(sw));
+          AppNotification.notifySuccess(version.getLabel() + " published. Now enter some details !", 1500);
+          callback.onSuccess(sw);
+        }
+        else {
+          AppNotification.notifyFailure("Could not publish");
+          callback.onFailure(new Throwable("Returned null"));
+        }
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not publish");
+        callback.onFailure(exception);
+      }
+    }).call(this.service).publishVersion(software, version);    
+  }
+  
   public void updateSoftware(final Software software, 
       final Callback<Software, Throwable> callback) {
     REST.withCallback(new MethodCallback<Software>() {
@@ -285,6 +477,23 @@ public class SoftwareREST {
         callback.onFailure(exception);
       }
     }).call(this.service).update(software.getName(), software);    
+  }
+  
+  public void updateSoftwareVersion(final String software, final SoftwareVersion version, 
+      final Callback<SoftwareVersion, Throwable> callback) {
+    REST.withCallback(new MethodCallback<SoftwareVersion>() {
+      @Override
+      public void onSuccess(Method method, SoftwareVersion sw) {
+        softwareVersionCache.put(sw.getName(), sw);
+        AppNotification.notifySuccess(version.getLabel() + " saved", 1000);
+        callback.onSuccess(sw);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not save "+version.getLabel());
+        callback.onFailure(exception);
+      }
+    }).call(this.service).updateVersion(software, version.getName(), version);    
   }
   
   public void deleteSoftware(final String swname, 
@@ -305,6 +514,26 @@ public class SoftwareREST {
         callback.onFailure(exception);
       }
     }).call(this.service).delete(swname);    
+  }
+  
+  public void deleteSoftwareVersion(final String swname, final String vname, 
+      final Callback<Void, Throwable> callback) {
+    REST.withCallback(new MethodCallback<Void>() {
+      @Override
+      public void onSuccess(Method method, Void v) {
+        softwareVersionCache.remove(swname);
+        for(SoftwareSummary sum: softwareVersionList)
+          if(sum.getName().equals(swname))
+            softwareVersionList.remove(sum);
+        callback.onSuccess(v);
+        AppNotification.notifySuccess(swname+" deleted", 1000);
+      }
+      @Override
+      public void onFailure(Method method, Throwable exception) {
+        AppNotification.notifyFailure("Could not delete "+vname);
+        callback.onFailure(exception);
+      }
+    }).call(this.service).deleteSoftwareVersion(swname, vname);    
   }
   
   public void runPlugin(final String pluginname, final Software software, 
@@ -473,4 +702,5 @@ public class SoftwareREST {
       }
     }
   }
+
 }

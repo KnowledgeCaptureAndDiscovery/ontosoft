@@ -13,8 +13,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.fusesource.restygwt.client.DirectRestService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Authorization;
@@ -36,6 +40,19 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")
   public List<SoftwareSummary> list();
   
+  @GET
+  @Path("versions")
+  @Produces("application/json")
+  public List<SoftwareVersionSummary> versions(String software);
+  
+  @GET
+  @Path("functions")
+  @Produces("application/json")
+  public List<FunctionSummary> functions();
+  
+  /*
+   * Query functions
+   */
   @POST
   @Path("search")
   @Produces("application/json")
@@ -43,15 +60,44 @@ public interface SoftwareService extends DirectRestService {
   public List<SoftwareSummary> listWithFacets(
       @JsonProperty("facets") List<EnumerationFacet> facets);
   
+  @POST
+  @Path("searchVersion")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(
+      @JsonProperty("facets") List<EnumerationFacet> facets, @PathParam("software") String software);
+  
+  @POST
+  @Path("searchFunction")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public List<FunctionSummary> listFunctionWithFacets(
+      @JsonProperty("facets") List<EnumerationFacet> facets);
+  
   @GET
   @Path("software/{name}")
   @Produces("application/json")
   public Software get(@PathParam("name") String name);
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/json")
+  public SoftwareVersion getVersion(@PathParam("name") String name, @PathParam("version") String version);
+
+  @GET
+  @Path("software/{name}/version/{version}/function/{function}")
+  @Produces("application/json")
+  public SoftwareFunction getSoftwareFunction(@PathParam("name") String name, @PathParam("version") String version, @PathParam("function") String function);
 
   @GET
   @Path("software/{name}")
   @Produces("application/rdf+xml")
   public String getGraph(@PathParam("name") String name);
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/rdf+xml")
+  public String getSoftwareVersionGraph(@PathParam("name") String name, @PathParam("version") String version);
   
   @GET
   @Path("software/{name}/provenance")
@@ -62,6 +108,13 @@ public interface SoftwareService extends DirectRestService {
   @Path("software/{name}/provenance")
   @Produces("application/rdf+xml")
   public String getProvenanceGraph(@PathParam("name") String name);
+  
+  /* versions */
+  @POST
+  @Path("software/{name}/version")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public SoftwareVersion publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version);
   
   @GET
   @Path("vocabulary")
@@ -98,11 +151,23 @@ public interface SoftwareService extends DirectRestService {
   @Consumes("application/json")
   public Software update(@PathParam("name") String name,
       @JsonProperty("software") Software software);
+  
+  @PUT
+  @Path("software/{swname}/version/{vname}")
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Software updateVersion(@PathParam("swname") String swname, @PathParam("vname") String vname,
+      @JsonProperty("version") SoftwareVersion version);
 
   @DELETE
   @Path("software/{name}")
   @Produces("text/html")
   public void delete(@PathParam("name") String name);
+  
+  @DELETE
+  @Path("software/{name}/version/{vname}")
+  @Produces("text/html")
+  public void deleteSoftwareVersion(@PathParam("name") String name, @PathParam("vname") String vname);
 
   @DELETE
   @Path("software/enumerations/{name}")
@@ -184,4 +249,5 @@ public interface SoftwareService extends DirectRestService {
   @Produces("application/json")  
   @Consumes("application/json")
   public Boolean getPermissionFeatureEnabled();
+
 }

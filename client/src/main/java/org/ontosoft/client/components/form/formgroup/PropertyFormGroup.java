@@ -19,6 +19,7 @@ import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.ontosoft.client.Config;
 import org.ontosoft.client.authentication.SessionStorage;
 import org.ontosoft.client.components.form.SoftwareForm;
+import org.ontosoft.client.components.form.SoftwareVersionForm;
 import org.ontosoft.client.components.form.events.HasPluginHandlers;
 import org.ontosoft.client.components.form.events.PluginResponseEvent;
 import org.ontosoft.client.components.form.events.PluginResponseHandler;

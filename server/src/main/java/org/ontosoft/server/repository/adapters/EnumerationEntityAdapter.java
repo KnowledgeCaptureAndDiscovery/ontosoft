@@ -37,6 +37,10 @@ public class EnumerationEntityAdapter extends EntityAdapter {
 
   @Override
   public boolean saveEntity(Entity entity) {
+	if (entity.getLabel().equals("") 
+			|| entity.getLabel() == null) {
+		return false;
+	}
     KBObject entityobj = this.ontkb.getIndividual(entity.getId());
     if(entityobj == null)
       entityobj = this.enumkb.getIndividual(entity.getId());
@@ -55,7 +59,8 @@ public class EnumerationEntityAdapter extends EntityAdapter {
     }
     
     // If no entity found, then create a new one
-    if(entityobj == null) {
+    if(entityobj == null 
+    		|| (entityobj != null && entity.getLabel() != this.enumkb.getLabel(entityobj))) {
       String etype = entity.getType().replaceAll("^.*/", "").replaceAll("^.*#", "");
       entity.setId(repo.ENUMNS() + etype + "-" + GUID.get());
       entityobj = this.enumkb.createObjectOfClass(entity.getId(), kbClass);

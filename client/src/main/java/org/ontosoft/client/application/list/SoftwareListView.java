@@ -263,7 +263,10 @@ public class SoftwareListView extends ParameterizedViewImpl
             sb.appendHtmlConstant("<div class='software-list-item'>");
             sb.appendHtmlConstant("<div class='software-name'>");
             sb.appendHtmlConstant(extralabel);
-            sb.appendHtmlConstant("<a href='" + link + "'>" + summary.getLabel() + "</a>");
+            if (summary.getSoftwareName() != null)
+              sb.appendHtmlConstant("<a href='" + link + "'>" + summary.getSoftwareName() + "</a>");
+            else
+              sb.appendHtmlConstant("<a href='" + link + "'>" + summary.getLabel() + "</a>");
             sb.appendHtmlConstant("</div>");
             
             if(summary.getDescription() != null)

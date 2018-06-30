@@ -13,155 +13,171 @@ import org.ontosoft.shared.classes.provenance.Provenance;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class SoftwareSummary {
-  String id;
-  String name;
-  String type;
-  String label;
-  String description;
-  
-  @JsonIgnore String externalRepositoryId;
-  @JsonIgnore String externalRepositoryUrl;
-  
-  List<String> authors;
-  String user;
-  long time;
-  String updateUser;
-  long updateTime;
+	String id;
+	String name;
+	String type;
+	String label;
+	String description;
+	String softwareName;
 
-  Permission permission;
-  
-  public SoftwareSummary() { }
-  
-  public SoftwareSummary(Software sw) {
-    this.setId(sw.getId());
-    this.setName(sw.getName());
-    this.setType(sw.getType());
-    this.setLabel(sw.getLabel());
-    
-    setProvenanceDetails(sw.getProvenance());
-    this.setPermission(sw.getPermission());
-  }
-  
-  public String getId() {
-    return id;
-  }
+	@JsonIgnore
+	String externalRepositoryId;
+	@JsonIgnore
+	String externalRepositoryUrl;
 
-  public void setId(String id) {
-    this.id = id;
-  }
+	List<String> authors;
+	String user;
+	long time;
+	String updateUser;
+	long updateTime;
 
-  public String getName() {
-    return name;
-  }
+	Permission permission;
 
-  public void setName(String name) {
-    this.name = name;
-  }
+	public SoftwareSummary() {
+	}
 
-  public String getType() {
-    return type;
-  }
+	public SoftwareSummary(Software sw) {
+		this.setId(sw.getId());
+		this.setName(sw.getName());
+		this.setType(sw.getType());
+		this.setLabel(sw.getLabel());
+		this.setSoftwareName(sw.getSoftwareName());
 
-  public void setType(String type) {
-    this.type = type;
-  }
+		setProvenanceDetails(sw.getProvenance());
+		this.setPermission(sw.getPermission());
+	}
 
-  public String getLabel() {
-    return label;
-  }
+	public String getId() {
+		return id;
+	}
 
-  public void setLabel(String label) {
-    this.label = label;
-  }
+	public void setId(String id) {
+		this.id = id;
+	}
 
-  public String getDescription() {
-    return description;
-  }
+	public String getName() {
+		return name;
+	}
 
-  public void setDescription(String description) {
-    this.description = description;
-  }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-  public List<String> getAuthors() {
-    return authors;
-  }
+	public String getType() {
+		return type;
+	}
 
-  public void setAuthors(List<String> authors) {
-    this.authors = authors;
-  }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-  public String getUser() {
-    return user;
-  }
+	public String getLabel() {
+		return label;
+	}
 
-  public void setUser(String user) {
-    this.user = user;
-  }
+	public void setLabel(String label) {
+		this.label = label;
+	}
 
-  public long getTime() {
-    return time;
-  }
+	public String getDescription() {
+		return description;
+	}
 
-  public void setTime(long time) {
-    this.time = time;
-  }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-  public String getUpdateUser() {
-    return updateUser;
-  }
+	public List<String> getAuthors() {
+		return authors;
+	}
 
-  public void setUpdateUser(String updateUser) {
-    this.updateUser = updateUser;
-  }
+	public void setAuthors(List<String> authors) {
+		this.authors = authors;
+	}
 
-  public long getUpdateTime() {
-    return updateTime;
-  }
+	public String getUser() {
+		return user;
+	}
 
-  public void setUpdateTime(long updateTime) {
-    this.updateTime = updateTime;
-  }
-  
-  private void setProvenanceDetails(Provenance prov) {
-    if(prov == null)
-      return;
-    
-    ProvEntity swentity = prov.getEntity(this.getId());
-    if(swentity != null) {
-      Activity act = prov.getActivity(swentity.getGeneratedBy());
-      if(act != null) {
-        Agent agent = prov.getAgent(act.getAgentId());
-        if(agent != null)
-          this.setUser(agent.getName());
-        Date time = act.getTime();
-        if(time != null)
-          this.setTime(time.getTime());
-      }
-    }
-  }
-  
-  public void setPermission(Permission permission) {
-    this.permission = permission;
-  }
-  
-  public Permission getPermission() {
-    return this.permission;
-  }
+	public void setUser(String user) {
+		this.user = user;
+	}
 
-  @JsonIgnore
-  public String getExternalRepositoryId() {
-    return externalRepositoryId;
-  }
-  @JsonIgnore
-  public void setExternalRepositoryId(String externalRepositoryId) {
-    this.externalRepositoryId = externalRepositoryId;
-  }
-  @JsonIgnore
-  public String getExternalRepositoryUrl() {
-    return externalRepositoryUrl;
-  }
-  @JsonIgnore
-  public void setExternalRepositoryUrl(String externalRepositoryUrl) {
-    this.externalRepositoryUrl = externalRepositoryUrl;
-  } 
+	public long getTime() {
+		return time;
+	}
+
+	public void setTime(long time) {
+		this.time = time;
+	}
+
+	public String getUpdateUser() {
+		return updateUser;
+	}
+
+	public void setUpdateUser(String updateUser) {
+		this.updateUser = updateUser;
+	}
+
+	public long getUpdateTime() {
+		return updateTime;
+	}
+
+	public void setUpdateTime(long updateTime) {
+		this.updateTime = updateTime;
+	}
+
+	private void setProvenanceDetails(Provenance prov) {
+		if (prov == null)
+			return;
+
+		ProvEntity swentity = prov.getEntity(this.getId());
+		if (swentity != null) {
+			Activity act = prov.getActivity(swentity.getGeneratedBy());
+			if (act != null) {
+				Agent agent = prov.getAgent(act.getAgentId());
+				if (agent != null)
+					this.setUser(agent.getName());
+				Date time = act.getTime();
+				if (time != null)
+					this.setTime(time.getTime());
+			}
+		}
+	}
+
+	public void setPermission(Permission permission) {
+		this.permission = permission;
+	}
+
+	public Permission getPermission() {
+		return this.permission;
+	}
+
+	@JsonIgnore
+	public String getExternalRepositoryId() {
+		return externalRepositoryId;
+	}
+
+	@JsonIgnore
+	public void setExternalRepositoryId(String externalRepositoryId) {
+		this.externalRepositoryId = externalRepositoryId;
+	}
+
+	@JsonIgnore
+	public String getExternalRepositoryUrl() {
+		return externalRepositoryUrl;
+	}
+
+	@JsonIgnore
+	public void setExternalRepositoryUrl(String externalRepositoryUrl) {
+		this.externalRepositoryUrl = externalRepositoryUrl;
+	}
+
+	public void setSoftwareName(String softwareName) {
+		this.softwareName = softwareName;
+	}
+	
+	public String getSoftwareName() {
+		return softwareName;
+	}
 }

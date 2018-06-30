@@ -567,8 +567,12 @@ public class PublishView extends ParameterizedViewImpl
     breadcrumbs.setVisible(true);
     
     String swlabel = piechart.getSoftware().getLabel();
-    if (swlabel == null)
+    String swname = piechart.getSoftware().getSoftwareName();
+    if (swname != null)
+      swlabel = swname;
+    else if (swlabel == null)
       swlabel = piechart.getSoftware().getName();
+    
     AnchorListItem anchor = new AnchorListItem(swlabel);
     anchor.addClickHandler(new ClickHandler() {
       @Override

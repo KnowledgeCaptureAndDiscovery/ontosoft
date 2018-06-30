@@ -282,7 +282,9 @@ public class ProvenanceRepository {
         for(Entity curEntity : curEntities) {
           if(newEntity.getId().equals(curEntity.getId())) {
             found = true;
-            if(!newEntity.getValue().toString().equals(curEntity.getValue().toString())) {
+            if(newEntity.getValue() != null 
+            		&& curEntity.getValue() != null 
+            		&& !newEntity.getValue().toString().equals(curEntity.getValue().toString())) {
               modified.put(curEntity, newEntity);
             }
           }

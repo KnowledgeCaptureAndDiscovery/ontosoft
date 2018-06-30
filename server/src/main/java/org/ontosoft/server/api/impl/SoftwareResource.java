@@ -23,8 +23,12 @@ import javax.ws.rs.core.SecurityContext;
 import org.ontosoft.server.repository.SoftwareRepository;
 import org.ontosoft.server.users.User;
 import org.ontosoft.shared.api.SoftwareService;
+import org.ontosoft.shared.classes.FunctionSummary;
 import org.ontosoft.shared.classes.SoftwareSummary;
+import org.ontosoft.shared.classes.SoftwareVersionSummary;
 import org.ontosoft.shared.classes.entities.Software;
+import org.ontosoft.shared.classes.entities.SoftwareFunction;
+import org.ontosoft.shared.classes.entities.SoftwareVersion;
 import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.permission.Permission;
 import org.ontosoft.shared.classes.permission.AccessMode;
@@ -74,6 +78,32 @@ public class SoftwareResource implements SoftwareService {
     }
   }
   
+  @GET
+  @Path("versions")
+  @Produces("application/json")
+  @Override
+  public List<SoftwareVersionSummary> versions(String software) {
+    try {
+      return this.repo.getAllSoftwareVersion(software);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
+  @Path("functions")
+  @Produces("application/json")
+  @Override
+  public List<FunctionSummary> functions() {
+    try {
+      return this.repo.getAllFunction();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
   @POST
   @Path("search")
   @Produces("application/json")
@@ -82,6 +112,34 @@ public class SoftwareResource implements SoftwareService {
   public List<SoftwareSummary> listWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
     try {
       return this.repo.getAllSoftwareWithFacets(facets);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @POST
+  @Path("searchVersion")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @Override
+  public List<SoftwareVersionSummary> listSoftwareVersionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets, @PathParam("version") String software) {
+    try {
+      return this.repo.getAllSoftwareVersionWithFacets(facets, software);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @POST
+  @Path("searchFunction")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @Override
+  public List<FunctionSummary> listFunctionWithFacets(@JsonProperty("facets") List<EnumerationFacet> facets) {
+    try {
+      return this.repo.getAllFunctionWithFacets(facets);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Exception: " + e.getMessage());
@@ -103,6 +161,46 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception: " + e.getMessage());
     }
   }
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/json")
+  @Override
+  public SoftwareVersion getVersion(@PathParam("name") String name, @PathParam("version") String version) {
+    try {
+      String vid = version;
+      String swid = name;
+      if(!name.startsWith("http:"))
+          swid = repo.LIBNS() + name;
+      if(!name.startsWith("http:"))
+          vid = swid + "/version/" + version;
+      return this.repo.getSoftwareVersion(swid, vid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
+  @Path("software/{name}/version/{version}/function/{function}")
+  @Produces("application/json")
+  @Override
+  public SoftwareFunction getSoftwareFunction(@PathParam("name") String name, @PathParam("version") String version, @PathParam("function") String function) {
+    try {
+      String vid = version;
+      String swid = name;
+      String fid = function;
+      if(!name.startsWith("http:")) {
+          swid = repo.LIBNS() + name;
+          vid = swid + "/version/" + version;
+          fid = swid + "/version/" + version + "#" + function;
+      }          
+      return this.repo.getSoftwareFunction(swid, vid, fid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
 
   @GET
   @Path("software/{name}")
@@ -113,6 +211,22 @@ public class SoftwareResource implements SoftwareService {
       String swid = name;
       if(!name.startsWith("http:"))
         swid = repo.LIBNS() + name;
+      return this.repo.serializeXML(swid);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception: " + e.getMessage());
+    }
+  }
+  
+  @GET
+  @Path("software/{name}/version/{version}")
+  @Produces("application/rdf+xml")
+  @Override
+  public String getSoftwareVersionGraph(@PathParam("name") String name, @PathParam("version") String version) {
+    try {
+      String swid = name;
+      if(!name.startsWith("http:"))
+        swid = repo.LIBNS() + name + "/version/" + version;
       return this.repo.serializeXML(swid);
     } catch (Exception e) {
       e.printStackTrace();
@@ -230,6 +344,29 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception in add: " + e.getMessage());
     }
   }
+  
+  @POST
+  @Path("software/{name}/version")
+  @Produces("application/json")
+  @Consumes("application/json")
+  @RolesAllowed("user")
+  @Override
+	public SoftwareVersion publishVersion(@PathParam("name") String name, @JsonProperty("version") SoftwareVersion version) {
+	  try {
+	      String vid = this.repo.addSoftwareVersion(name, version,
+	          (User) securityContext.getUserPrincipal());
+	      if(vid != null) {
+	        version.setId(vid);
+	        return this.repo.getSoftwareVersion(name, vid);
+	        //response.sendRedirect(swid);
+	        //return software;
+	      }
+	      return null;
+	    } catch (Exception e) {
+	      e.printStackTrace();
+	      throw new RuntimeException("Exception in add: " + e.getMessage());
+	    }
+	}
 
   @PUT
   @Path("software/{name}")
@@ -253,6 +390,33 @@ public class SoftwareResource implements SoftwareService {
       throw new RuntimeException("Exception in update: " + e.getMessage());
     }
   }
+  
+  @PUT
+  @Path("software/{swname}/version/{vname}")
+  @Consumes("application/json")
+  @Produces("application/json")
+  @RolesAllowed("user")
+  @Override
+  public Software updateVersion(@PathParam("swname") String swname,
+	  @PathParam("vname") String vname,
+      @JsonProperty("version") SoftwareVersion version) {
+    try {
+      String swid = swname;
+      String vid = vname;
+      if(!swname.startsWith("http:"))
+        swid = repo.LIBNS() + swname;
+      if(!vname.startsWith("http:"))
+          vid = swid + "/version/" + vname;
+      if (!this.repo.updateSoftwareVersion(version, swid, vid,
+          (User) securityContext.getUserPrincipal()))
+        throw new RuntimeException("Could not update " + vname);
+      return version;
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Exception in update: " + e.getMessage());
+    }
+  }
 
   @DELETE
   @Path("software/{name}")
@@ -265,6 +429,25 @@ public class SoftwareResource implements SoftwareService {
       if(!name.startsWith("http:"))
         swid = repo.LIBNS() + name;
       if (!this.repo.deleteSoftware(swid, (User) securityContext.getUserPrincipal()))
+        throw new RuntimeException("Could not delete " + name);
+    } catch (Exception e) {
+      //e.printStackTrace();
+      throw new RuntimeException("Exception in delete: " + e.getMessage());
+    }
+  }
+  
+  @DELETE
+  @Path("software/{name}/version/{vname}")
+  @Produces("text/html")
+  @RolesAllowed("user")
+  @Override
+  public void deleteSoftwareVersion(@PathParam("name") String name, @PathParam("vname") String vname) {
+    try {
+      String swid = name;
+      if(!name.startsWith("http:"))
+        swid = repo.LIBNS() + name;
+      String vid = swid + "/version/" + vname;
+      if (!this.repo.deleteSoftwareVersion(swid,vid, (User) securityContext.getUserPrincipal()))
         throw new RuntimeException("Could not delete " + name);
     } catch (Exception e) {
       //e.printStackTrace();

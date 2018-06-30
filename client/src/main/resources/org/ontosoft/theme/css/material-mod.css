@@ -1,5 +1,9 @@
 @CHARSET "US-ASCII";
 
+fieldset .input-group {
+     width: 100% !important;
+}
+
 .nav-tabs>li.active {
   background: #FFF;
   /*border-radius: 5px 5px 0px 0px;
@@ -441,7 +445,7 @@ fieldset.bordered-fieldset {
   padding: 0px 4px 0px 4px;
   border-radius: 4px !important;
   background: #F9F9F9;
-  border: 1px dashed #F0F0F0;
+  border: 1px dashed #000;
 }
 /* Labels */
 .form-group .input-label {
