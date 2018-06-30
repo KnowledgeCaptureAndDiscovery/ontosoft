@@ -337,12 +337,12 @@ public class BrowseView extends ParameterizedViewImpl
   
   @UiHandler("rdfbutton")
   void onRDFButtonClick(ClickEvent event) {
-    openWindow("text/plain", softwarerdf);
+    downloadFile("text/plain", software.getName()+".rdf", softwarerdf);
   }
   
   @UiHandler("jsonbutton")
   void onJsonButtonClick(ClickEvent event) {
-    openWindow("application/json", codec.encode(software).toString());
+    downloadFile("application/json", software.getName()+".json", codec.encode(software).toString());
   }
   
   @UiHandler("htmlbutton")
@@ -398,11 +398,23 @@ public class BrowseView extends ParameterizedViewImpl
         "</style>\n";    
     String html = "<html><head>" + styles + 
         "</head><body>"+ softwarehtml +"</body></html>";
-    openWindow("text/html", html);
+    openWindow(software.getName(), html);
   }
   
-  native void openWindow(String mime, String content) /*-{
-    window.open("data:"+mime+";base64,"+btoa(unescape(encodeURIComponent(content))));
+  native void openWindow(String title, String content) /*-{
+	var win = window.open(title);
+	win.document.writeln(content);
+  }-*/;
+  
+  native void downloadFile(String mime, String filename, String content) /*-{
+  	var data = encodeURIComponent(content);
+  	var element = document.createElement('a');
+  	element.setAttribute('href', 'data:'+mime+';charset=utf-8,' + data);
+  	element.setAttribute('download', filename);
+  	element.style.display = 'none';
+  	document.body.appendChild(element);
+  	element.click();
+  	document.body.removeChild(element);
   }-*/;
   
   private void easeIn(Widget w) {

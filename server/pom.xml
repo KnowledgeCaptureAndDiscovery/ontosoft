@@ -5,7 +5,6 @@
 
 	<!-- POM file generated with GWT webAppCreator -->
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.ontosoft</groupId>
 	<artifactId>ontosoft-server</artifactId>
 	<name>OntoSoft server</name>
 	<description>OntoSoft REST server</description>
