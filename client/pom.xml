@@ -57,13 +57,13 @@
 		<dependency>
 			<groupId>org.gwtbootstrap3</groupId>
 			<artifactId>gwtbootstrap3</artifactId>
-			<version>${gwtbootstrap3.version}</version>
+			<version>1.0.1</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 		    <groupId>org.gwtbootstrap3</groupId>
 		    <artifactId>gwtbootstrap3-extras</artifactId>
-		    <version>${gwtbootstrap3.version}</version>
+		    <version>1.0.2</version>
 		    <scope>provided</scope>
 		</dependency>		
 		
