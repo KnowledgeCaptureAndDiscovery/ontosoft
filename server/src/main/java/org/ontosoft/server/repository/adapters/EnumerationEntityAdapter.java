@@ -6,8 +6,8 @@ import org.ontosoft.shared.classes.entities.EnumerationEntity;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.vocabulary.MetadataEnumeration;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
 
 public class EnumerationEntityAdapter extends EntityAdapter {
   

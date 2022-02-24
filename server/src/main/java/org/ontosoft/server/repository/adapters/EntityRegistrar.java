@@ -2,7 +2,7 @@ package org.ontosoft.server.repository.adapters;
 
 import java.util.HashMap;
 
-import edu.isi.wings.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBAPI;
 
 public class EntityRegistrar {
   private static HashMap<String, Class<IEntityAdapter>> adapters = 
