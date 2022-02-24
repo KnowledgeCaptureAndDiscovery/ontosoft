@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<!-- POM file generated with GWT webAppCreator -->
 	<modelVersion>4.0.0</modelVersion>
@@ -9,22 +7,35 @@
 	<name>Ontosoft client</name>
 	<description>Ontosoft portal web application</description>
 	<packaging>war</packaging>
-    <parent>
-        <groupId>org.ontosoft</groupId>
-        <artifactId>ontosoft</artifactId>
-        <version>2.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+	<parent>
+		<groupId>org.ontosoft</groupId>
+		<artifactId>ontosoft</artifactId>
+		<version>2.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<repositories>
+		<repository>
+			<id>sonatype-nexus-snapshots</id>
+			<url>http://oss.sonatype.org/content/repositories/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
 
 	<properties>
 		<gwt.version>2.7.0</gwt.version>
 		<gwtp.version>1.5</gwtp.version>
 		<gin.version>2.1.2</gin.version>
 		<gwt.d3.version>1.1.1</gwt.d3.version>
-		<restygwt.version>2.0.3</restygwt.version>		
+		<restygwt.version>2.0.3</restygwt.version>
 		<validation.version>1.0.0.GA</validation.version>
 		<gwtbootstrap3.version>1.0-SNAPSHOT</gwtbootstrap3.version>
-		
+
 		<java.version>1.7</java.version>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,7 +55,7 @@
 			<version>${project.version}</version>
 			<classifier>sources</classifier>
 		</dependency>
-		
+
 		<!-- GWT -->
 		<dependency>
 			<groupId>com.google.gwt</groupId>
@@ -57,16 +68,15 @@
 		<dependency>
 			<groupId>org.gwtbootstrap3</groupId>
 			<artifactId>gwtbootstrap3</artifactId>
-			<version>1.0.0</version>
-			<scope>provided</scope>
+			<version>${gwtbootstrap3.version}</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.gwtbootstrap3</groupId>
-		    <artifactId>gwtbootstrap3-extras</artifactId>
-		    <version>1.0.2</version>
-		    <scope>provided</scope>
-		</dependency>		
-		
+			<groupId>org.gwtbootstrap3</groupId>
+			<artifactId>gwtbootstrap3-extras</artifactId>
+			<version>${gwtbootstrap3.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<!-- GWT D3 -->
 		<dependency>
 			<groupId>com.github.gwtd3</groupId>
@@ -74,7 +84,7 @@
 			<version>${gwt.d3.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<!-- GWT Gin -->
 		<dependency>
 			<groupId>com.google.gwt.inject</groupId>
@@ -82,7 +92,7 @@
 			<version>${gin.version}</version>
 			<scope>provided</scope>
 		</dependency>
-	
+
 		<!-- GWT MVP -->
 		<dependency>
 			<groupId>com.gwtplatform</groupId>
@@ -90,7 +100,7 @@
 			<version>${gwtp.version}</version>
 			<scope>provided</scope>
 		</dependency>
-	        
+
 		<!-- RESTY GWT -->
 		<dependency>
 			<groupId>org.fusesource.restygwt</groupId>
@@ -170,5 +180,5 @@
 			</releases>
 		</repository>
 	</repositories>
-    
+
 </project>
