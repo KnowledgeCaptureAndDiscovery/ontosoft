@@ -8,8 +8,8 @@ import org.ontosoft.shared.classes.entities.ComplexEntity;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.util.GUID;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
 
 public class ComplexEntityAdapter extends EntityAdapter {
   protected ArrayList<KBObject> properties;

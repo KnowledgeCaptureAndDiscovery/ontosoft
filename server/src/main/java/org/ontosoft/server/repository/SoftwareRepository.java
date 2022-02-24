@@ -41,12 +41,12 @@ import org.ontosoft.shared.classes.users.UserCredentials;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
-import edu.isi.wings.ontapi.KBTriple;
-import edu.isi.wings.ontapi.OntFactory;
-import edu.isi.wings.ontapi.OntSpec;
-import edu.isi.wings.ontapi.SparqlQuerySolution;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBTriple;
+import edu.isi.kcap.ontapi.OntFactory;
+import edu.isi.kcap.ontapi.OntSpec;
+import edu.isi.kcap.ontapi.SparqlQuerySolution;
 
 public class SoftwareRepository {
 

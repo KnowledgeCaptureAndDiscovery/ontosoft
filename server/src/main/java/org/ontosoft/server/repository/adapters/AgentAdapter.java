@@ -1,6 +1,6 @@
 package org.ontosoft.server.repository.adapters;
 
-import edu.isi.wings.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBAPI;
 
 public class AgentAdapter extends EnumerationEntityAdapter {
 

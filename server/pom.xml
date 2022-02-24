@@ -22,7 +22,6 @@
 		<jackson.version>2.4.6</jackson.version>
 		<swagger.version>1.5.9</swagger.version>		
 		<commons-configuration.version>1.10</commons-configuration.version>
-		<wings-ontapi.version>4.0-SNAPSHOT</wings-ontapi.version>
 		<jbcrypt.version>0.3m</jbcrypt.version>
 		<java.version>1.7</java.version>		
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
@@ -30,21 +29,21 @@
 	</properties>
 
 	<repositories>
-		<!-- Local Wings Repository (for wings-ontapi & dependencies) -->
 		<repository>
-      		<id>Local archiva.snapshots repository</id>
-			<url>http://www.wings-workflows.org/archiva/repository/snapshots/</url>
+			<id>github</id>
+			<name>Github</name>
+			<url>https://maven.pkg.github.com/KnowledgeCaptureAndDiscovery/ontapi</url>
 		</repository>
 	</repositories>
 
-	<dependencies>
-		<!-- Wings ontapi -->
+
+	<dependencies>		
 		<dependency>
-			<groupId>edu.isi.wings</groupId>
-			<artifactId>wings-ontapi</artifactId>
-			<version>${wings-ontapi.version}</version>
+			<groupId>edu.isi.kcap</groupId>
+			<artifactId>ontapi</artifactId>
+			<version>1.2.4</version>
 		</dependency>
-        
+
 		<!-- OntoSoft shared -->
 		<dependency>
 			<groupId>org.ontosoft</groupId>

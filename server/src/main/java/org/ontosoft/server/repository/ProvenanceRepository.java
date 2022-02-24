@@ -19,11 +19,11 @@ import org.ontosoft.shared.classes.provenance.Provenance;
 import org.ontosoft.shared.classes.util.GUID;
 import org.ontosoft.shared.classes.util.KBConstants;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
-import edu.isi.wings.ontapi.KBTriple;
-import edu.isi.wings.ontapi.OntFactory;
-import edu.isi.wings.ontapi.OntSpec;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBTriple;
+import edu.isi.kcap.ontapi.OntFactory;
+import edu.isi.kcap.ontapi.OntSpec;
 
 public class ProvenanceRepository {
   OntFactory fac;

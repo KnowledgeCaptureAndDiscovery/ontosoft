@@ -3,8 +3,8 @@ package org.ontosoft.server.repository.adapters;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.MeasurementEntity;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
 
 public class MeasurementEntityAdapter extends EntityAdapter {
 

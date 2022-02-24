@@ -2,7 +2,7 @@ package org.ontosoft.server.repository.adapters;
 
 import org.ontosoft.shared.classes.entities.NumericEntity;
 
-import edu.isi.wings.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBAPI;
 
 public class NumericEntityAdapter extends EntityAdapter {
 

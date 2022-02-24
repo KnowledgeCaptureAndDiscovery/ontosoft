@@ -1,7 +1,7 @@
 package org.ontosoft.server.repository.adapters;
 
 import org.ontosoft.shared.classes.entities.DateEntity;
-import edu.isi.wings.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBAPI;
 
 public class DateEntityAdapter extends EntityAdapter {
 

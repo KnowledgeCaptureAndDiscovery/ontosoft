@@ -5,7 +5,7 @@ import java.net.URI;
 import org.ontosoft.shared.classes.entities.Entity;
 import org.ontosoft.shared.classes.entities.Location;
 
-import edu.isi.wings.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBAPI;
 
 public class LocationAdapter extends EntityAdapter {
   

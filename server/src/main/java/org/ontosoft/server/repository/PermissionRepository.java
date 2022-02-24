@@ -15,11 +15,11 @@ import org.ontosoft.shared.classes.permission.AccessMode;
 import org.ontosoft.shared.classes.permission.Agent;
 import org.ontosoft.shared.classes.users.UserCredentials;
 
-import edu.isi.wings.ontapi.KBAPI;
-import edu.isi.wings.ontapi.KBObject;
-import edu.isi.wings.ontapi.KBTriple;
-import edu.isi.wings.ontapi.OntFactory;
-import edu.isi.wings.ontapi.OntSpec;
+import edu.isi.kcap.ontapi.KBAPI;
+import edu.isi.kcap.ontapi.KBObject;
+import edu.isi.kcap.ontapi.KBTriple;
+import edu.isi.kcap.ontapi.OntFactory;
+import edu.isi.kcap.ontapi.OntSpec;
 
 public class PermissionRepository {
   OntFactory fac;
