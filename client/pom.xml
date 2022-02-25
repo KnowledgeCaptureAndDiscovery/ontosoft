@@ -14,19 +14,6 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<repositories>
-		<repository>
-			<id>sonatype-nexus-snapshots</id>
-			<url>http://oss.sonatype.org/content/repositories/snapshots</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-	</repositories>
-
 	<properties>
 		<gwt.version>2.7.0</gwt.version>
 		<gwtp.version>1.5</gwtp.version>
