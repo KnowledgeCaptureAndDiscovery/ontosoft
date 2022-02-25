@@ -167,5 +167,5 @@
 		</plugins>
 	</build>
 
-	<!-- Required because snapshot releases may need to be fetched by CI server -->
+
 </project>
