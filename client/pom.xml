@@ -21,7 +21,7 @@
 		<gwt.d3.version>1.1.1</gwt.d3.version>
 		<restygwt.version>2.0.3</restygwt.version>
 		<validation.version>1.0.0.GA</validation.version>
-		<gwtbootstrap3.version>1.0-SNAPSHOT</gwtbootstrap3.version>
+		<gwtbootstrap3.version>0.9.4</gwtbootstrap3.version>
 
 		<java.version>1.7</java.version>
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
