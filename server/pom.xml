@@ -22,7 +22,7 @@
 		<jackson.version>2.4.6</jackson.version>
 		<swagger.version>1.5.9</swagger.version>		
 		<commons-configuration.version>1.10</commons-configuration.version>
-		<jbcrypt.version>0.3m</jbcrypt.version>
+		<jbcrypt.version>0.4</jbcrypt.version>
 		<java.version>1.7</java.version>		
 		<webappDirectory>${project.build.directory}/${project.build.finalName}</webappDirectory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
